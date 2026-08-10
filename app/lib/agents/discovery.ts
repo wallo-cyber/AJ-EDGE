@@ -1,4 +1,4 @@
-import { crmServices } from '../crm/services';
+import { supabaseCrm } from '../supabase/crm';
 
 export type DiscoveryProviderType = 'manual' | 'csv' | 'web';
 
@@ -119,7 +119,7 @@ export class CsvImportProvider implements DiscoveryProvider {
 
   async discover(query: DiscoveryQuery): Promise<DiscoveryCandidate[]> {
     const rows = this.parseRows(this.rawCsv);
-    const existingCompanies = crmServices.companies.list();
+    const existingCompanies = await supabaseCrm.companies.list();
     const seenKeys = new Set<string>();
     const candidates: DiscoveryCandidate[] = [];
 

@@ -55,8 +55,6 @@ export const companyTypes: CompanyType[] = ['مصنع', 'مطور عقاري', '
 export const companyCities: CompanyCity[] = ['الدمام', 'الخبر', 'الظهران', 'الجبيل', 'رأس تنورة', 'القطيف', 'بقيق', 'الخفجي', 'النعيرية'];
 export const companyStatuses: CompanyStatus[] = ['نشط', 'في المتابعة', 'مؤجل', 'مكتمل', 'مرفوض'];
 
-const STORAGE_KEY = 'aj-edge-companies';
-
 export function readCompanies(): Company[] {
   return crmServices.companies.list() as Company[];
 }

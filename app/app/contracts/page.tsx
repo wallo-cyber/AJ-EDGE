@@ -1,16 +1,2 @@
-import { CRMPage } from '../../components/crm-shell';
-
-export default function ContractsPage() {
-  return (
-    <CRMPage
-      title="العقود"
-      description="إدارة العقود الموقعة مع العملاء والمقاولين الرئيسيين."
-      action={<div className="rounded-2xl border border-[#ead9b3] bg-white px-4 py-3 text-sm text-[#6f6044]">العقود ستظهر عند التوقيع</div>}
-    >
-      <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">
-        <h3 className="text-lg font-semibold text-[#2f2417]">لا توجد عقود بعد</h3>
-        <p className="mt-2 text-sm leading-7 text-[#6f6044]">سيتم توثيق العقود المتفق عليها ومراحل التنفيذ لاحقاً.</p>
-      </div>
-    </CRMPage>
-  );
-}
+import { SimpleCrudPage } from '../../components/simple-crud-page';
+export default function ContractsPage() { return <SimpleCrudPage table="contracts" title="العقود" description="إدارة العقود وقيمها وفترات تنفيذها." fields={[{ key: 'company_id', label: 'الشركة', type: 'company', required: true }, { key: 'contract_number', label: 'رقم العقد', required: true }, { key: 'title', label: 'العنوان', required: true }, { key: 'value', label: 'القيمة', type: 'number' }, { key: 'status', label: 'الحالة', type: 'select', options: ['مسودة', 'نشط', 'مكتمل', 'ملغي'] }, { key: 'start_date', label: 'تاريخ البداية', type: 'date' }, { key: 'end_date', label: 'تاريخ النهاية', type: 'date' }, { key: 'notes', label: 'الملاحظات', type: 'textarea' }]} />; }

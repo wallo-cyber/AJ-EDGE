@@ -5,8 +5,8 @@ import { CompanyActions } from '../../components/company-actions';
 import { CompanyForm } from '../../components/company-form';
 import { CRMPage } from '../../components/crm-shell';
 import { companyCities, companyStatuses, companyTypes, type Company, type CompanyCity, type CompanyStatus, type CompanyType } from '../../lib/company-store';
-import { crmServices } from '../../lib/crm/services';
 import { filterItems, paginateItems, searchItems, sortItems } from '../../lib/crm/search';
+import { supabaseCrm } from '../../lib/supabase/crm';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -16,9 +16,12 @@ export default function CompaniesPage() {
   const [cityFilter, setCityFilter] = useState<CompanyCity | 'الكل'>('الكل');
   const [typeFilter, setTypeFilter] = useState<CompanyType | 'الكل'>('الكل');
   const [statusFilter, setStatusFilter] = useState<CompanyStatus | 'الكل'>('الكل');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    setCompanies(crmServices.companies.list() as Company[]);
+    void supabaseCrm.companies.list().then((items) => setCompanies(items as Company[])).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, []);
 
   const filteredCompanies = useMemo(() => {
@@ -43,28 +46,23 @@ export default function CompaniesPage() {
     setEditingCompanyId(null);
   };
 
-  const handleSubmit = (company: Company) => {
-    const nextCompanies = editingCompanyId
-      ? companies.map((item) => (item.id === editingCompanyId ? { ...item, ...company } : item))
-      : [{
-          ...company,
-          id: crypto.randomUUID(),
-          communicationHistory: [],
-          followUps: [],
-          opportunities: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }, ...companies];
-
-    setCompanies(nextCompanies);
-    crmServices.companies.replace(nextCompanies as never);
-    closeForm();
+  const handleSubmit = async (company: Company) => {
+    setError(''); setSuccess('');
+    try {
+      if (editingCompanyId) {
+        const updated = await supabaseCrm.companies.update(editingCompanyId, company);
+        setCompanies((items) => items.map((item) => item.id === editingCompanyId ? updated as Company : item));
+      } else {
+        const created = await supabaseCrm.companies.create({ ...company, communicationHistory: [], followUps: [], opportunities: [] });
+        setCompanies((items) => [created as Company, ...items]);
+      }
+      setSuccess('تم حفظ الشركة بنجاح.'); closeForm();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حفظ الشركة.'); }
   };
 
-  const handleDelete = (companyId: string) => {
-    const nextCompanies = companies.filter((company) => company.id !== companyId);
-    setCompanies(nextCompanies);
-    crmServices.companies.replace(nextCompanies as never);
+  const handleDelete = async (companyId: string) => {
+    try { await supabaseCrm.companies.remove(companyId); setCompanies((items) => items.filter((company) => company.id !== companyId)); setSuccess('تم حذف الشركة.'); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
   };
 
   const handleEdit = (company: Company) => {
@@ -87,6 +85,9 @@ export default function CompaniesPage() {
         </button>
       }
     >
+      {error ? <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+      {success ? <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-700">{success}</div> : null}
+      {loading ? <div className="rounded-2xl bg-white p-6 text-center text-[#6f6044]">جارٍ تحميل الشركات...</div> : null}
       <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
         <div className="grid gap-3 md:grid-cols-4">
           <input
@@ -158,7 +159,7 @@ export default function CompaniesPage() {
                 </td>
               </tr>
             ) : (
-              filteredCompanies.map((company) => (
+              paginatedCompanies.items.map((company) => (
                 <tr key={company.id} className="border-b border-[#f4ebd7] align-top">
                   <td className="px-3 py-3">
                     <div className="font-semibold">{company.companyName}</div>
@@ -174,7 +175,7 @@ export default function CompaniesPage() {
                       companyId={company.id}
                       onEdit={() => handleEdit(company)}
                       onDelete={() => handleDelete(company.id)}
-                      onCreateOutreach={() => {
+                      onCreateOutreach={async () => {
                         const nextCompanies: Company[] = companies.map((item) => {
                           if (item.id !== company.id) {
                             return item;
@@ -195,9 +196,10 @@ export default function CompaniesPage() {
                           };
                         });
                         setCompanies(nextCompanies);
-                        crmServices.companies.replace(nextCompanies as never);
+                        const changed = nextCompanies.find((item) => item.id === company.id);
+                        if (changed) await supabaseCrm.companies.update(company.id, changed);
                       }}
-                      onAddFollowUp={() => {
+                      onAddFollowUp={async () => {
                         const nextCompanies: Company[] = companies.map((item) => {
                           if (item.id !== company.id) {
                             return item;
@@ -217,7 +219,8 @@ export default function CompaniesPage() {
                           };
                         });
                         setCompanies(nextCompanies);
-                        crmServices.companies.replace(nextCompanies as never);
+                        const changed = nextCompanies.find((item) => item.id === company.id);
+                        if (changed) await supabaseCrm.companies.update(company.id, changed);
                       }}
                     />
                   </td>

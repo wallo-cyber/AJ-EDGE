@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { contactDepartments, decisionLevels, preferredMethods, createEmptyContact, type Contact, type ContactDepartment, type ContactDecisionLevel, type ContactMethod } from '../lib/contact-store';
+import { contactDepartments, decisionLevels, preferredMethods, createEmptyContact, type Contact } from '../lib/contact-store';
 
 type ContactFormProps = {
   initialContact?: Contact;

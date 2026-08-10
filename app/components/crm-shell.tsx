@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getSupabaseClient } from '../lib/supabase/client';
 
 const navItems = [
   { href: '/dashboard', label: 'لوحة القيادة', icon: '◈' },
@@ -28,6 +29,32 @@ type CRMPageProps = {
 
 export function CRMPage({ title, description, action, children }: CRMPageProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) router.replace('/login');
+      else setIsAuthenticated(true);
+      setCheckingAuth(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user));
+      if (!session?.user) router.replace('/login');
+    });
+    return () => listener.subscription.unsubscribe();
+  }, [router]);
+
+  if (checkingAuth || !isAuthenticated) {
+    return <div className="flex min-h-screen items-center justify-center bg-[#f7ebd2] text-[#6f6044]">جارٍ التحقق من الجلسة...</div>;
+  }
+
+  const signOut = async () => {
+    await getSupabaseClient().auth.signOut();
+    router.replace('/login');
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_#fffdf9_0%,_#f7ebd2_45%,_#f4e6c8_100%)] text-[#2f2417]">
@@ -38,7 +65,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
               AJ-EDGE CRM
             </p>
             <h1 className="mt-2 text-xl font-semibold text-[#2f2417]">المنصة التجارية</h1>
-            <p className="mt-1 text-sm text-[#6f6044]">المنطقة الشرقية - جاهزة لـ Supabase</p>
+            <p className="mt-1 text-sm text-[#6f6044]">المنطقة الشرقية - متصل بـ Supabase</p>
           </div>
 
           <nav className="space-y-2">
@@ -72,6 +99,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
               <li>الجبيل</li>
             </ul>
           </div>
+          <button onClick={signOut} className="mt-3 w-full rounded-2xl border border-[#d8c08d] bg-white px-3 py-2.5 text-sm font-semibold text-[#6f6044]">تسجيل الخروج</button>
         </aside>
 
         <main className="flex-1 rounded-[30px] border border-[#e8d9b7] bg-white/85 p-4 shadow-[0_20px_45px_rgba(92,70,26,0.08)] backdrop-blur sm:p-6">

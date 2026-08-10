@@ -44,8 +44,6 @@ export const contactDepartments: ContactDepartment[] = [
 export const decisionLevels: ContactDecisionLevel[] = ['صاحب قرار', 'مؤثر', 'منسق', 'غير محدد'];
 export const preferredMethods: ContactMethod[] = ['واتساب', 'بريد', 'هاتف', 'LinkedIn', 'زيارة'];
 
-const STORAGE_KEY = 'aj-edge-contacts';
-
 export function readContacts(): Contact[] {
   return crmServices.contacts.list() as Contact[];
 }

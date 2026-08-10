@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
-import { crmServices } from '../lib/crm/services';
+import { supabaseCrm } from '../lib/supabase/crm';
+import { simpleCrud } from '../lib/supabase/simple-crud';
 import type { Company, FollowUp, Message, Opportunity, TimelineEntry } from '../lib/crm/types';
 import { allowedCities, allowedCompanyTypes, CsvImportProvider, type DiscoveryCandidate, type DiscoveryProvider, type DiscoveryProviderType, type DiscoveryQuery, type ImportSummary } from '../lib/agents/discovery';
 
@@ -140,9 +141,10 @@ export function AgentsWorkflow() {
     }
   };
 
-  const approveCandidate = (candidate: DiscoveryCandidate) => {
+  const approveCandidate = async (candidate: DiscoveryCandidate) => {
     const companyId = crypto.randomUUID();
     const now = new Date().toISOString();
+    const today = now.slice(0, 10);
     const company: Company = {
       id: companyId,
       companyName: candidate.companyName || 'شركة جديدة',
@@ -158,8 +160,8 @@ export function AgentsWorkflow() {
       linkedIn: '',
       serviceOpportunity: candidate.suggestedService,
       status: 'prospect',
-      lastContact: now,
-      nextFollowUp: now,
+      lastContact: today,
+      nextFollowUp: today,
       notes: candidate.agentNotes,
       communicationHistory: [],
       followUps: [],
@@ -168,17 +170,17 @@ export function AgentsWorkflow() {
       updatedAt: now,
     };
 
-    const existing = crmServices.companies.list().some((item) => item.companyName === company.companyName || item.generalEmail === company.generalEmail);
+    const existing = (await supabaseCrm.companies.list()).some((item) => item.companyName === company.companyName || item.generalEmail === company.generalEmail);
     if (existing) {
       addLog(`تم تجاهل ${candidate.companyName || 'شركة جديدة'} بسبب تكرار الشركة.`);
       return;
     }
 
-    crmServices.companies.create(company as never);
+    const createdCompany = await supabaseCrm.companies.create(company);
 
     const opportunity: Opportunity = {
       id: crypto.randomUUID(),
-      companyId,
+      companyId: createdCompany.id,
       companyName: company.companyName,
       title: `فرصة أولية - ${candidate.suggestedService}`,
       service: candidate.suggestedService,
@@ -192,15 +194,15 @@ export function AgentsWorkflow() {
       updatedAt: now,
     };
 
-    crmServices.opportunities.create(opportunity as never);
+    await supabaseCrm.opportunities.create(opportunity);
 
     const followUp: FollowUp = {
       id: crypto.randomUUID(),
-      companyId,
+      companyId: createdCompany.id,
       companyName: company.companyName,
       contactPerson: company.contactPerson || candidate.recommendedContactPosition,
       followUpType: 'متابعة أولية',
-      date: now,
+      date: today,
       time: '09:00',
       priority: candidate.priority,
       status: 'pending',
@@ -208,18 +210,18 @@ export function AgentsWorkflow() {
       notes: candidate.agentNotes,
       result: 'pending',
       nextAction: 'إرسال عرض أولي',
-      nextFollowUpDate: now,
+      nextFollowUpDate: today,
       createdAt: now,
       updatedAt: now,
     };
 
-    crmServices.followUps.create(followUp as never);
+    await supabaseCrm.followUps.create(followUp);
 
     const timelineEntry: TimelineEntry = {
       id: crypto.randomUUID(),
-      companyId,
+      companyId: createdCompany.id,
       companyName: company.companyName,
-      date: now,
+      date: today,
       type: 'متابعة',
       title: 'اعتماد شركة من الوكلاء',
       notes: `تم اعتماد ${company.companyName} من خلال ${candidate.source}`,
@@ -227,7 +229,7 @@ export function AgentsWorkflow() {
       updatedAt: now,
     };
 
-    crmServices.timeline.create(timelineEntry as never);
+    await simpleCrud.create('timeline', { company_id: createdCompany.id, company_name: company.companyName, date: now, type: timelineEntry.type, title: timelineEntry.title, notes: timelineEntry.notes });
 
     setCandidates((previous) => previous.map((item) => item.id === candidate.id ? { ...item, reviewStatus: 'approved' } : item));
     setImportSummary((previous) => ({ ...previous, approved: previous.approved + 1 }));
@@ -251,7 +253,7 @@ export function AgentsWorkflow() {
     }
   };
 
-  const createMessageForCandidate = (candidate: DiscoveryCandidate) => {
+  const createMessageForCandidate = async (candidate: DiscoveryCandidate) => {
     const now = new Date().toISOString();
     const message: Message = {
       id: crypto.randomUUID(),
@@ -266,11 +268,11 @@ export function AgentsWorkflow() {
       updatedAt: now,
     };
 
-    crmServices.messages.create(message as never);
+    await simpleCrud.create('messages', { company_id: null, company_name: message.companyName, direction: message.direction, channel: message.channel, subject: message.subject, body: message.body, sent_at: message.sentAt });
     addLog(`تم إنشاء رسالة أولية ل${candidate.companyName || 'الشركة'}.`);
   };
 
-  const addFollowUpForCandidate = (candidate: DiscoveryCandidate) => {
+  const addFollowUpForCandidate = async (candidate: DiscoveryCandidate) => {
     const now = new Date().toISOString();
     const followUp: FollowUp = {
       id: crypto.randomUUID(),
@@ -291,7 +293,7 @@ export function AgentsWorkflow() {
       updatedAt: now,
     };
 
-    crmServices.followUps.create(followUp as never);
+    await supabaseCrm.followUps.create(followUp);
     addLog(`تم إضافة متابعة أولية ل${candidate.companyName || 'الشركة'}.`);
   };
 

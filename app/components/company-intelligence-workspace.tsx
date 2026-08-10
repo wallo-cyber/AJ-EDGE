@@ -5,7 +5,6 @@ import type { Company } from '../lib/company-store';
 import {
   createEmptyBusinessOpportunity,
   createEmptyCompanyIntelligenceData,
-  createEmptyCompetitor,
   createEmptyDecisionMaker,
   createEmptyDocumentRecord,
   createEmptyNewsItem,
@@ -78,6 +77,7 @@ function EmptyState({ message }: { message: string }) {
 
 export function CompanyIntelligenceWorkspace({ company }: CompanyIntelligenceWorkspaceProps) {
   const [data, setData] = useState<CompanyIntelligenceData>(createEmptyCompanyIntelligenceData());
+  const [hydrated, setHydrated] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectDraft, setProjectDraft] = useState<CompanyProject>(createEmptyProject());
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
@@ -101,12 +101,13 @@ export function CompanyIntelligenceWorkspace({ company }: CompanyIntelligenceWor
   const [editingTimelineId, setEditingTimelineId] = useState<string | null>(null);
 
   useEffect(() => {
-    setData(readCompanyIntelligence(company.id));
+    setHydrated(false);
+    void readCompanyIntelligence(company.id).then((value) => { setData(value); setHydrated(true); });
   }, [company.id]);
 
   useEffect(() => {
-    writeCompanyIntelligence(company.id, data);
-  }, [company.id, data]);
+    if (hydrated) void writeCompanyIntelligence(company.id, company.companyName, data);
+  }, [company.companyName, company.id, data, hydrated]);
 
   const sortedTimeline = useMemo(() => {
     return [...data.timeline].sort((left, right) => (left.date > right.date ? -1 : 1));

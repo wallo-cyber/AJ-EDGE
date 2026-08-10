@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { CompanyIntelligenceWorkspace } from './company-intelligence-workspace';
 import { FollowUpForm } from './follow-up-form';
 import type { Company } from '../lib/company-store';
-import { readContacts, type Contact } from '../lib/contact-store';
-import { readFollowUps, writeFollowUps, type FollowUp } from '../lib/follow-up-store';
+import { type Contact } from '../lib/contact-store';
+import { type FollowUp } from '../lib/follow-up-store';
+import { supabaseCrm } from '../lib/supabase/crm';
 
 type CompanyDetailsViewProps = {
   company: Company;
@@ -18,8 +19,10 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'intelligence'>('overview');
 
   useEffect(() => {
-    setContacts(readContacts().filter((contact) => contact.companyId === company.id || contact.companyName === company.companyName));
-    setFollowUps(readFollowUps().filter((item) => item.companyId === company.id || item.companyName === company.companyName));
+    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list()]).then(([contactItems, followUpItems]) => {
+      setContacts(contactItems.filter((contact) => contact.companyId === company.id || contact.companyName === company.companyName) as Contact[]);
+      setFollowUps(followUpItems.filter((item) => item.companyId === company.id || item.companyName === company.companyName) as FollowUp[]);
+    });
   }, [company.companyName, company.id]);
 
   const upcomingFollowUps = useMemo(() => {
@@ -27,15 +30,9 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
     return followUps.filter((item) => item.status === 'مجدولة' && item.date >= today);
   }, [followUps]);
 
-  function handleFollowUpSubmit(followUp: FollowUp) {
-    const nextFollowUps = [
-      { ...followUp, id: followUp.id || crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-      ...followUps,
-    ];
-
-    setFollowUps(nextFollowUps);
-    writeFollowUps(nextFollowUps);
-    window.dispatchEvent(new CustomEvent('follow-ups:updated', { detail: nextFollowUps }));
+  async function handleFollowUpSubmit(followUp: FollowUp) {
+    const created = await supabaseCrm.followUps.create({ ...followUp, companyId: company.id, companyName: company.companyName });
+    setFollowUps((items) => [created as FollowUp, ...items]);
     setIsFollowUpOpen(false);
   }
 

@@ -1,0 +1,11 @@
+create index if not exists meetings_company_id_idx on public.meetings(company_id);
+create index if not exists opportunities_company_id_idx on public.opportunities(company_id);
+create index if not exists messages_company_id_idx on public.messages(company_id);
+create index if not exists quotations_company_id_idx on public.quotations(company_id);
+create index if not exists contracts_company_id_idx on public.contracts(company_id);
+create index if not exists documents_owner_id_idx on public.documents(owner_id);
+create index if not exists documents_company_id_idx on public.documents(company_id);
+create index if not exists news_owner_id_idx on public.news(owner_id);
+create index if not exists news_company_id_idx on public.news(company_id);
+create index if not exists company_intelligence_company_id_idx on public.company_intelligence(company_id);
+create index if not exists timeline_company_id_idx on public.timeline(company_id);

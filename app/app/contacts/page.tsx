@@ -5,8 +5,8 @@ import { ContactForm } from '../../components/contact-form';
 import { CRMPage } from '../../components/crm-shell';
 import { type Company } from '../../lib/company-store';
 import { type Contact, type ContactDepartment, type ContactDecisionLevel } from '../../lib/contact-store';
-import { crmServices } from '../../lib/crm/services';
 import { filterItems, searchItems, sortItems } from '../../lib/crm/search';
+import { supabaseCrm } from '../../lib/supabase/crm';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -18,10 +18,15 @@ export default function ContactsPage() {
   const [departmentFilter, setDepartmentFilter] = useState<ContactDepartment | 'الكل'>('الكل');
   const [decisionFilter, setDecisionFilter] = useState<ContactDecisionLevel | 'الكل'>('الكل');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    setContacts(crmServices.contacts.list() as Contact[]);
-    setCompanies(crmServices.companies.list() as Company[]);
+    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.companies.list()]).then(([contactItems, companyItems]) => {
+      setContacts(contactItems as Contact[]);
+      setCompanies(companyItems as Company[]);
+    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, []);
 
   const filteredContacts = useMemo(() => {
@@ -46,20 +51,25 @@ export default function ContactsPage() {
     setSelectedContact(null);
   };
 
-  const handleSubmit = (contact: Contact) => {
-    const nextContacts = editingContactId
-      ? contacts.map((item) => (item.id === editingContactId ? { ...item, ...contact } : item))
-      : [{ ...contact, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, ...contacts];
-
-    setContacts(nextContacts);
-    crmServices.contacts.replace(nextContacts as never);
-    closeForm();
+  const handleSubmit = async (contact: Contact) => {
+    const selectedCompany = companies.find((company) => company.id === contact.companyId || company.companyName === contact.companyName);
+    const linkedContact = { ...contact, companyId: selectedCompany?.id ?? contact.companyId, companyName: selectedCompany?.companyName ?? contact.companyName };
+    setError(''); setSuccess('');
+    try {
+      if (editingContactId) {
+        const updated = await supabaseCrm.contacts.update(editingContactId, linkedContact);
+        setContacts((items) => items.map((item) => item.id === editingContactId ? updated as Contact : item));
+      } else {
+        const created = await supabaseCrm.contacts.create(linkedContact);
+        setContacts((items) => [created as Contact, ...items]);
+      }
+      setSuccess('تم حفظ جهة الاتصال.'); closeForm();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحفظ.'); }
   };
 
-  const handleDelete = (contactId: string) => {
-    const nextContacts = contacts.filter((contact) => contact.id !== contactId);
-    setContacts(nextContacts);
-    crmServices.contacts.replace(nextContacts as never);
+  const handleDelete = async (contactId: string) => {
+    try { await supabaseCrm.contacts.remove(contactId); setContacts((items) => items.filter((contact) => contact.id !== contactId)); setSuccess('تم الحذف.'); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
   };
 
   const handleEdit = (contact: Contact) => {
@@ -78,6 +88,9 @@ export default function ContactsPage() {
         <button onClick={openNewForm} className="rounded-full bg-[#2f2417] px-5 py-3 text-sm font-semibold text-[#fef8ec]">إضافة جهة اتصال</button>
       }
     >
+      {error ? <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
+      {success ? <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-700">{success}</div> : null}
+      {loading ? <div className="rounded-2xl bg-white p-6 text-center text-[#6f6044]">جارٍ تحميل جهات الاتصال...</div> : null}
       <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
         <div className="grid gap-3 md:grid-cols-4">
           <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="بحث بالاسم أو البريد أو المنصب" className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />

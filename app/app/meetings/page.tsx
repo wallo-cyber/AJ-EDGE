@@ -1,16 +1,2 @@
-import { CRMPage } from '../../components/crm-shell';
-
-export default function MeetingsPage() {
-  return (
-    <CRMPage
-      title="الاجتماعات"
-      description="جدولة الاجتماعات مع العملاء والشركاء والمقاولين الرئيسيين في المنطقة الشرقية."
-      action={<div className="rounded-2xl border border-[#ead9b3] bg-white px-4 py-3 text-sm text-[#6f6044]">التقويم سيكون متاحاً لاحقاً</div>}
-    >
-      <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">
-        <h3 className="text-lg font-semibold text-[#2f2417]">لا توجد اجتماعات بعد</h3>
-        <p className="mt-2 text-sm leading-7 text-[#6f6044]">سيتم إدراج الاجتماعات القادمة والمكتملة هنا.</p>
-      </div>
-    </CRMPage>
-  );
-}
+import { SimpleCrudPage } from '../../components/simple-crud-page';
+export default function MeetingsPage() { return <SimpleCrudPage table="meetings" title="الاجتماعات" description="إدارة اجتماعات الشركات ومواعيدها." fields={[{ key: 'company_id', label: 'الشركة', type: 'company', required: true }, { key: 'title', label: 'العنوان', required: true }, { key: 'meeting_date', label: 'الموعد', type: 'datetime-local', required: true }, { key: 'location', label: 'الموقع' }, { key: 'status', label: 'الحالة', type: 'select', options: ['مجدول', 'مكتمل', 'ملغي'] }, { key: 'contact_person', label: 'جهة الاتصال' }, { key: 'notes', label: 'الملاحظات', type: 'textarea' }]} />; }

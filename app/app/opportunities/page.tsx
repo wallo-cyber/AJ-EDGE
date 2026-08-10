@@ -1,16 +1,2 @@
-import { CRMPage } from '../../components/crm-shell';
-
-export default function OpportunitiesPage() {
-  return (
-    <CRMPage
-      title="الفرص"
-      description="إدارة فرص العمل والتقديرات الأولية للمشاريع في المنطقة الشرقية."
-      action={<div className="rounded-2xl border border-[#ead9b3] bg-white px-4 py-3 text-sm text-[#6f6044]">الفرص تحتاج إلى بيانات فعلية</div>}
-    >
-      <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">
-        <h3 className="text-lg font-semibold text-[#2f2417]">لا توجد فرص بعد</h3>
-        <p className="mt-2 text-sm leading-7 text-[#6f6044]">سيتم تتبع مراحل كل فرصة من التحضير إلى الإغلاق.</p>
-      </div>
-    </CRMPage>
-  );
-}
+import { SimpleCrudPage } from '../../components/simple-crud-page';
+export default function OpportunitiesPage() { return <SimpleCrudPage table="opportunities" title="الفرص" description="إدارة فرص الأعمال المرتبطة بالشركات." fields={[{ key: 'company_id', label: 'الشركة', type: 'company', required: true }, { key: 'title', label: 'الفرصة', required: true }, { key: 'service', label: 'الخدمة' }, { key: 'stage', label: 'المرحلة', type: 'select', options: ['استكشاف', 'تأهيل', 'عرض', 'تفاوض', 'فوز', 'خسارة'] }, { key: 'probability', label: 'الاحتمال %', type: 'number' }, { key: 'value', label: 'القيمة', type: 'number' }, { key: 'priority', label: 'الأولوية' }, { key: 'owner', label: 'المسؤول' }, { key: 'expected_close', label: 'الإغلاق المتوقع', type: 'date' }, { key: 'notes', label: 'الملاحظات', type: 'textarea' }]} />; }

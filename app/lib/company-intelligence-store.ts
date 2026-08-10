@@ -75,7 +75,7 @@ export type TimelineEntry = {
   notes: string;
 };
 
-import { readFromStorage, writeToStorage } from './crm/storage';
+import { getSupabaseClient } from './supabase/client';
 
 export type CompanyIntelligenceData = {
   overview: {
@@ -222,20 +222,23 @@ export function createEmptyTimelineEntry(): TimelineEntry {
   };
 }
 
-function getStorageKey(companyId: string) {
-  return `aj-edge-company-intelligence-${companyId}`;
-}
-
-export function readCompanyIntelligence(companyId: string): CompanyIntelligenceData {
-  const stored = readFromStorage<CompanyIntelligenceData>(getStorageKey(companyId));
-  if (stored.length === 0) {
+export async function readCompanyIntelligence(companyId: string): Promise<CompanyIntelligenceData> {
+  const { data: row, error } = await getSupabaseClient().from('company_intelligence').select('data').eq('company_id', companyId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!row) {
     return createEmptyCompanyIntelligenceData();
   }
-
-  const parsed = stored[0];
+  const parsed = row.data as CompanyIntelligenceData;
   return parsed && typeof parsed === 'object' ? { ...createEmptyCompanyIntelligenceData(), ...parsed, overview: { ...createEmptyCompanyIntelligenceData().overview, ...(parsed.overview ?? {}) }, activity: { ...createEmptyCompanyIntelligenceData().activity, ...(parsed.activity ?? {}) }, aiAnalysis: { ...createEmptyCompanyIntelligenceData().aiAnalysis, ...(parsed.aiAnalysis ?? {}) }, projects: Array.isArray(parsed.projects) ? parsed.projects : [], decisionMakers: Array.isArray(parsed.decisionMakers) ? parsed.decisionMakers : [], businessOpportunities: Array.isArray(parsed.businessOpportunities) ? parsed.businessOpportunities : [], competitors: Array.isArray(parsed.competitors) ? parsed.competitors : [], news: Array.isArray(parsed.news) ? parsed.news : [], documents: Array.isArray(parsed.documents) ? parsed.documents : [], timeline: Array.isArray(parsed.timeline) ? parsed.timeline : [] } : createEmptyCompanyIntelligenceData();
 }
 
-export function writeCompanyIntelligence(companyId: string, data: CompanyIntelligenceData) {
-  writeToStorage<CompanyIntelligenceData>(getStorageKey(companyId), [data]);
+export async function writeCompanyIntelligence(companyId: string, companyName: string, data: CompanyIntelligenceData) {
+  const supabase = getSupabaseClient();
+  const { data: existing, error: readError } = await supabase.from('company_intelligence').select('id').eq('company_id', companyId).maybeSingle();
+  if (readError) throw new Error(readError.message);
+  const query = existing
+    ? supabase.from('company_intelligence').update({ data, company_name: companyName, updated_at: new Date().toISOString() }).eq('id', existing.id)
+    : supabase.from('company_intelligence').insert({ company_id: companyId, company_name: companyName, data });
+  const { error } = await query;
+  if (error) throw new Error(error.message);
 }

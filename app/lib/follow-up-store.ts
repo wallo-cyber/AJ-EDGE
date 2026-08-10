@@ -28,8 +28,6 @@ export const followUpTypes: FollowUpType[] = ['اتصال', 'بريد إلكتر
 export const followUpPriorities: FollowUpPriority[] = ['عالية', 'متوسطة', 'منخفضة'];
 export const followUpStatuses: FollowUpStatus[] = ['مجدولة', 'مكتملة', 'متأخرة', 'ملغاة'];
 
-const STORAGE_KEY = 'aj-edge-follow-ups';
-
 export function readFollowUps(): FollowUp[] {
   return crmServices.followUps.list() as FollowUp[];
 }
