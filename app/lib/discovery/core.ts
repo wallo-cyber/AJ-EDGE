@@ -35,14 +35,18 @@ export function isDuplicate(a: DiscoveryInput, b: DiscoveryInput) {
   return phoneA.length >= 7 && phoneA === phoneB;
 }
 
-function domain(value: unknown) { return normalizeText(value).replace(/^www\./, '').split('/')[0].split('@').pop() ?? ''; }
-function nameTokens(value: unknown) { return new Set(safeText(value).toLowerCase().replace(/شركة|مؤسسة|مصنع|للمقاولات|والتجارة/g, '').split(/\s+/).filter((part) => part.length > 2)); }
+function domain(value: unknown) { const text=safeText(value).toLowerCase();const host=(text.includes('@')?text.split('@').pop()??'':text.replace(/^https?:\/\//,'').replace(/^www\./,'').split('/')[0]).replace(/:\d+$/,'').replace(/\.$/,'');return host; }
+function coreName(value: unknown) { return normalizeText(safeText(value).replace(/شركة|مؤسسة|مصنع|مجموعة|للمقاولات|والتجارة|المحدودة|ذ\.م\.م/gi, '')); }
+function similarity(a: unknown,b: unknown){const left=coreName(a),right=coreName(b);if(!left||!right)return 0;if(left===right)return 1;if(left.length<2||right.length<2)return 0;const pairs=(value:string)=>{const result:string[]=[];for(let i=0;i<value.length-1;i+=1)result.push(value.slice(i,i+2));return result};const rightPairs=pairs(right),leftPairs=pairs(left);let matches=0;for(const pair of leftPairs){const index=rightPairs.indexOf(pair);if(index>=0){matches+=1;rightPairs.splice(index,1)}}return 2*matches/(leftPairs.length+pairs(right).length);}
+const freeEmailDomains=new Set(['gmail.com','hotmail.com','outlook.com','yahoo.com','icloud.com','live.com']);
 export type DuplicateStatus = 'Exact Duplicate' | 'Possible Duplicate' | 'New Lead';
 export function duplicateStatus(a: DiscoveryInput, b: DiscoveryInput): DuplicateStatus {
-  if (isDuplicate(a, b) || (domain(a.generalEmail) && domain(a.generalEmail) === domain(b.generalEmail))) return 'Exact Duplicate';
-  const left = nameTokens(a.companyName); const right = nameTokens(b.companyName);
-  const overlap = [...left].filter((token) => right.has(token)).length;
-  if ((safeText(a.city) && safeText(a.city) === safeText(b.city) && overlap >= Math.max(1, Math.min(left.size, right.size) - 1)) || (domain(a.website) && domain(a.website) === domain(b.website))) return 'Possible Duplicate';
+  const nameA=normalizeText(a.companyName),nameB=normalizeText(b.companyName); if(nameA&&nameA===nameB)return 'Exact Duplicate';
+  const phoneA=normalizePhone(a.generalPhone),phoneB=normalizePhone(b.generalPhone);if(phoneA.length>=7&&phoneA===phoneB)return 'Exact Duplicate';
+  const websiteA=domain(a.website),websiteB=domain(b.website);if(websiteA&&websiteA===websiteB)return 'Exact Duplicate';
+  const emailA=safeText(a.generalEmail).toLowerCase(),emailB=safeText(b.generalEmail).toLowerCase();if(emailA&&emailA===emailB)return 'Exact Duplicate';
+  const score=similarity(a.companyName,b.companyName),sameCity=normalizeText(a.city)!==''&&normalizeText(a.city)===normalizeText(b.city);const emailDomainA=domain(a.generalEmail),emailDomainB=domain(b.generalEmail);const corporateDomainMatch=emailDomainA&&emailDomainA===emailDomainB&&!freeEmailDomains.has(emailDomainA);
+  if (corporateDomainMatch || score>=0.94 || (sameCity&&score>=0.86)) return 'Possible Duplicate';
   return 'New Lead';
 }
 
