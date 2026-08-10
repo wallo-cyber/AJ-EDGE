@@ -57,12 +57,13 @@ function contactFromRow(row: DbRow): Contact {
 }
 
 function contactToRow(contact: Partial<Contact>) {
+  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + (contact.mobile ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'غير محدد' ? 15 : 0));
   return {
     company_id: nullable(contact.companyId ?? ''), company_name: contact.companyName ?? '', name: nullable(contact.fullName ?? ''),
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
     phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
-    preferred_contact_method: contact.preferredContactMethod ?? '', notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
+    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel || 'General Contact', verification_status: contact.email || contact.mobile ? 'Verified' : 'Needs Verification', contact_score: contactScore, source: 'AJ-EDGE', notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
 }
 
@@ -81,7 +82,7 @@ function followUpToRow(item: Partial<FollowUp>) {
     company_id: nullable(item.companyId ?? ''), company_name: item.companyName ?? '', contact_id: nullable(item.contactId ?? ''),
     contact_person: item.contactPerson ?? '', follow_up_type: item.followUpType ?? '', date: item.date || new Date().toISOString().slice(0, 10),
     due_date: nullable(item.date ?? ''), time: item.time || '00:00', priority: item.priority ?? '', status: nullable(item.status ?? ''),
-    subject: item.subject ?? '', title: nullable(item.subject ?? ''), notes: nullable(item.notes ?? ''), result: item.result ?? '',
+    subject: item.subject ?? '', title: nullable(item.subject ?? ''), notes: nullable(item.notes ?? ''), result: item.result ?? '', outcome: item.result ?? '',
     next_action: item.nextAction ?? '', next_follow_up_date: nullable(item.nextFollowUpDate ?? ''), updated_at: new Date().toISOString(),
   };
 }
