@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 
 const navItems = [
+  { href: '/agent-center', label: 'مركز الوكلاء', icon: '⚙' },
   { href: '/daily', label: 'مركز العمل اليومي', icon: '✓' },
   { href: '/search', label: 'البحث الشامل', icon: '⌕' },
   { href: '/exports', label: 'تصدير البيانات', icon: '↓' },

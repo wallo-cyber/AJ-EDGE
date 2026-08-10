@@ -21,10 +21,11 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'intelligence'>('overview');
 
   useEffect(() => {
-    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents]) => {
+    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events', 'agent_logs', 'agent_jobs'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents, agentLogs, agentJobs]) => {
       setContacts(contactItems.filter((contact) => contact.companyId === company.id || contact.companyName === company.companyName) as Contact[]);
       setFollowUps(followUpItems.filter((item) => item.companyId === company.id || item.companyName === company.companyName) as FollowUp[]);
-      setOperational({ messages: messages.filter((item) => item.company_id === company.id), meetings: meetings.filter((item) => item.company_id === company.id), opportunities: opportunities.filter((item) => item.company_id === company.id), audit_events: auditEvents.filter((item) => item.company_id === company.id) });
+      const companyJobIds = new Set(agentJobs.filter((item) => item.company_id === company.id).map((item) => String(item.id)));
+      setOperational({ messages: messages.filter((item) => item.company_id === company.id), meetings: meetings.filter((item) => item.company_id === company.id), opportunities: opportunities.filter((item) => item.company_id === company.id), audit_events: auditEvents.filter((item) => item.company_id === company.id), agent_logs: agentLogs.filter((item) => companyJobIds.has(String(item.job_id ?? ''))) });
     });
   }, [company.companyName, company.id]);
 
@@ -64,6 +65,8 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
         </div>
         {operational.messages?.[0] ? <div className="mt-4 rounded-2xl bg-[#fdf8ee] p-3"><p className="text-xs">أول مسودة جاهزة للمراجعة</p><p className="mt-2 whitespace-pre-wrap text-sm">{String(operational.messages[0].body ?? '')}</p></div> : null}
       </section>
+
+      <section className="rounded-[24px] border border-[#ead9b3] bg-white p-5"><h3 className="text-lg font-semibold">Agent Activity Timeline</h3><div className="mt-3 space-y-2 text-xs">{operational.agent_logs?.slice(0, 10).map((item) => <div key={item.id} className="rounded-xl bg-[#fdf8ee] p-3"><span className="text-[#9a7b2f]">{String(item.created_at ?? '')} · {String(item.agent_name ?? '')}</span><p>{String(item.message ?? '')}</p></div>)}{!operational.agent_logs?.length && <p>لا يوجد نشاط للوكلاء على هذه الشركة بعد.</p>}</div></section>
 
       {activeTab === 'intelligence' ? (
         <CompanyIntelligenceWorkspace company={company} />

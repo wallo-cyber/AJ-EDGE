@@ -10,7 +10,8 @@
     "test:supabase": "node scripts/supabase-smoke.mjs",
     "test:discovery": "node --experimental-strip-types --test lib/discovery/core.test.ts",
     "test:operational": "node --experimental-strip-types --test lib/operational/core.test.ts",
-    "test": "npm run test:discovery && npm run test:operational"
+    "test:agents": "node --experimental-strip-types --test lib/agents/orchestrator.test.ts",
+    "test": "npm run test:discovery && npm run test:operational && npm run test:agents"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
