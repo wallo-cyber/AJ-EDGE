@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
+import { getSupabaseClient } from '../lib/supabase/client';
 import { AGENT_NAMES, agentRequiresCompany, type AgentName } from '../lib/agents/orchestrator';
 
 const safe = (value: unknown) => String(value ?? '').trim();
@@ -18,7 +19,19 @@ export function AgentControlCenter() {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const load = () => Promise.all(['agent_settings', 'agent_jobs', 'agent_runs', 'agent_logs', 'agent_errors', 'companies'].map((table) => simpleCrud.list(table))).then(([a, b, c, d, e, f]) => { setSettings(a); setJobs(b); setRuns(c); setLogs(d); setErrors(e); setCompanies(f); }).finally(() => setLoading(false));
-  useEffect(() => { void load(); const timer = window.setInterval(() => void load(), 30000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => {
+    let timer: number | undefined;
+    let cancelled = false;
+    void getSupabaseClient().auth.getUser().then(({ data }) => {
+      if (cancelled || !data.user) return;
+      void load();
+      timer = window.setInterval(() => void load(), 30000);
+    });
+    return () => {
+      cancelled = true;
+      if (timer) window.clearInterval(timer);
+    };
+  }, []);
   const global = settings.find((item) => item.agent_name === '_global');
   const today = new Date().toISOString().slice(0, 10);
   const topA = [...companies].filter((company) => company.priority === 'A').sort((a, b) => Number(b.lead_score ?? 0) - Number(a.lead_score ?? 0))[0];
