@@ -7,6 +7,7 @@ import type { Company } from '../lib/company-store';
 import { type Contact } from '../lib/contact-store';
 import { type FollowUp } from '../lib/follow-up-store';
 import { supabaseCrm } from '../lib/supabase/crm';
+import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 
 type CompanyDetailsViewProps = {
   company: Company;
@@ -15,13 +16,15 @@ type CompanyDetailsViewProps = {
 export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
+  const [operational, setOperational] = useState<Record<string, SimpleRow[]>>({});
   const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'intelligence'>('overview');
 
   useEffect(() => {
-    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list()]).then(([contactItems, followUpItems]) => {
+    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents]) => {
       setContacts(contactItems.filter((contact) => contact.companyId === company.id || contact.companyName === company.companyName) as Contact[]);
       setFollowUps(followUpItems.filter((item) => item.companyId === company.id || item.companyName === company.companyName) as FollowUp[]);
+      setOperational({ messages: messages.filter((item) => item.company_id === company.id), meetings: meetings.filter((item) => item.company_id === company.id), opportunities: opportunities.filter((item) => item.company_id === company.id), audit_events: auditEvents.filter((item) => item.company_id === company.id) });
     });
   }, [company.companyName, company.id]);
 
@@ -44,6 +47,23 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
       </div>
 
       <section className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5"><div className="grid gap-3 sm:grid-cols-3"><div><p className="text-xs text-[#6f6044]">Priority</p><strong className="text-2xl">{company.priority||'C'}</strong></div><div><p className="text-xs text-[#6f6044]">Lead Score</p><strong className="text-2xl">{company.leadScore||0}/100</strong></div><div><p className="text-xs text-[#6f6044]">Data Completeness</p><strong className="text-2xl">{company.dataCompleteness||0}%</strong></div></div>{company.scoreReasons?.length?<ul className="mt-3 text-sm text-[#6f6044]">{company.scoreReasons.map(reason=><li key={reason}>+ {reason}</li>)}</ul>:null}{company.missingFields?.length?<p className="mt-3 text-sm text-red-700">البيانات الناقصة: {company.missingFields.join('، ')}</p>:null}</section>
+
+      <section className="rounded-[24px] border border-[#ead9b3] bg-white p-5">
+        <h3 className="text-lg font-semibold">مركز العمل على الشركة</h3>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <a target="_blank" rel="noreferrer" href={`https://www.google.com/search?q=${encodeURIComponent(company.companyName)}`} className="rounded-full border px-3 py-2">بحث الشركة</a>
+          <a target="_blank" rel="noreferrer" href={`https://www.google.com/search?q=${encodeURIComponent(company.companyName)}+procurement+manager`} className="rounded-full border px-3 py-2">مسؤول المشتريات</a>
+          <a target="_blank" rel="noreferrer" href={`https://www.google.com/search?q=${encodeURIComponent(company.companyName)}+projects+manager`} className="rounded-full border px-3 py-2">مسؤول المشاريع</a>
+          <a target="_blank" rel="noreferrer" href={`https://www.google.com/search?q=${encodeURIComponent(company.companyName)}+vendor+registration`} className="rounded-full border px-3 py-2">تسجيل الموردين</a>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+          <div><p className="text-xs">المسودات</p><strong>{operational.messages?.filter((item) => ['Draft', 'Approved'].includes(String(item.status))).length ?? 0}</strong></div>
+          <div><p className="text-xs">الاجتماعات</p><strong>{operational.meetings?.length ?? 0}</strong></div>
+          <div><p className="text-xs">الفرص</p><strong>{operational.opportunities?.length ?? 0}</strong></div>
+          <div><p className="text-xs">سجل التدقيق</p><strong>{operational.audit_events?.length ?? 0}</strong></div>
+        </div>
+        {operational.messages?.[0] ? <div className="mt-4 rounded-2xl bg-[#fdf8ee] p-3"><p className="text-xs">أول مسودة جاهزة للمراجعة</p><p className="mt-2 whitespace-pre-wrap text-sm">{String(operational.messages[0].body ?? '')}</p></div> : null}
+      </section>
 
       {activeTab === 'intelligence' ? (
         <CompanyIntelligenceWorkspace company={company} />
