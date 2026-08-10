@@ -23,6 +23,7 @@ export function EnrichmentWorkspace() {
   const update = async (row: SimpleRow, values: Record<string, string | number | null>, notice: string) => { await simpleCrud.update('companies', row.id, values); setMessage(notice); await load(); };
 
   return <CRMPage title="استكمال البيانات" description="طابور قانوني يبدأ بـ Priority A ثم B، ولا يحفظ أي معلومة غير موثقة.">
+    <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">متوقف مؤقتاً — حصة البحث الخارجي غير متاحة. البحث اليدوي والبيانات المحفوظة يعملان بصورة طبيعية.</p>
     <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="بحث عن شركة" className="w-full rounded-xl border p-3" />
     {message && <p className="rounded-xl bg-emerald-50 p-3 text-emerald-700">{message}</p>}
     {loading ? <p className="p-8 text-center">جارٍ التحميل...</p> : <div className="grid gap-3">{rows.map((row) => {

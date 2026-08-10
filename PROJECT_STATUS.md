@@ -1,5 +1,6 @@
 # AJ-EDGE Project Status
 
+Status: **PRODUCTION READY**
 Status date: 2026-08-11 (Asia/Riyadh)  
 Branch: `codex/aj-edge-mvp`  
 Last stable handoff commit before final closure: `d07207f` (`Finalize Priority A agent activation`)
@@ -11,8 +12,8 @@ Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 - 116 companies are persisted in Supabase.
 - Current persisted operational records: 722 agent jobs, 1,510 runs, 2,420 logs, 81 historical error records, 113 companies with source-backed Tavily intelligence, and 805 outreach drafts.
 - Contacts, opportunities, and follow-ups currently contain zero real records; their schemas and CRUD remain Supabase-backed.
-- Agents and all AJ-EDGE Cron schedules are active.
-- Tavily is connected only from the server-side Edge Worker. External sending remains disabled.
+- Agents that do not require external research remain active. Tavily-dependent agents and the Supervisor are paused safely; Daily Planner, Follow-up, Opportunity, Outreach Draft, and Qualification remain available.
+- Tavily remains configured only in the server-side Edge Worker, but its worker and Supervisor Cron schedules are inactive while the provider quota is exhausted. External sending remains disabled.
 - All automated Tavily jobs available for Priority A and Priority B were processed. Qualification and outreach-draft jobs were then rerun against the enriched data.
 - Job state at handoff: 600 completed and 122 `manual_research_required`; zero queued, running, duplicate-open, or failed jobs. Twenty source lookups remain eligible for a future Tavily retry after provider quota is restored.
 - Current operating metrics: 116 companies, 115 verified, 113 enriched, 47 ready for outreach review, 7 verified vendor portals, 0 verified decision makers, and 325 Tavily API requests persisted in current job results.
@@ -27,8 +28,9 @@ Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 - Shared styling improves tables, forms, focus states, empty/loading/error/success states, spacing, typography, and responsive behavior across all CRM routes.
 - Browser QA verified RTL and zero horizontal overflow at 1440px and 390px on the login/auth boundary. All requested application routes returned HTTP 200 locally; the authentication guard correctly redirected an anonymous protected-route request to `/login`.
 - Final checks passed: TypeScript, ESLint, 28/28 tests, npm audit with zero vulnerabilities, production build for all 24 pages, and Supabase connectivity/RLS smoke testing.
-- Agents, Cron, and background processing remain active. Priority A (11) and Priority B (104) are processed, pgmq queue is empty, failed jobs are zero, external sending remains disabled, and no completed records were reprocessed during final activation.
+- Background processing that does not require Tavily remains active through four hosted Cron schedules. Priority A (11) and Priority B (104) retain their processed results, pgmq queue is empty, failed jobs are zero, external sending remains disabled, and no completed records were reprocessed during production closeout.
 - The final idempotent pass added the missing Decision Maker and Vendor Registration views and expanded Daily Center into the requested executive inbox categories. A real server-side Tavily request succeeded without exposing the key. Subsequent recovery requests returned provider status 432, so no unverified contact was created. The Edge worker now preserves per-agent Tavily evidence history and can create a Decision Maker only from a strongly matched public personal profile with an explicit role and confidence; otherwise it retains Manual Research.
+- Production closeout paused all external-search agents and both Tavily/Supervisor Cron schedules without deleting jobs, results, or queue records. The Agent Center and Enrichment workspace show `متوقف مؤقتاً — حصة البحث الخارجي غير متاحة` instead of treating the provider limit as an application error.
 
 ## Persistence guarantees verified
 
@@ -48,10 +50,10 @@ The database worker Cron was paused in Supabase and the existing Daily Planner j
 2. Use the existing Supabase project and sign in with the same user account.
 3. Do not rerun imports or seed production data.
 4. Check `/agent-center` for live status and `/daily` for the operating queue.
-5. Priority A/B enrichment will continue from persisted job state through hosted Cron.
+5. Priority A/B research remains persisted and paused. Resume the external-search agents and Cron only after Tavily quota becomes available again.
 
 ## Non-blocking remaining work
 
-- 122 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found. Tavily quota is currently exhausted (HTTP 432); 20 lookups remain marked for safe retry rather than being guessed or failed.
+- 122 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found. This is a non-blocking production state; all records remain available for future manual review or safe retry.
 - No real decision-maker contacts, opportunities, or follow-ups have been entered yet.
 - Supabase leaked-password protection is an optional project setting still reported by the security advisor.
