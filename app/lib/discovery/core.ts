@@ -2,8 +2,10 @@ export type DiscoveryStatus = 'جديد' | 'بحاجة تحقق' | 'مؤهل' | 
 
 export type DiscoveryInput = {
   companyName: string; companyType: string; sector: string; city: string;
+  activity?: string; address?: string; tags?: string;
   website: string; generalPhone: string; generalEmail: string;
   contactName: string; contactPosition: string; linkedIn: string;
+  contactEmail?: string; contactPhone?: string;
   discoverySource: string; sourceUrl: string; notes: string;
   projectSignal: boolean; verificationStatus?: string;
 };
@@ -31,6 +33,17 @@ export function isDuplicate(a: DiscoveryInput, b: DiscoveryInput) {
   return phoneA.length >= 7 && phoneA === phoneB;
 }
 
+function domain(value: string) { return normalizeText(value).replace(/^www\./, '').split('/')[0].split('@').pop() ?? ''; }
+function nameTokens(value: string) { return new Set(value.toLowerCase().replace(/شركة|مؤسسة|مصنع|للمقاولات|والتجارة/g, '').split(/\s+/).filter((part) => part.length > 2)); }
+export type DuplicateStatus = 'Exact Duplicate' | 'Possible Duplicate' | 'New Lead';
+export function duplicateStatus(a: DiscoveryInput, b: DiscoveryInput): DuplicateStatus {
+  if (isDuplicate(a, b) || (domain(a.generalEmail) && domain(a.generalEmail) === domain(b.generalEmail))) return 'Exact Duplicate';
+  const left = nameTokens(a.companyName); const right = nameTokens(b.companyName);
+  const overlap = [...left].filter((token) => right.has(token)).length;
+  if ((a.city && a.city === b.city && overlap >= Math.max(1, Math.min(left.size, right.size) - 1)) || (domain(a.website) && domain(a.website) === domain(b.website))) return 'Possible Duplicate';
+  return 'New Lead';
+}
+
 export function calculateLeadScore(item: DiscoveryInput) {
   const haystack = `${item.companyType} ${item.sector}`.toLowerCase();
   const typeScore = /مصنع|صناع/.test(haystack) ? 20 : /مطور|عقار/.test(haystack) ? 18 : /مقاول|إنشاء/.test(haystack) ? 20 : 6;
@@ -39,6 +52,24 @@ export function calculateLeadScore(item: DiscoveryInput) {
   const projectsScore = item.projectSignal || /مشروع|توسع|تنفيذ|تطوير/.test(item.notes) ? 20 : 7;
   const contactScore = Math.min(15, (item.generalPhone ? 5 : 0) + (item.generalEmail ? 5 : 0) + (item.website ? 5 : 0));
   return Math.min(100, typeScore + fitScore + geoScore + projectsScore + contactScore);
+}
+
+export function scoreDetails(item: DiscoveryInput) {
+  const reasons: string[] = []; const missing: string[] = [];
+  const score = calculateLeadScore(item);
+  if (/مصنع|صناع|مقاول|عقار|تطوير/.test(`${item.companyType} ${item.sector} ${item.activity ?? ''}`)) reasons.push('نشاط ملائم للمقاولات');
+  if (easternCities.some((city) => item.city.includes(city))) reasons.push(`ضمن النطاق الجغرافي: ${item.city}`);
+  if (item.projectSignal) reasons.push('مؤشرات مشاريع أو توسع');
+  if (item.contactName) reasons.push('مسؤول تواصل متوفر'); else missing.push('مسؤول تواصل');
+  if (item.website) reasons.push('موقع إلكتروني متوفر'); else missing.push('الموقع الإلكتروني');
+  if (!item.generalEmail && !item.contactEmail) missing.push('البريد الإلكتروني');
+  if (!item.generalPhone && !item.contactPhone) missing.push('الهاتف');
+  return { score, reasons, missing };
+}
+
+export function dataCompleteness(item: DiscoveryInput) {
+  const values = [item.companyName,item.companyType,item.sector,item.activity,item.city,item.website,item.generalPhone,item.generalEmail,item.contactName,item.contactPosition,item.linkedIn,item.discoverySource,item.sourceUrl];
+  return Math.round(values.filter(Boolean).length / values.length * 100);
 }
 
 function splitCsvLine(line: string) {
@@ -61,9 +92,11 @@ export function parseDiscoveryCsv(csv: string): DiscoveryInput[] {
     companyName: ['companyname', 'name', 'اسمالشركة', 'الاسم'], companyType: ['companytype', 'type', 'نوعالشركة', 'النوع', 'الفئة'],
     sector: ['sector', 'القطاع', 'النشاط'], city: ['city', 'المدينة'], website: ['website', 'الموقع', 'الموقعالإلكتروني'],
     generalPhone: ['phone', 'generalphone', 'الهاتف'], generalEmail: ['email', 'generalemail', 'البريد', 'البريدالإلكتروني'],
-    contactName: ['contactname', 'اسممسؤولالتواصل', 'مسؤولالتواصل'], contactPosition: ['contactposition', 'منصبمسؤولالتواصل', 'المنصب'],
+    contactName: ['contactname', 'اسممسؤولالتواصل', 'مسؤولالتواصل'], contactPosition: ['contactposition','contacttitle', 'منصبمسؤولالتواصل', 'المنصب'],
     linkedIn: ['linkedin', 'لينكدإن', 'لينكدان'],
-    discoverySource: ['source', 'discoverysource', 'المصدر', 'مصدرالبيانات'], sourceUrl: ['sourceurl', 'رابطالمصدر'],
+    activity: ['activity','النشاط'], address: ['address','العنوان'], tags: ['tags','الوسوم'],
+    contactEmail: ['contactemail','بريدالمسؤول'], contactPhone: ['contactphone','هاتفالمسؤول'],
+    discoverySource: ['source','sourcename', 'discoverysource', 'المصدر', 'مصدرالبيانات'], sourceUrl: ['sourceurl', 'رابطالمصدر'],
     notes: ['notes', 'ملاحظات'], verificationStatus: ['verificationstatus', 'حالةالتحقق'],
   };
   const value = (cells: string[], key: keyof typeof aliases) => {
@@ -74,6 +107,7 @@ export function parseDiscoveryCsv(csv: string): DiscoveryInput[] {
     city: value(cells, 'city'), website: value(cells, 'website'), generalPhone: value(cells, 'generalPhone'),
     generalEmail: value(cells, 'generalEmail'), discoverySource: value(cells, 'discoverySource') || 'CSV',
     contactName: value(cells, 'contactName'), contactPosition: value(cells, 'contactPosition'), linkedIn: value(cells, 'linkedIn'),
+    activity: value(cells, 'activity'), address: value(cells, 'address'), tags: value(cells, 'tags'), contactEmail: value(cells, 'contactEmail'), contactPhone: value(cells, 'contactPhone'),
     sourceUrl: value(cells, 'sourceUrl'), notes: value(cells, 'notes'), projectSignal: false,
     verificationStatus: value(cells, 'verificationStatus') || 'بحاجة تحقق',
   })).filter((row) => row.companyName);
@@ -84,11 +118,11 @@ export function prepareImport(items: DiscoveryInput[], existing: DiscoveryInput[
   const accepted: DiscoveryInput[] = []; let duplicates = 0; let rejected = 0; let needsReview = 0;
   for (const item of items) {
     if (!item.companyName.trim() || !item.companyType.trim() || !item.city.trim()) { rejected += 1; continue; }
-    if ([...existing, ...accepted].some((candidate) => isDuplicate(item, candidate))) { duplicates += 1; continue; }
+    if ([...existing, ...accepted].some((candidate) => duplicateStatus(item, candidate) === 'Exact Duplicate')) { duplicates += 1; continue; }
     if (!item.website && !item.generalPhone && !item.generalEmail) needsReview += 1;
     accepted.push(item);
   }
   return { total: items.length, accepted, duplicates, needsReview, rejected };
 }
 
-export const discoveryCsvTemplate = '\uFEFFاسم الشركة,الفئة,النشاط,المدينة,الموقع الإلكتروني,الهاتف,البريد الإلكتروني,اسم مسؤول التواصل,منصب مسؤول التواصل,LinkedIn,مصدر البيانات,رابط المصدر,ملاحظات\r\n';
+export const discoveryCsvTemplate = '\uFEFFcompany_name,company_type,sector,activity,city,website,general_phone,general_email,contact_name,contact_title,contact_email,contact_phone,linkedin,source_name,source_url,notes\r\n';

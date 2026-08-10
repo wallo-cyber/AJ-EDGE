@@ -1,5 +1,2 @@
-import { AgentsWorkflow } from '../../components/agents-workflow';
-
-export default function AgentsPage() {
-  return <AgentsWorkflow />;
-}
+import { SimpleCrudPage } from '../../components/simple-crud-page';
+export default function AgentsPage(){return <SimpleCrudPage table="agents" title="الوكلاء والمعرّفون" description="إدارة العلاقات التي قد تجلب فرص أعمال دون نظام عمولات مالي." fields={[{key:'name',label:'الاسم',required:true},{key:'company',label:'الشركة'},{key:'phone',label:'الهاتف'},{key:'email',label:'البريد'},{key:'city',label:'المدينة'},{key:'specialization',label:'التخصص'},{key:'industries',label:'القطاعات'},{key:'relationship_status',label:'الحالة',type:'select',options:['New','Contacted','Active','Inactive']},{key:'source',label:'المصدر'},{key:'notes',label:'ملاحظات',type:'textarea'}]}/>}

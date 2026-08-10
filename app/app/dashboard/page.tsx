@@ -1,29 +1,13 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { CRMPage } from '../../components/crm-shell';
-import { simpleCrud } from '../../lib/supabase/simple-crud';
-
-const metrics = [
-  ['company_discovery', 'الشركات المكتشفة'],
-  ['companies', 'الشركات'], ['contacts', 'جهات الاتصال'], ['opportunities', 'الفرص'],
-  ['follow_ups', 'المتابعات'], ['meetings', 'الاجتماعات'], ['quotations', 'عروض الأسعار'], ['contracts', 'العقود'],
-] as const;
-
+import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
+const now = new Date();
 export default function DashboardPage() {
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    void Promise.all(metrics.map(async ([table]) => [table, (await simpleCrud.list(table)).length] as const))
-      .then((values) => setCounts(Object.fromEntries(values)))
-      .catch((reason: Error) => setError(reason.message))
-      .finally(() => setLoading(false));
-  }, []);
-
-  return <CRMPage title="لوحة القيادة" description="ملخص حي لبيانات CRM الحالية في Supabase.">
-    {error ? <div className="rounded-2xl bg-red-50 p-4 text-red-700">تعذر تحميل المؤشرات: {error}</div> : null}
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(([table, label]) => <div key={table} className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5"><p className="text-sm text-[#6f6044]">{label}</p><p className="mt-2 text-3xl font-semibold text-[#2f2417]">{loading ? '…' : counts[table] ?? 0}</p></div>)}</div>
-  </CRMPage>;
+  const [data, setData] = useState<Record<string, SimpleRow[]>>({}); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
+  useEffect(() => { void Promise.all(['companies','company_discovery','contacts','follow_ups','opportunities','meetings'].map(async table => [table, await simpleCrud.list(table)] as const)).then(values => setData(Object.fromEntries(values))).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false)); }, []);
+  const today=now.toISOString().slice(0,10), week=new Date(now.getTime()-7*86400000).toISOString(); const companies=data.companies??[], leads=data.company_discovery??[], contacts=data.contacts??[], followUps=data.follow_ups??[], opportunities=data.opportunities??[], meetings=data.meetings??[];
+  const metrics=[['إجمالي الشركات',companies.length],['Leads جديدة',leads.filter(x=>['جديد','New'].includes(String(x.review_status))).length],['Qualified Leads',leads.filter(x=>['مؤهل','Qualified'].includes(String(x.review_status))).length],['Decision Makers',contacts.filter(x=>String(x.decision_level).includes('قرار')||x.contact_classification==='Decision Maker').length],['متابعات اليوم',followUps.filter(x=>String(x.date||x.due_date)===today).length],['متابعات متأخرة',followUps.filter(x=>String(x.date||x.due_date)<today&&!['Completed','مكتملة'].includes(String(x.status))).length],['فرص مفتوحة',opportunities.filter(x=>!['Won','Lost','فوز','خسارة'].includes(String(x.stage))).length],['الاجتماعات',meetings.length],['شركات جديدة هذا الأسبوع',companies.filter(x=>String(x.created_at)>=week).length]];
+  const stages=Object.entries(opportunities.reduce<Record<string,number>>((all,item)=>{const stage=String(item.stage||'غير محدد');all[stage]=(all[stage]||0)+1;return all},{})); const top=[...leads].sort((a,b)=>Number(b.lead_score)-Number(a.lead_score)).slice(0,5);
+  return <CRMPage title="لوحة القيادة التنفيذية" description="مؤشرات تطوير الأعمال من بيانات Supabase الحقيقية.">{error&&<p className="rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}{loading?<p className="p-8 text-center">جارٍ تحميل المؤشرات...</p>:<><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{metrics.map(([label,value])=><div key={String(label)} className="rounded-2xl border border-[#ead9b3] bg-[#fdf8ee] p-4"><p className="text-xs text-[#6f6044]">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></div>)}</div><div className="grid gap-4 lg:grid-cols-2"><section className="rounded-2xl border bg-white p-4"><h3 className="font-semibold">الفرص حسب المرحلة</h3>{stages.length?stages.map(([stage,count])=><div key={stage} className="flex justify-between border-b py-2"><span>{stage}</span><strong>{count}</strong></div>):<p className="py-4 text-sm text-[#6f6044]">لا توجد فرص بعد.</p>}</section><section className="rounded-2xl border bg-white p-4"><h3 className="font-semibold">أعلى Leads</h3>{top.length?top.map(item=><div key={item.id} className="flex justify-between border-b py-2"><span>{String(item.company_name)}</span><strong>{String(item.lead_score)}/100</strong></div>):<p className="py-4 text-sm text-[#6f6044]">لا توجد Leads بعد.</p>}</section></div><section className="rounded-2xl border bg-[#fdf8ee] p-4"><h3 className="font-semibold">Conversion</h3><p className="mt-2 text-sm">Discovered {leads.length} → Qualified {leads.filter(x=>['مؤهل','Qualified','تمت إضافته للـ CRM'].includes(String(x.review_status))).length} → Contacted {companies.filter(x=>x.last_contact).length} → Opportunity {opportunities.length}</p></section></>}</CRMPage>;
 }

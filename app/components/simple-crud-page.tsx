@@ -58,6 +58,7 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
   }
 
   async function remove(id: string) {
+    if (!window.confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
     setError('');
     try { await simpleCrud.remove(table, id); setRows((items) => items.filter((item) => item.id !== id)); setSuccess('تم الحذف بنجاح.'); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
