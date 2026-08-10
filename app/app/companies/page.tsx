@@ -5,7 +5,7 @@ import { CompanyActions } from '../../components/company-actions';
 import { CompanyForm } from '../../components/company-form';
 import { CRMPage } from '../../components/crm-shell';
 import { companyCities, companyStatuses, companyTypes, type Company, type CompanyCity, type CompanyStatus, type CompanyType } from '../../lib/company-store';
-import { filterItems, paginateItems, searchItems, sortItems } from '../../lib/crm/search';
+import { filterItems, paginateItems, searchItems } from '../../lib/crm/search';
 import { supabaseCrm } from '../../lib/supabase/crm';
 
 export default function CompaniesPage() {
@@ -31,7 +31,7 @@ export default function CompaniesPage() {
       companyType: typeFilter === 'الكل' ? '' : typeFilter,
       status: statusFilter === 'الكل' ? '' : statusFilter,
     });
-    return sortItems(filtered as Company[], 'companyName' as keyof Company, 'asc');
+    return [...filtered as Company[]].sort((a,b)=>(a.priority??'C').localeCompare(b.priority??'C')||(b.leadScore??0)-(a.leadScore??0));
   }, [companies, cityFilter, searchTerm, statusFilter, typeFilter]);
 
   const paginatedCompanies = useMemo(() => paginateItems(filteredCompanies, 1, 50), [filteredCompanies]);

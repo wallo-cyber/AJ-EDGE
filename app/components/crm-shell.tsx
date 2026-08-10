@@ -8,7 +8,10 @@ import { getSupabaseClient } from '../lib/supabase/client';
 const navItems = [
   { href: '/daily', label: 'مركز العمل اليومي', icon: '✓' },
   { href: '/search', label: 'البحث الشامل', icon: '⌕' },
+  { href: '/exports', label: 'تصدير البيانات', icon: '↓' },
   { href: '/discovery', label: 'اكتشاف الشركات', icon: '⌕' },
+  { href: '/enrichment', label: 'استكمال البيانات', icon: '+' },
+  { href: '/ready-outreach', label: 'جاهز للتواصل', icon: '→' },
   { href: '/dashboard', label: 'لوحة القيادة', icon: '◈' },
   { href: '/companies', label: 'الشركات', icon: '◉' },
   { href: '/contacts', label: 'جهات الاتصال', icon: '◎' },

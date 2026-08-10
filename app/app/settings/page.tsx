@@ -1,20 +1,3 @@
-import { CRMPage } from '../../components/crm-shell';
-
-export default function SettingsPage() {
-  return (
-    <CRMPage
-      title="الإعدادات"
-      description="إعدادات التطبيق الأساسية للاستعداد للربط مع Supabase وإدارة المستخدمين."
-      action={<div className="rounded-2xl border border-[#ead9b3] bg-white px-4 py-3 text-sm text-[#6f6044]">الإعدادات ستتوسع لاحقاً</div>}
-    >
-      <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">
-        <h3 className="text-lg font-semibold text-[#2f2417]">إعدادات التطبيق</h3>
-        <ul className="mt-3 space-y-2 text-sm leading-7 text-[#6f6044]">
-          <li>• إعدادات قاعدة البيانات Supabase.</li>
-          <li>• إعدادات المستخدم والصلاحيات.</li>
-          <li>• إعدادات المنطقة واللغة.</li>
-        </ul>
-      </div>
-    </CRMPage>
-  );
-}
+'use client';
+import { useEffect,useState } from 'react'; import { CRMPage } from '../../components/crm-shell'; import { simpleCrud } from '../../lib/supabase/simple-crud'; import { getSupabaseClient } from '../../lib/supabase/client';
+export default function SettingsPage(){const [outreach,setOutreach]=useState(10),[follow,setFollow]=useState(15),[message,setMessage]=useState('');useEffect(()=>{void simpleCrud.list('user_settings').then(rows=>{if(rows[0]){setOutreach(Number(rows[0].daily_outreach_limit));setFollow(Number(rows[0].daily_follow_up_limit))}})},[]);const save=async()=>{const {data:{user}}=await getSupabaseClient().auth.getUser();if(!user)return;const {error}=await getSupabaseClient().from('user_settings').upsert({owner_id:user.id,daily_outreach_limit:outreach,daily_follow_up_limit:follow,updated_at:new Date().toISOString()});if(error)throw error;setMessage('تم حفظ حدود العمل اليومية.')};return <CRMPage title="الإعدادات" description="ضبط حدود التشغيل اليومية لمنع التواصل المفرط."><div className="max-w-xl rounded-2xl border bg-[#fdf8ee] p-5"><label className="block text-sm">الشركات الجديدة يومياً<input type="number" min="1" max="50" value={outreach} onChange={e=>setOutreach(Number(e.target.value))} className="mt-1 w-full rounded-xl border bg-white p-3"/></label><label className="mt-4 block text-sm">المتابعات اليومية<input type="number" min="1" max="100" value={follow} onChange={e=>setFollow(Number(e.target.value))} className="mt-1 w-full rounded-xl border bg-white p-3"/></label><button onClick={()=>void save()} className="mt-4 rounded-full bg-[#2f2417] px-5 py-2 text-white">حفظ</button>{message&&<p className="mt-3 text-emerald-700">{message}</p>}</div></CRMPage>}

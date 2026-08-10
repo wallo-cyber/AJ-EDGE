@@ -43,6 +43,8 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
         <button onClick={() => setActiveTab('intelligence')} className={`rounded-full px-4 py-2 text-sm font-semibold ${activeTab === 'intelligence' ? 'bg-[#2f2417] text-[#fef8ec]' : 'bg-white text-[#6f6044]'}`}>التحليل الذكي</button>
       </div>
 
+      <section className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5"><div className="grid gap-3 sm:grid-cols-3"><div><p className="text-xs text-[#6f6044]">Priority</p><strong className="text-2xl">{company.priority||'C'}</strong></div><div><p className="text-xs text-[#6f6044]">Lead Score</p><strong className="text-2xl">{company.leadScore||0}/100</strong></div><div><p className="text-xs text-[#6f6044]">Data Completeness</p><strong className="text-2xl">{company.dataCompleteness||0}%</strong></div></div>{company.scoreReasons?.length?<ul className="mt-3 text-sm text-[#6f6044]">{company.scoreReasons.map(reason=><li key={reason}>+ {reason}</li>)}</ul>:null}{company.missingFields?.length?<p className="mt-3 text-sm text-red-700">البيانات الناقصة: {company.missingFields.join('، ')}</p>:null}</section>
+
       {activeTab === 'intelligence' ? (
         <CompanyIntelligenceWorkspace company={company} />
       ) : (

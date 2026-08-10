@@ -44,6 +44,13 @@ export type Company = {
   lastContact: string;
   nextFollowUp: string;
   notes: string;
+  priority?: string;
+  leadScore?: number;
+  dataCompleteness?: number;
+  dataQualityStatus?: string;
+  missingFields?: string[];
+  scoreReasons?: string[];
+  sourceName?: string;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];

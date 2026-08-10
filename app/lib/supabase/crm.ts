@@ -27,7 +27,7 @@ function companyFromRow(row: DbRow): Company {
     contactPerson: text(row.contact_person), position: text(row.position), mobile: text(row.mobile),
     linkedIn: text(row.linked_in) || text(row.linkedin), serviceOpportunity: text(row.service_opportunity),
     status: text(row.status), lastContact: text(row.last_contact), nextFollowUp: text(row.next_follow_up),
-    notes: text(row.notes), communicationHistory: jsonArray(row.communication_history),
+    notes: text(row.notes), priority:text(row.priority), leadScore:Number(row.lead_score||0), dataCompleteness:Number(row.data_completeness||0), dataQualityStatus:text(row.data_quality_status), missingFields:jsonArray<string>(row.missing_fields), scoreReasons:jsonArray<string>(row.score_reasons), sourceName:text(row.source_name), communicationHistory: jsonArray(row.communication_history),
     followUps: jsonArray(row.follow_ups), opportunities: jsonArray(row.opportunities),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
   };
