@@ -12,13 +12,19 @@ import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 type CompanyDetailsViewProps = {
   company: Company;
 };
+type CompanyTab = 'overview' | 'contacts' | 'research' | 'outreach' | 'followups' | 'meetings' | 'opportunities' | 'activity';
+const companyTabs: { id: CompanyTab; label: string }[] = [
+  { id: 'overview', label: 'نظرة عامة' }, { id: 'contacts', label: 'جهات الاتصال' }, { id: 'research', label: 'البحث' },
+  { id: 'outreach', label: 'التواصل' }, { id: 'followups', label: 'المتابعات' }, { id: 'meetings', label: 'الاجتماعات' },
+  { id: 'opportunities', label: 'الفرص' }, { id: 'activity', label: 'النشاط' },
+];
 
 export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [operational, setOperational] = useState<Record<string, SimpleRow[]>>({});
   const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'intelligence'>('overview');
+  const [activeTab, setActiveTab] = useState<CompanyTab>('overview');
 
   useEffect(() => {
     void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events', 'agent_logs', 'agent_jobs'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents, agentLogs, agentJobs]) => {
@@ -42,12 +48,11 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-2">
-        <button onClick={() => setActiveTab('overview')} className={`rounded-full px-4 py-2 text-sm font-semibold ${activeTab === 'overview' ? 'bg-[#2f2417] text-[#fef8ec]' : 'bg-white text-[#6f6044]'}`}>ملف الشركة</button>
-        <button onClick={() => setActiveTab('intelligence')} className={`rounded-full px-4 py-2 text-sm font-semibold ${activeTab === 'intelligence' ? 'bg-[#2f2417] text-[#fef8ec]' : 'bg-white text-[#6f6044]'}`}>التحليل الذكي</button>
+      <div className="flex gap-1 overflow-x-auto rounded-[18px] border border-[#ead9b3] bg-[#f7efdf] p-1.5">
+        {companyTabs.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold ${activeTab === tab.id ? 'bg-[#2f2417] text-[#fef8ec] shadow-md' : 'text-[#6f6044] hover:bg-white'}`}>{tab.label}</button>)}
       </div>
 
-      <section className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5"><div className="grid gap-3 sm:grid-cols-3"><div><p className="text-xs text-[#6f6044]">Priority</p><strong className="text-2xl">{company.priority||'C'}</strong></div><div><p className="text-xs text-[#6f6044]">Lead Score</p><strong className="text-2xl">{company.leadScore||0}/100</strong></div><div><p className="text-xs text-[#6f6044]">Data Completeness</p><strong className="text-2xl">{company.dataCompleteness||0}%</strong></div></div>{company.scoreReasons?.length?<ul className="mt-3 text-sm text-[#6f6044]">{company.scoreReasons.map(reason=><li key={reason}>+ {reason}</li>)}</ul>:null}{company.missingFields?.length?<p className="mt-3 text-sm text-red-700">البيانات الناقصة: {company.missingFields.join('، ')}</p>:null}</section>
+      <section className="crm-card p-5"><div className="grid gap-5 sm:grid-cols-3"><div><div className="flex justify-between"><p className="text-xs text-[#6f6044]">Priority</p><span className={`crm-chip ${company.priority === 'A' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-700'}`}>{company.priority||'C'}</span></div><strong className="mt-2 block text-2xl">أولوية {company.priority||'C'}</strong></div><div><div className="flex justify-between text-xs"><span>Lead Score</span><strong>{company.leadScore||0}/100</strong></div><div className="crm-progress mt-3"><span style={{width:`${company.leadScore||0}%`}} /></div></div><div><div className="flex justify-between text-xs"><span>Data Completeness</span><strong>{company.dataCompleteness||0}%</strong></div><div className="crm-progress mt-3"><span style={{width:`${company.dataCompleteness||0}%`}} /></div></div></div>{company.scoreReasons?.length?<ul className="mt-4 flex flex-wrap gap-2 text-xs text-[#6f6044]">{company.scoreReasons.map(reason=><li className="crm-chip bg-[#f5ecdc]" key={reason}>+ {reason}</li>)}</ul>:null}{company.missingFields?.length?<p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">البيانات الناقصة: {company.missingFields.join('، ')}</p>:null}</section>
 
       <section className="rounded-[24px] border border-[#ead9b3] bg-white p-5">
         <h3 className="text-lg font-semibold">مركز العمل على الشركة</h3>
@@ -68,8 +73,20 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
 
       <section className="rounded-[24px] border border-[#ead9b3] bg-white p-5"><h3 className="text-lg font-semibold">Agent Activity Timeline</h3><div className="mt-3 space-y-2 text-xs">{operational.agent_logs?.slice(0, 10).map((item) => <div key={item.id} className="rounded-xl bg-[#fdf8ee] p-3"><span className="text-[#9a7b2f]">{String(item.created_at ?? '')} · {String(item.agent_name ?? '')}</span><p>{String(item.message ?? '')}</p></div>)}{!operational.agent_logs?.length && <p>لا يوجد نشاط للوكلاء على هذه الشركة بعد.</p>}</div></section>
 
-      {activeTab === 'intelligence' ? (
+      {activeTab === 'research' ? (
         <CompanyIntelligenceWorkspace company={company} />
+      ) : activeTab === 'contacts' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">جهات الاتصال</h3><div className="mt-4 grid gap-3 md:grid-cols-2">{contacts.map((contact) => <article key={contact.id} className="rounded-2xl border border-[#ead9b3] bg-[#fdf9f1] p-4"><strong>{contact.fullName}</strong><p className="mt-1 text-sm text-[#75664d]">{contact.position || contact.department || '—'}</p><p className="mt-2 text-xs">{contact.email || contact.mobile || 'لا توجد بيانات اتصال منشورة'}</p></article>)}{!contacts.length && <div className="crm-empty md:col-span-2">لا توجد جهات اتصال مرتبطة بعد.</div>}</div></section>
+      ) : activeTab === 'outreach' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">مسودات التواصل</h3><div className="mt-4 space-y-3">{operational.messages?.map((item) => <article key={item.id} className="rounded-2xl border border-[#ead9b3] bg-[#fdf9f1] p-4"><div className="flex justify-between gap-3"><strong>{String(item.template_name || item.subject || 'مسودة')}</strong><span className="crm-chip bg-amber-100 text-amber-800">{String(item.status || 'Draft')}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-7">{String(item.body || '')}</p></article>)}{!operational.messages?.length && <div className="crm-empty">لا توجد مسودات بعد.</div>}</div></section>
+      ) : activeTab === 'followups' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">المتابعات</h3><div className="mt-4 space-y-3">{followUps.map((item) => <article key={item.id} className="rounded-2xl border p-4"><div className="flex justify-between"><strong>{item.subject || item.followUpType}</strong><span className="crm-chip bg-blue-50 text-blue-700">{item.status}</span></div><p className="mt-2 text-xs text-[#75664d]">{item.date}</p></article>)}{!followUps.length && <div className="crm-empty">لا توجد متابعات بعد.</div>}</div></section>
+      ) : activeTab === 'meetings' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">الاجتماعات</h3><div className="mt-4 space-y-3">{operational.meetings?.map((item) => <article key={item.id} className="rounded-2xl border p-4"><strong>{String(item.title || item.subject || 'اجتماع')}</strong><p className="mt-2 text-xs text-[#75664d]">{String(item.date || item.meeting_date || '')}</p></article>)}{!operational.meetings?.length && <div className="crm-empty">لا توجد اجتماعات بعد.</div>}</div></section>
+      ) : activeTab === 'opportunities' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">الفرص</h3><div className="mt-4 space-y-3">{operational.opportunities?.map((item) => <article key={item.id} className="rounded-2xl border p-4"><div className="flex justify-between"><strong>{String(item.title || 'فرصة')}</strong><span className="crm-chip bg-emerald-50 text-emerald-700">{String(item.stage || '')}</span></div><p className="mt-2 text-sm text-[#75664d]">{String(item.next_action || '')}</p></article>)}{!operational.opportunities?.length && <div className="crm-empty">لا توجد فرص حقيقية بعد.</div>}</div></section>
+      ) : activeTab === 'activity' ? (
+        <section className="crm-card p-5"><h3 className="font-bold">سجل النشاط</h3><div className="mt-4 space-y-2">{operational.agent_logs?.slice(0, 100).map((item) => <div key={item.id} className="border-r-2 border-[#b78d38] bg-[#fdf9f1] p-3 text-xs"><span className="text-[#9a7b2f]">{String(item.created_at || '')} · {String(item.agent_name || '')}</span><p className="mt-1">{String(item.message || '')}</p></div>)}{!operational.agent_logs?.length && <div className="crm-empty">لا يوجد نشاط بعد.</div>}</div></section>
       ) : (
         <>
       <section className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">

@@ -138,11 +138,14 @@ export default function CompaniesPage() {
         />
       ) : null}
 
-      <div className="overflow-x-auto rounded-[24px] border border-[#ead9b3] bg-white p-3">
+      <div className="crm-card overflow-x-auto p-2">
         <table className="min-w-full text-right text-sm text-[#2f2417]">
           <thead>
             <tr className="border-b border-[#ead9b3] text-[#9a7b2f]">
               <th className="px-3 py-3">الشركة</th>
+              <th className="px-3 py-3">الأولوية</th>
+              <th className="px-3 py-3">Lead Score</th>
+              <th className="px-3 py-3">اكتمال البيانات</th>
               <th className="px-3 py-3">النوع</th>
               <th className="px-3 py-3">المدينة</th>
               <th className="px-3 py-3">الشخص المسؤول</th>
@@ -154,7 +157,7 @@ export default function CompaniesPage() {
           <tbody>
             {filteredCompanies.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-[#6f6044]">
+                <td colSpan={10} className="px-3 py-10 text-center text-[#6f6044]">
                   لا توجد شركات تطابق هذه المعايير بعد.
                 </td>
               </tr>
@@ -165,10 +168,13 @@ export default function CompaniesPage() {
                     <div className="font-semibold">{company.companyName}</div>
                     <div className="mt-1 text-xs text-[#6f6044]">{company.sector || '—'}</div>
                   </td>
+                  <td className="px-3 py-3"><span className={`crm-chip ${company.priority === 'A' ? 'bg-amber-100 text-amber-800' : company.priority === 'B' ? 'bg-stone-200 text-stone-700' : 'bg-orange-50 text-orange-700'}`}>Priority {company.priority || 'C'}</span></td>
+                  <td className="min-w-32 px-3 py-3"><div className="mb-1 flex justify-between text-xs"><span>الدرجة</span><strong>{company.leadScore || 0}/100</strong></div><div className="crm-progress"><span style={{ width: `${Math.max(0, Math.min(100, company.leadScore || 0))}%` }} /></div></td>
+                  <td className="min-w-32 px-3 py-3"><div className="mb-1 flex justify-between text-xs"><span>الملف</span><strong>{company.dataCompleteness || 0}%</strong></div><div className="crm-progress"><span style={{ width: `${Math.max(0, Math.min(100, company.dataCompleteness || 0))}%` }} /></div></td>
                   <td className="px-3 py-3">{company.companyType}</td>
                   <td className="px-3 py-3">{company.city}</td>
                   <td className="px-3 py-3">{company.contactPerson || '—'}</td>
-                  <td className="px-3 py-3">{company.status}</td>
+                  <td className="px-3 py-3"><span className="crm-chip bg-emerald-50 text-emerald-700">{company.status}</span></td>
                   <td className="px-3 py-3">{company.nextFollowUp || '—'}</td>
                   <td className="px-3 py-3">
                     <CompanyActions

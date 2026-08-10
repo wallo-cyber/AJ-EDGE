@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fdf8ee;
-  --foreground: #2f2417;
+  --background: #f6f0e4;
+  --foreground: #291f14;
+  --surface: #fffdf9;
+  --surface-soft: #faf5eb;
+  --border: #e7d8b8;
+  --gold: #a57c2a;
+  --brown: #2f2417;
+  --muted: #76684f;
 }
 
 @theme inline {
@@ -19,11 +25,64 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--background);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(207, 173, 101, .16), transparent 30rem),
+    linear-gradient(180deg, #fbf7ef 0%, var(--background) 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  line-height: 1.5;
 }
 
 * {
   box-sizing: border-box;
+}
+
+::selection { background: #dcc38d; color: #291f14; }
+
+button, a, input, select, textarea { transition: all .18s ease; }
+button { cursor: pointer; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(165, 124, 42, .24);
+  outline-offset: 2px;
+}
+input, select, textarea { min-height: 42px; }
+table { border-collapse: separate; border-spacing: 0; }
+thead { position: sticky; top: 0; z-index: 2; }
+tbody tr:hover { background: #fcf8f0; }
+
+.crm-card {
+  border: 1px solid var(--border);
+  background: rgba(255, 253, 249, .96);
+  border-radius: 20px;
+  box-shadow: 0 12px 35px rgba(70, 48, 18, .06);
+}
+.crm-kpi {
+  position: relative;
+  overflow: hidden;
+  min-height: 118px;
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, #fffdfa, #f8f0df);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 10px 28px rgba(70, 48, 18, .055);
+}
+.crm-kpi::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -28px;
+  top: -28px;
+  width: 76px;
+  height: 76px;
+  border-radius: 999px;
+  background: rgba(184, 143, 57, .10);
+}
+.crm-progress { height: 7px; overflow: hidden; border-radius: 999px; background: #eee4d1; }
+.crm-progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #b9913e, #6d501e); }
+.crm-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 10px; font-size: 11px; font-weight: 700; }
+.crm-empty { border: 1px dashed #d8c59c; border-radius: 18px; background: #fdf9f1; padding: 28px; text-align: center; color: var(--muted); }
+
+@media (max-width: 767px) {
+  body { font-size: 14px; }
+  .crm-kpi { min-height: 100px; padding: 14px; }
+  table { min-width: 760px; }
 }

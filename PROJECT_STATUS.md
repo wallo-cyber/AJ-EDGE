@@ -18,6 +18,17 @@ Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 - Current operating metrics: 116 companies, 115 verified, 113 enriched, 46 ready for outreach review, 7 verified vendor portals, 0 verified decision makers, and 336 Tavily API requests persisted in job results.
 - Priority distribution remains 11 A, 104 B, and 1 C after the final qualification pass.
 
+## Final UI release
+
+- The Arabic RTL application shell now uses a compact responsive sidebar, clearer page hierarchy, modern cards, consistent state styling, and a mobile navigation drawer while preserving every existing route and action.
+- The executive Dashboard uses structured KPI cards, lead-score progress, a ranked target list, and a conversion funnel backed by Supabase data.
+- Daily Center is presented as an executive task inbox; Agent Center uses operational cards with live status, queue, run counters, schedules, actions, and logs.
+- Companies now show Priority badges plus Lead Score and Data Completeness progress bars. Company Profile has organized tabs for Overview, Contacts, Research, Outreach, Follow-ups, Meetings, Opportunities, and Activity.
+- Shared styling improves tables, forms, focus states, empty/loading/error/success states, spacing, typography, and responsive behavior across all CRM routes.
+- Browser QA verified RTL and zero horizontal overflow at 1440px and 390px on the login/auth boundary. All requested application routes returned HTTP 200 locally; the authentication guard correctly redirected an anonymous protected-route request to `/login`.
+- Final checks passed: TypeScript, ESLint, 28/28 tests, npm audit with zero vulnerabilities, production build for all 24 pages, and Supabase connectivity/RLS smoke testing.
+- Agents, Cron, and background processing remain active. Priority A (11) and Priority B (104) are processed, pgmq queue is empty, failed jobs are zero, external sending remains disabled, and no completed records were reprocessed during final activation.
+
 ## Persistence guarantees verified
 
 - All CRM collections and operational agent state are in the hosted Supabase project; the unused browser `localStorage` provider was removed.
