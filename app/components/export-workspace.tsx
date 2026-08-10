@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CRMPage } from './crm-shell'; import { simpleCrud } from '../lib/supabase/simple-crud';
 const tables=[['companies','Companies'],['contacts','Contacts'],['follow_ups','Follow-ups'],['opportunities','Opportunities']] as const;
 function csvCell(value:unknown){const text=Array.isArray(value)?value.join('|'):typeof value==='object'&&value?JSON.stringify(value):String(value??'');return `"${text.replaceAll('"','""')}"`}
