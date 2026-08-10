@@ -1,5 +1,3 @@
-import { crmServices } from './crm/services';
-
 export type ContactDepartment =
   | 'الإدارة العامة'
   | 'المشاريع'
@@ -43,14 +41,6 @@ export const contactDepartments: ContactDepartment[] = [
 
 export const decisionLevels: ContactDecisionLevel[] = ['صاحب قرار', 'مؤثر', 'منسق', 'غير محدد'];
 export const preferredMethods: ContactMethod[] = ['واتساب', 'بريد', 'هاتف', 'LinkedIn', 'زيارة'];
-
-export function readContacts(): Contact[] {
-  return crmServices.contacts.list() as Contact[];
-}
-
-export function writeContacts(contacts: Contact[]) {
-  crmServices.contacts.replace(contacts as never);
-}
 
 export function createEmptyContact(companyId?: string, companyName = ''): Omit<Contact, 'id' | 'createdAt' | 'updatedAt'> {
   return {

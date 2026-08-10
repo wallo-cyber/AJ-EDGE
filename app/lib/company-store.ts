@@ -1,5 +1,3 @@
-import { crmServices } from './crm/services';
-
 export type CompanyType = 'مصنع' | 'مطور عقاري' | 'مقاول رئيسي' | 'مكتب استشاري' | 'شركة صناعية';
 export type CompanyCity =
   | 'الدمام'
@@ -61,14 +59,6 @@ export type Company = {
 export const companyTypes: CompanyType[] = ['مصنع', 'مطور عقاري', 'مقاول رئيسي', 'مكتب استشاري', 'شركة صناعية'];
 export const companyCities: CompanyCity[] = ['الدمام', 'الخبر', 'الظهران', 'الجبيل', 'رأس تنورة', 'القطيف', 'بقيق', 'الخفجي', 'النعيرية'];
 export const companyStatuses: CompanyStatus[] = ['نشط', 'في المتابعة', 'مؤجل', 'مكتمل', 'مرفوض'];
-
-export function readCompanies(): Company[] {
-  return crmServices.companies.list() as Company[];
-}
-
-export function writeCompanies(companies: Company[]) {
-  crmServices.companies.replace(companies as never);
-}
 
 export function createEmptyCompany(): Omit<Company, 'id' | 'communicationHistory' | 'followUps' | 'opportunities' | 'createdAt' | 'updatedAt'> {
   return {

@@ -7,7 +7,7 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // Collections are hydrated from browser-only localStorage after mount.
+      // Collections are hydrated asynchronously from Supabase after mount.
       "react-hooks/set-state-in-effect": "off",
     },
   },

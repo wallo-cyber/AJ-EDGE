@@ -1,5 +1,3 @@
-import { crmServices } from './crm/services';
-
 export type FollowUpType = 'اتصال' | 'بريد إلكتروني' | 'واتساب' | 'زيارة' | 'اجتماع' | 'LinkedIn';
 export type FollowUpPriority = 'عالية' | 'متوسطة' | 'منخفضة';
 export type FollowUpStatus = 'مجدولة' | 'مكتملة' | 'متأخرة' | 'ملغاة';
@@ -27,14 +25,6 @@ export type FollowUp = {
 export const followUpTypes: FollowUpType[] = ['اتصال', 'بريد إلكتروني', 'واتساب', 'زيارة', 'اجتماع', 'LinkedIn'];
 export const followUpPriorities: FollowUpPriority[] = ['عالية', 'متوسطة', 'منخفضة'];
 export const followUpStatuses: FollowUpStatus[] = ['مجدولة', 'مكتملة', 'متأخرة', 'ملغاة'];
-
-export function readFollowUps(): FollowUp[] {
-  return crmServices.followUps.list() as FollowUp[];
-}
-
-export function writeFollowUps(followUps: FollowUp[]) {
-  crmServices.followUps.replace(followUps as never);
-}
 
 export function createEmptyFollowUp(companyId = '', companyName = '', contactPerson = ''): Omit<FollowUp, 'id' | 'createdAt' | 'updatedAt'> {
   return {
