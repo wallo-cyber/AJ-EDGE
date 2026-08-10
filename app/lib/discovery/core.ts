@@ -3,6 +3,7 @@ export type DiscoveryStatus = 'جديد' | 'بحاجة تحقق' | 'مؤهل' | 
 export type DiscoveryInput = {
   companyName: string; companyType: string; sector: string; city: string;
   website: string; generalPhone: string; generalEmail: string;
+  contactName: string; contactPosition: string; linkedIn: string;
   discoverySource: string; sourceUrl: string; notes: string;
   projectSignal: boolean; verificationStatus?: string;
 };
@@ -57,10 +58,12 @@ export function parseDiscoveryCsv(csv: string): DiscoveryInput[] {
   if (lines.length < 2) return [];
   const headers = splitCsvLine(lines[0]).map(normalizeText);
   const aliases: Record<keyof Omit<DiscoveryInput, 'projectSignal'>, string[]> = {
-    companyName: ['companyname', 'name', 'اسمالشركة', 'الاسم'], companyType: ['companytype', 'type', 'نوعالشركة', 'النوع'],
-    sector: ['sector', 'القطاع'], city: ['city', 'المدينة'], website: ['website', 'الموقع', 'الموقعالإلكتروني'],
-    generalPhone: ['phone', 'generalphone', 'الهاتف'], generalEmail: ['email', 'generalemail', 'البريد'],
-    discoverySource: ['source', 'discoverysource', 'المصدر'], sourceUrl: ['sourceurl', 'رابطالمصدر'],
+    companyName: ['companyname', 'name', 'اسمالشركة', 'الاسم'], companyType: ['companytype', 'type', 'نوعالشركة', 'النوع', 'الفئة'],
+    sector: ['sector', 'القطاع', 'النشاط'], city: ['city', 'المدينة'], website: ['website', 'الموقع', 'الموقعالإلكتروني'],
+    generalPhone: ['phone', 'generalphone', 'الهاتف'], generalEmail: ['email', 'generalemail', 'البريد', 'البريدالإلكتروني'],
+    contactName: ['contactname', 'اسممسؤولالتواصل', 'مسؤولالتواصل'], contactPosition: ['contactposition', 'منصبمسؤولالتواصل', 'المنصب'],
+    linkedIn: ['linkedin', 'لينكدإن', 'لينكدان'],
+    discoverySource: ['source', 'discoverysource', 'المصدر', 'مصدرالبيانات'], sourceUrl: ['sourceurl', 'رابطالمصدر'],
     notes: ['notes', 'ملاحظات'], verificationStatus: ['verificationstatus', 'حالةالتحقق'],
   };
   const value = (cells: string[], key: keyof typeof aliases) => {
@@ -70,7 +73,22 @@ export function parseDiscoveryCsv(csv: string): DiscoveryInput[] {
     companyName: value(cells, 'companyName'), companyType: value(cells, 'companyType'), sector: value(cells, 'sector'),
     city: value(cells, 'city'), website: value(cells, 'website'), generalPhone: value(cells, 'generalPhone'),
     generalEmail: value(cells, 'generalEmail'), discoverySource: value(cells, 'discoverySource') || 'CSV',
+    contactName: value(cells, 'contactName'), contactPosition: value(cells, 'contactPosition'), linkedIn: value(cells, 'linkedIn'),
     sourceUrl: value(cells, 'sourceUrl'), notes: value(cells, 'notes'), projectSignal: false,
     verificationStatus: value(cells, 'verificationStatus') || 'بحاجة تحقق',
   })).filter((row) => row.companyName);
 }
+
+export type ImportReport = { total: number; accepted: DiscoveryInput[]; duplicates: number; needsReview: number; rejected: number };
+export function prepareImport(items: DiscoveryInput[], existing: DiscoveryInput[]): ImportReport {
+  const accepted: DiscoveryInput[] = []; let duplicates = 0; let rejected = 0; let needsReview = 0;
+  for (const item of items) {
+    if (!item.companyName.trim() || !item.companyType.trim() || !item.city.trim()) { rejected += 1; continue; }
+    if ([...existing, ...accepted].some((candidate) => isDuplicate(item, candidate))) { duplicates += 1; continue; }
+    if (!item.website && !item.generalPhone && !item.generalEmail) needsReview += 1;
+    accepted.push(item);
+  }
+  return { total: items.length, accepted, duplicates, needsReview, rejected };
+}
+
+export const discoveryCsvTemplate = '\uFEFFاسم الشركة,الفئة,النشاط,المدينة,الموقع الإلكتروني,الهاتف,البريد الإلكتروني,اسم مسؤول التواصل,منصب مسؤول التواصل,LinkedIn,مصدر البيانات,رابط المصدر,ملاحظات\r\n';
