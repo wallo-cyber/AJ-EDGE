@@ -6,18 +6,20 @@ import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
 
 const today = new Date().toISOString().slice(0, 10);
 const value = (item: SimpleRow, key: string) => String(item[key] ?? '');
+const hasTavilyResult = (row: SimpleRow) => Boolean(row.data && typeof row.data === 'object' && 'tavily' in row.data);
 
 export default function DashboardPage() {
   const [data, setData] = useState<Record<string, SimpleRow[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  useEffect(() => { void Promise.all(['companies', 'contacts', 'follow_ups', 'opportunities', 'meetings', 'messages'].map(async (table) => [table, await simpleCrud.list(table)] as const)).then((rows) => setData(Object.fromEntries(rows))).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false)); }, []);
-  const companies = data.companies ?? [], contacts = data.contacts ?? [], followUps = data.follow_ups ?? [], opportunities = data.opportunities ?? [], meetings = data.meetings ?? [], messages = data.messages ?? [];
+  useEffect(() => { void Promise.all(['companies', 'contacts', 'follow_ups', 'opportunities', 'meetings', 'messages', 'company_intelligence', 'agent_jobs'].map(async (table) => [table, await simpleCrud.list(table)] as const)).then((rows) => setData(Object.fromEntries(rows))).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false)); }, []);
+  const companies = data.companies ?? [], contacts = data.contacts ?? [], followUps = data.follow_ups ?? [], opportunities = data.opportunities ?? [], meetings = data.meetings ?? [], messages = data.messages ?? [], intelligence = data.company_intelligence ?? [], agentJobs = data.agent_jobs ?? [];
   const ready = companies.filter((company) => ['A', 'B'].includes(value(company, 'priority')) && (company.general_email || company.email || company.general_phone || company.phone || contacts.some((contact) => contact.company_id === company.id))).length;
   const contacted = companies.filter((company) => company.outreach_status === 'Contacted' || company.last_contact).length;
   const responded = companies.filter((company) => company.last_outcome && !['No Response', ''].includes(value(company, 'last_outcome'))).length;
   const rfqs = opportunities.filter((opportunity) => value(opportunity, 'stage').includes('RFQ')).length;
   const metrics = [
+    ['Enriched', intelligence.filter(hasTavilyResult).length], ['Needs Manual Research', agentJobs.filter((job) => job.status === 'manual_research_required').length], ['Queued', agentJobs.filter((job) => job.status === 'queued').length], ['Failed Jobs', agentJobs.filter((job) => job.status === 'failed').length],
     ['إجمالي الشركات', companies.length], ['Priority A', companies.filter((company) => company.priority === 'A').length], ['Priority B', companies.filter((company) => company.priority === 'B').length], ['Priority C', companies.filter((company) => company.priority === 'C').length],
     ['تحتاج استكمالاً', companies.filter((company) => ['Needs Enrichment', 'Poor Data'].includes(value(company, 'data_quality_status'))).length], ['صناع القرار', contacts.filter((contact) => contact.contact_classification === 'Decision Maker').length], ['روابط التسجيل', companies.filter((company) => company.vendor_registration_url).length], ['جاهزة للتواصل', ready],
     ['تم التواصل', contacted], ['ردود', responded], ['متابعات اليوم', followUps.filter((item) => value(item, 'date') === today && !['Completed', 'Cancelled'].includes(value(item, 'status'))).length], ['متأخرة', followUps.filter((item) => value(item, 'date') < today && !['Completed', 'Cancelled'].includes(value(item, 'status'))).length],

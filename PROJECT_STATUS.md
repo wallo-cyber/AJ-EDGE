@@ -2,18 +2,20 @@
 
 Status date: 2026-08-11 (Asia/Riyadh)  
 Branch: `codex/aj-edge-mvp`  
-Last implementation commit before this handoff: `7551896` (`Connect Tavily to background agents`)  
+Last stable handoff commit before final closure: `ca750e4` (`Document cross-device resume and remove browser storage`)
 Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 
 ## Stable state
 
 - Next.js application, Supabase Authentication, and ownership-based RLS are operational.
 - 116 companies are persisted in Supabase.
-- Current persisted operational records: 715 agent jobs, 726 runs, 1,445 logs, 21 error records, 12 company-intelligence records, and 805 outreach message/draft records.
+- Current persisted operational records: 715 agent jobs, 756 runs, 1,486 logs, 21 error records, 12 company-intelligence records, and 805 outreach drafts.
 - Contacts, opportunities, and follow-ups currently contain zero real records; their schemas and CRUD remain Supabase-backed.
 - Agents and all AJ-EDGE Cron schedules are active.
 - Tavily is connected only from the server-side Edge Worker. External sending remains disabled.
-- Job state at handoff: 383 completed and 332 `manual_research_required`; zero queued/running duplicates and zero failed jobs.
+- All 11 Priority A companies completed the required agent pipeline and have source-backed Tavily intelligence. Priority B remains staged progressively for 104 companies.
+- Job state at handoff: 392 completed and 323 `manual_research_required`; zero queued/running duplicates and zero failed jobs.
+- Current operating metrics: 10 companies ready for outreach, 1 verified vendor portal, 0 verified decision makers, and 41 Tavily API requests used during activation and verification.
 
 ## Persistence guarantees verified
 
@@ -37,6 +39,6 @@ The Tavily Cron job was paused in Supabase, an existing persisted job was observ
 
 ## Non-blocking remaining work
 
-- 332 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found.
+- 323 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found.
 - No real decision-maker contacts, opportunities, or follow-ups have been entered yet.
 - Supabase leaked-password protection is an optional project setting still reported by the security advisor.

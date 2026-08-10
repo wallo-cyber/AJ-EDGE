@@ -140,7 +140,8 @@ Deno.serve(async (request) => {
     const priorityB = (companies ?? []).filter((company: Row) => company.priority === 'B').map((company: Row) => company.id);
     const { data: candidates, error } = await admin.from('agent_jobs').select('*').in('agent_name', LIVE_AGENTS).in('status', ['queued', 'manual_research_required']).order('priority', { ascending: false }).order('created_at');
     if (error) throw error;
-    const ordered = [...(candidates ?? [])].sort((a: Row, b: Row) => {
+    const unprocessed = (candidates ?? []).filter((job: Row) => Number((job.result as Row | null)?.api_requests ?? 0) === 0);
+    const ordered = [...unprocessed].sort((a: Row, b: Row) => {
       const rank = (id: unknown) => priorityA.includes(id) ? 0 : priorityB.includes(id) ? 1 : 2;
       return rank(a.company_id) - rank(b.company_id);
     }).slice(0, batchSize);
