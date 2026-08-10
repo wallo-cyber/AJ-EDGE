@@ -12,10 +12,11 @@ import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 type CompanyDetailsViewProps = {
   company: Company;
 };
-type CompanyTab = 'overview' | 'contacts' | 'research' | 'outreach' | 'followups' | 'meetings' | 'opportunities' | 'activity';
+type CompanyTab = 'overview' | 'contacts' | 'decisionMakers' | 'research' | 'vendorRegistration' | 'outreach' | 'followups' | 'meetings' | 'opportunities' | 'activity';
 const companyTabs: { id: CompanyTab; label: string }[] = [
-  { id: 'overview', label: 'نظرة عامة' }, { id: 'contacts', label: 'جهات الاتصال' }, { id: 'research', label: 'البحث' },
-  { id: 'outreach', label: 'التواصل' }, { id: 'followups', label: 'المتابعات' }, { id: 'meetings', label: 'الاجتماعات' },
+  { id: 'overview', label: 'نظرة عامة' }, { id: 'contacts', label: 'جهات الاتصال' }, { id: 'decisionMakers', label: 'صنّاع القرار' },
+  { id: 'research', label: 'البحث' }, { id: 'vendorRegistration', label: 'تسجيل الموردين' }, { id: 'outreach', label: 'التواصل' },
+  { id: 'followups', label: 'المتابعات' }, { id: 'meetings', label: 'الاجتماعات' },
   { id: 'opportunities', label: 'الفرص' }, { id: 'activity', label: 'النشاط' },
 ];
 
@@ -27,11 +28,11 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   const [activeTab, setActiveTab] = useState<CompanyTab>('overview');
 
   useEffect(() => {
-    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events', 'agent_logs', 'agent_jobs'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents, agentLogs, agentJobs]) => {
+    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.followUps.list(), ...['messages', 'meetings', 'opportunities', 'audit_events', 'agent_logs', 'agent_jobs', 'companies'].map((table) => simpleCrud.list(table))]).then(([contactItems, followUpItems, messages, meetings, opportunities, auditEvents, agentLogs, agentJobs, companies]) => {
       setContacts(contactItems.filter((contact) => contact.companyId === company.id || contact.companyName === company.companyName) as Contact[]);
       setFollowUps(followUpItems.filter((item) => item.companyId === company.id || item.companyName === company.companyName) as FollowUp[]);
       const companyJobIds = new Set(agentJobs.filter((item) => item.company_id === company.id).map((item) => String(item.id)));
-      setOperational({ messages: messages.filter((item) => item.company_id === company.id), meetings: meetings.filter((item) => item.company_id === company.id), opportunities: opportunities.filter((item) => item.company_id === company.id), audit_events: auditEvents.filter((item) => item.company_id === company.id), agent_logs: agentLogs.filter((item) => companyJobIds.has(String(item.job_id ?? ''))) });
+      setOperational({ company: companies.filter((item) => item.id === company.id), messages: messages.filter((item) => item.company_id === company.id), meetings: meetings.filter((item) => item.company_id === company.id), opportunities: opportunities.filter((item) => item.company_id === company.id), audit_events: auditEvents.filter((item) => item.company_id === company.id), agent_logs: agentLogs.filter((item) => companyJobIds.has(String(item.job_id ?? ''))) });
     });
   }, [company.companyName, company.id]);
 
@@ -45,6 +46,9 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
     setFollowUps((items) => [created as FollowUp, ...items]);
     setIsFollowUpOpen(false);
   }
+
+  const companyRow = operational.company?.[0];
+  const decisionMakers = contacts.filter((contact) => contact.decisionLevel === 'صاحب قرار' || /owner|ceo|director|manager|procurement|purchasing|projects|engineering|facility/i.test(contact.position));
 
   return (
     <div className="space-y-4">
@@ -77,6 +81,10 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
         <CompanyIntelligenceWorkspace company={company} />
       ) : activeTab === 'contacts' ? (
         <section className="crm-card p-5"><h3 className="font-bold">جهات الاتصال</h3><div className="mt-4 grid gap-3 md:grid-cols-2">{contacts.map((contact) => <article key={contact.id} className="rounded-2xl border border-[#ead9b3] bg-[#fdf9f1] p-4"><strong>{contact.fullName}</strong><p className="mt-1 text-sm text-[#75664d]">{contact.position || contact.department || '—'}</p><p className="mt-2 text-xs">{contact.email || contact.mobile || 'لا توجد بيانات اتصال منشورة'}</p></article>)}{!contacts.length && <div className="crm-empty md:col-span-2">لا توجد جهات اتصال مرتبطة بعد.</div>}</div></section>
+      ) : activeTab === 'decisionMakers' ? (
+        <section className="crm-card p-5"><div className="flex items-center justify-between"><h3 className="font-bold">صنّاع القرار</h3><span className="crm-chip bg-[#f0e3ca] text-[#6d5125]">{decisionMakers.length} موثق</span></div><div className="mt-4 grid gap-3 md:grid-cols-2">{decisionMakers.map((contact) => <article key={contact.id} className="rounded-2xl border border-[#ead9b3] bg-[#fdf9f1] p-4"><strong>{contact.fullName}</strong><p className="mt-1 text-sm text-[#75664d]">{contact.position || contact.department}</p><div className="mt-3 space-y-1 text-xs"><p>{contact.email || 'البريد غير منشور'}</p><p>{contact.mobile || 'الهاتف غير منشور'}</p>{contact.linkedIn && <a className="text-[#8d6926] underline" href={contact.linkedIn} target="_blank" rel="noreferrer">الملف العام</a>}</div></article>)}{!decisionMakers.length && <div className="crm-empty md:col-span-2">لم يُعثر على صانع قرار موثق بعد؛ الحالة محفوظة للبحث اليدوي دون تخمين.</div>}</div></section>
+      ) : activeTab === 'vendorRegistration' ? (
+        <section className="crm-card p-5"><div className="flex items-center justify-between"><h3 className="font-bold">تسجيل الموردين والمقاولين</h3><span className={`crm-chip ${companyRow?.vendor_registration_url ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{String(companyRow?.vendor_registration_status || (companyRow?.vendor_registration_url ? 'Available' : 'Manual Research'))}</span></div><div className="mt-5 grid gap-4 md:grid-cols-2"><div className="rounded-2xl bg-[#fdf9f1] p-4"><p className="text-xs text-[#75664d]">Portal URL</p>{companyRow?.vendor_registration_url ? <a className="mt-2 block break-all font-semibold text-[#8d6926] underline" href={String(companyRow.vendor_registration_url)} target="_blank" rel="noreferrer">{String(companyRow.vendor_registration_url)}</a> : <p className="mt-2 font-semibold">غير متوفر بمصدر مؤكد</p>}</div><div className="rounded-2xl bg-[#fdf9f1] p-4"><p className="text-xs text-[#75664d]">آخر تحقق</p><p className="mt-2 font-semibold">{String(companyRow?.verified_at || companyRow?.updated_at || '—')}</p><p className="mt-3 text-xs text-[#75664d]">المصدر: {String(companyRow?.source_url || 'بحث يدوي مطلوب')}</p></div></div></section>
       ) : activeTab === 'outreach' ? (
         <section className="crm-card p-5"><h3 className="font-bold">مسودات التواصل</h3><div className="mt-4 space-y-3">{operational.messages?.map((item) => <article key={item.id} className="rounded-2xl border border-[#ead9b3] bg-[#fdf9f1] p-4"><div className="flex justify-between gap-3"><strong>{String(item.template_name || item.subject || 'مسودة')}</strong><span className="crm-chip bg-amber-100 text-amber-800">{String(item.status || 'Draft')}</span></div><p className="mt-3 whitespace-pre-wrap text-sm leading-7">{String(item.body || '')}</p></article>)}{!operational.messages?.length && <div className="crm-empty">لا توجد مسودات بعد.</div>}</div></section>
       ) : activeTab === 'followups' ? (
@@ -95,11 +103,17 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
           <div><p className="text-sm text-[#9a7b2f]">اسم الشركة</p><p className="mt-1 font-semibold text-[#2f2417]">{company.companyName}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">النوع</p><p className="mt-1 font-semibold text-[#2f2417]">{company.companyType}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">القطاع</p><p className="mt-1 font-semibold text-[#2f2417]">{company.sector || '—'}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">النشاط</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.activity || company.serviceOpportunity || '—')}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">المدينة</p><p className="mt-1 font-semibold text-[#2f2417]">{company.city}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">الموقع الإلكتروني</p><p className="mt-1 font-semibold text-[#2f2417]">{company.website || '—'}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">البريد الإلكتروني العام</p><p className="mt-1 font-semibold text-[#2f2417]">{company.generalEmail || '—'}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">الهاتف العام</p><p className="mt-1 font-semibold text-[#2f2417]">{company.generalPhone || '—'}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">الحالة</p><p className="mt-1 font-semibold text-[#2f2417]">{company.status}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">التأهيل</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.data_quality_status || '—')}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">حالة البحث</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.verification_status || '—')}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">حالة التواصل</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.outreach_status || 'Not Contacted')}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">المصدر</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.source_name || company.sourceName || '—')}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">رابط المصدر</p>{companyRow?.source_url ? <a href={String(companyRow.source_url)} target="_blank" rel="noreferrer" className="mt-1 block break-all font-semibold text-[#8d6926] underline">فتح المصدر</a> : <p className="mt-1 font-semibold">—</p>}</div>
           <div><p className="text-sm text-[#9a7b2f]">آخر تواصل</p><p className="mt-1 font-semibold text-[#2f2417]">{company.lastContact || '—'}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">المتابعة القادمة</p><p className="mt-1 font-semibold text-[#2f2417]">{company.nextFollowUp || '—'}</p></div>
         </div>

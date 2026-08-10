@@ -23,6 +23,27 @@ const companyMatch = (company: Row, result: SearchResult) => {
   return nameTokens.length > 0 && nameTokens.filter((part) => haystack.includes(part)).length >= Math.min(2, nameTokens.length);
 };
 const unique = <T>(items: T[]) => [...new Set(items)];
+const decisionRolePattern = /\b(owner|chief executive officer|ceo|managing director|general manager|procurement manager|purchasing manager|projects? manager|business development manager|engineering manager|facilit(?:y|ies) manager)\b/i;
+
+function extractDecisionMaker(company: Row, results: SearchResult[]) {
+  for (const result of results) {
+    const url = safe(result.url);
+    const text = `${safe(result.title)} ${safe(result.content)}`;
+    const role = text.match(decisionRolePattern)?.[0];
+    if (!url.includes('linkedin.com/in/') || !role || !companyMatch(company, result) || Number(result.score ?? 0) < 0.55) continue;
+    const rawName = safe(result.title).split(/\s(?:-|\|)\s/)[0].replace(/\s*\|?\s*LinkedIn.*$/i, '').trim();
+    const nameParts = rawName.split(/\s+/).filter(Boolean);
+    if (nameParts.length < 2 || nameParts.length > 5 || decisionRolePattern.test(rawName) || /company|group|factory|industrial|contracting/i.test(rawName)) continue;
+    return {
+      name: rawName,
+      title: role,
+      linkedin: url,
+      source_url: url,
+      confidence: Math.min(0.9, Math.max(0.7, Number(result.score ?? 0.7))),
+    };
+  }
+  return null;
+}
 
 async function tavilySearch(query: string): Promise<SearchResult[]> {
   const key = Deno.env.get('TAVILY_API_KEY');
@@ -56,7 +77,7 @@ function extractFacts(company: Row, results: SearchResult[]) {
   const linkedIn = matched.find((result) => safe(result.url).includes('linkedin.com/company/'));
   const vendor = matched.find((result) => {
     const domain = domainOf(safe(result.url));
-    const isRegistrationPage = /vendor|supplier|registration|procurement|تسجيل المورد|الموردين/i.test(`${safe(result.title)} ${safe(result.url)}`);
+    const isRegistrationPage = /vendor|supplier|registration|procurement|\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0645\u0648\u0631\u062f|\u0627\u0644\u0645\u0648\u0631\u062f\u064a\u0646/i.test(`${safe(result.title)} ${safe(result.url)}`);
     return isRegistrationPage && Boolean(existingDomain) && (domain === existingDomain || domain.endsWith(`.${existingDomain}`));
   });
   const evidenceResults = official ? matched.filter((result) => domainOf(safe(result.url)) === domainOf(safe(official.url))) : [];
@@ -103,6 +124,7 @@ async function processJob(admin: ReturnType<typeof createClient>, job: Row, comp
     return { enriched: 0, decisionMakers: 0, contacts: 0, vendorPortals: 0, manual: 0 };
   }
   const facts = extractFacts(company, results);
+  const decisionMaker = agent === 'Decision Maker' ? extractDecisionMaker(company, results) : null;
   const updates: Row = { updated_at: new Date().toISOString() };
   let contacts = 0;
   if (!safe(company.website) && facts.official_website?.value) updates.website = facts.official_website.value;
@@ -113,17 +135,31 @@ async function processJob(admin: ReturnType<typeof createClient>, job: Row, comp
   if (!safe(company.source_url) && facts.official_website?.source_url) updates.source_url = facts.official_website.source_url;
   if (Object.keys(updates).length > 1) await admin.from('companies').update(updates).eq('id', company.id);
 
+  if (decisionMaker) {
+    const { data: existingContacts } = await admin.from('contacts').select('id,linkedin,linked_in,full_name').eq('company_id', company.id);
+    const normalizedName = decisionMaker.name.toLowerCase();
+    const duplicateContact = (existingContacts ?? []).some((contact: Row) => (safe(contact.linkedin) || safe(contact.linked_in)) === decisionMaker.linkedin || safe(contact.full_name).toLowerCase() === normalizedName);
+    if (!duplicateContact) {
+      const { error: contactError } = await admin.from('contacts').insert({ owner_id: job.owner_id, company_id: company.id, company_name: companyName, name: decisionMaker.name, full_name: decisionMaker.name, position: decisionMaker.title, decision_role: decisionMaker.title, contact_classification: 'Decision Maker', linkedin: decisionMaker.linkedin, linked_in: decisionMaker.linkedin, source: decisionMaker.source_url, verification_status: 'Public Source Verified', contact_score: Math.round(decisionMaker.confidence * 100), notes: `Public source: ${decisionMaker.source_url} | Confidence: ${decisionMaker.confidence.toFixed(2)}` });
+      if (contactError) throw contactError;
+      contacts = 1;
+    }
+  }
+
   const { data: existing } = await admin.from('company_intelligence').select('id,data').eq('company_id', company.id).maybeSingle();
-  const intelligence = { ...(existing?.data ?? {}), tavily: { agent, checked_at: new Date().toISOString(), ...facts } };
+  const previousData = (existing?.data ?? {}) as Row;
+  const previousHistory = (previousData.tavily_history ?? {}) as Row;
+  const agentEvidence = { agent, checked_at: new Date().toISOString(), ...facts, decision_maker: decisionMaker };
+  const intelligence = { ...previousData, tavily: agentEvidence, tavily_history: { ...previousHistory, [agent]: agentEvidence } };
   if (existing?.id) await admin.from('company_intelligence').update({ data: intelligence, updated_at: new Date().toISOString() }).eq('id', existing.id);
   else await admin.from('company_intelligence').insert({ owner_id: job.owner_id, company_id: company.id, company_name: companyName, data: intelligence });
 
   const useful = Object.keys(updates).length > 1 || facts.sources.length > 0;
-  const manual = agent === 'Decision Maker';
+  const manual = agent === 'Decision Maker' && !decisionMaker;
   const status = manual ? 'manual_research_required' : 'completed';
-  const result = { api_requests: 1, source_count: facts.sources.length, fields_updated: Object.keys(updates).filter((key) => key !== 'updated_at'), confidence_stored: true, reason: manual ? 'No verified named decision maker was created automatically' : undefined };
+  const result = { api_requests: 1, source_count: facts.sources.length, fields_updated: Object.keys(updates).filter((key) => key !== 'updated_at'), confidence_stored: true, decision_maker: decisionMaker, reason: manual ? 'No verified named decision maker was created automatically' : undefined };
   await admin.from('agent_jobs').update({ status, result, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', job.id);
-  return { enriched: useful ? 1 : 0, decisionMakers: 0, contacts, vendorPortals: facts.vendor_registration ? 1 : 0, manual: manual ? 1 : 0 };
+  return { enriched: useful ? 1 : 0, decisionMakers: decisionMaker ? 1 : 0, contacts, vendorPortals: facts.vendor_registration ? 1 : 0, manual: manual ? 1 : 0 };
 }
 
 Deno.serve(async (request) => {
