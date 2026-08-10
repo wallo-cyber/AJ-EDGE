@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:supabase": "node scripts/supabase-smoke.mjs"
+    "test:supabase": "node scripts/supabase-smoke.mjs",
+    "test:discovery": "node --experimental-strip-types --test lib/discovery/core.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",

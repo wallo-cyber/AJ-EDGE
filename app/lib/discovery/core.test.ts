@@ -1,0 +1,6 @@
+import test from 'node:test'; import assert from 'node:assert/strict';
+import { calculateLeadScore, isDuplicate, parseDiscoveryCsv, type DiscoveryInput } from './core.ts';
+const company = (overrides: Partial<DiscoveryInput> = {}): DiscoveryInput => ({ companyName:'مصنع الخليج',companyType:'مصنع',sector:'صناعي',city:'الدمام',website:'https://gulf.example',generalPhone:'0131234567',generalEmail:'info@gulf.example',discoverySource:'CSV',sourceUrl:'',notes:'مشروع توسع',projectSignal:true,...overrides });
+test('scores a relevant Eastern Province lead highly',()=>assert.equal(calculateLeadScore(company()),100));
+test('detects duplicates by normalized name, website, or phone',()=>{assert.ok(isDuplicate(company(),company({website:'',generalPhone:'',companyName:'مصنع  الخليج'})));assert.ok(isDuplicate(company(),company({companyName:'آخر',website:'https://www.gulf.example/'})));assert.ok(isDuplicate(company(),company({companyName:'آخر',website:'',generalPhone:'+966 13 123 4567'})));});
+test('parses Arabic/English CSV rows',()=>{const rows=parseDiscoveryCsv('companyName,companyType,city,phone\n"شركة ألف",مقاول,الخبر,0500000000');assert.equal(rows.length,1);assert.equal(rows[0].companyName,'شركة ألف');assert.equal(rows[0].city,'الخبر');});

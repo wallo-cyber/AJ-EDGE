@@ -5,6 +5,7 @@ import { CRMPage } from '../../components/crm-shell';
 import { simpleCrud } from '../../lib/supabase/simple-crud';
 
 const metrics = [
+  ['company_discovery', 'الشركات المكتشفة'],
   ['companies', 'الشركات'], ['contacts', 'جهات الاتصال'], ['opportunities', 'الفرص'],
   ['follow_ups', 'المتابعات'], ['meetings', 'الاجتماعات'], ['quotations', 'عروض الأسعار'], ['contracts', 'العقود'],
 ] as const;
