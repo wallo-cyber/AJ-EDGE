@@ -159,9 +159,12 @@ Deno.serve(async (request) => {
         totals.processed += 1; totals.enriched += outcome.enriched; totals.decisionMakers += outcome.decisionMakers; totals.contacts += outcome.contacts; totals.vendorPortals += outcome.vendorPortals; totals.manual += outcome.manual; totals.apiRequests += 1;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        const failed = nextAttempt >= Number(job.max_attempts ?? 3);
-        await admin.from('agent_jobs').update({ status: failed ? 'failed' : 'queued', last_error: message, updated_at: new Date().toISOString() }).eq('id', job.id);
-        await admin.from('agent_runs').update({ status: failed ? 'failed' : 'retrying', completed_at: new Date().toISOString(), summary: { error: message } }).eq('id', run?.id);
+        const providerLimited = message.includes('(432)');
+        const failed = !providerLimited && nextAttempt >= Number(job.max_attempts ?? 3);
+        const status = providerLimited ? 'manual_research_required' : failed ? 'failed' : 'queued';
+        const result = providerLimited ? { api_requests: 0, reason: 'Tavily provider limit reached; manual research required', provider_status: 432 } : undefined;
+        await admin.from('agent_jobs').update({ status, result, last_error: message, completed_at: providerLimited || failed ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', job.id);
+        await admin.from('agent_runs').update({ status: providerLimited ? 'manual_research_required' : failed ? 'failed' : 'retrying', completed_at: new Date().toISOString(), summary: { error: message, manual_research_required: providerLimited } }).eq('id', run?.id);
         await admin.from('agent_errors').insert({ owner_id: job.owner_id, job_id: job.id, run_id: run?.id ?? null, agent_name: job.agent_name, error_message: message, attempt: nextAttempt });
       }
     }

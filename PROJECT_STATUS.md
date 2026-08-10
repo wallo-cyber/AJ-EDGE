@@ -2,20 +2,21 @@
 
 Status date: 2026-08-11 (Asia/Riyadh)  
 Branch: `codex/aj-edge-mvp`  
-Last stable handoff commit before final closure: `ca750e4` (`Document cross-device resume and remove browser storage`)
+Last stable handoff commit before final closure: `d07207f` (`Finalize Priority A agent activation`)
 Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 
 ## Stable state
 
 - Next.js application, Supabase Authentication, and ownership-based RLS are operational.
 - 116 companies are persisted in Supabase.
-- Current persisted operational records: 715 agent jobs, 756 runs, 1,486 logs, 21 error records, 12 company-intelligence records, and 805 outreach drafts.
+- Current persisted operational records: 719 agent jobs, 1,466 runs, 2,414 logs, 40 historical error records, 113 companies with source-backed Tavily intelligence, and 805 outreach drafts.
 - Contacts, opportunities, and follow-ups currently contain zero real records; their schemas and CRUD remain Supabase-backed.
 - Agents and all AJ-EDGE Cron schedules are active.
 - Tavily is connected only from the server-side Edge Worker. External sending remains disabled.
-- All 11 Priority A companies completed the required agent pipeline and have source-backed Tavily intelligence. Priority B remains staged progressively for 104 companies.
-- Job state at handoff: 392 completed and 323 `manual_research_required`; zero queued/running duplicates and zero failed jobs.
-- Current operating metrics: 10 companies ready for outreach, 1 verified vendor portal, 0 verified decision makers, and 41 Tavily API requests used during activation and verification.
+- All automated Tavily jobs available for Priority A and Priority B were processed. Qualification and outreach-draft jobs were then rerun against the enriched data.
+- Job state at handoff: 597 completed and 122 `manual_research_required`; zero queued, running, duplicate-open, or failed jobs.
+- Current operating metrics: 116 companies, 115 verified, 113 enriched, 46 ready for outreach review, 7 verified vendor portals, 0 verified decision makers, and 336 Tavily API requests persisted in job results.
+- Priority distribution remains 11 A, 104 B, and 1 C after the final qualification pass.
 
 ## Persistence guarantees verified
 
@@ -27,7 +28,7 @@ Current handoff commit: use `git rev-parse HEAD` after pulling the branch.
 
 ## Resume test
 
-The Tavily Cron job was paused in Supabase, an existing persisted job was observed unchanged, then Cron was re-enabled and the worker resumed. It completed the existing Enrichment job `1ff1e5a7-c23f-4221-8468-3e1bf811f440`, originally created at `2026-08-10 20:28:02 UTC`, without creating a new job. Total jobs remained 715 and duplicate open-job groups remained 0.
+The database worker Cron was paused in Supabase and the existing Daily Planner job `ca31dcfa-5187-4a5b-a04c-3a1a8d5cf127` was re-queued. Its queued state and pgmq message remained persisted while Cron was inactive. After Cron was re-enabled, the same job completed, the queue returned to zero, and total jobs remained 719 with zero duplicate open-job groups.
 
 ## Continue tomorrow
 
@@ -39,6 +40,6 @@ The Tavily Cron job was paused in Supabase, an existing persisted job was observ
 
 ## Non-blocking remaining work
 
-- 323 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found.
+- 122 records remain in manual research status, primarily where no sufficiently reliable public source or verified decision maker was found. Nine final lookups were moved to manual research after Tavily returned provider-limit status 432; the worker now treats this response as manual research instead of wasting retries.
 - No real decision-maker contacts, opportunities, or follow-ups have been entered yet.
 - Supabase leaked-password protection is an optional project setting still reported by the security advisor.
