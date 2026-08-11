@@ -134,7 +134,7 @@ These deferred dependencies are not production blockers for the current draft-an
 ## NEXT DEVICE RESUME
 
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
-2. Confirm the latest commit subject is `ALGAEU cross-device checkpoint`; do not reset, re-seed, or re-import production data.
+2. Confirm the latest commit subject is `ALGAEU master checkpoint before V8`; do not reset, re-seed, or re-import production data.
 3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
 4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. For the optional server-only cross-device audit, add `SUPABASE_SECRET_KEY` to the ignored `.env.local`; never put it in Git or any `NEXT_PUBLIC_` variable.
 5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
@@ -189,3 +189,15 @@ These deferred dependencies are not production blockers for the current draft-an
 - The Data API confirms the V5/V6 company/message columns and required intelligence-table shapes are not yet available. The migrations now reconcile any protected placeholder tables additively. Until both migrations are recorded remotely, V6 persistence is intentionally blocked while existing V4 workflows remain usable.
 - Local QA passes: TypeScript, ESLint, 57/57 tests, npm audit (0 vulnerabilities), and the 29-route Next.js production build. Supabase/Auth/current RLS continuity passes; V6 schema/RLS application verification remains pending the valid Personal Access Token.
 - Cross-device handoff is safe after the V6 commit is pushed to `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. The only required external action is replacing local `SUPABASE_ACCESS_TOKEN` with a valid Personal Access Token from Supabase Dashboard → Account → Access Tokens.
+
+## Master checkpoint before V8 — 2026-08-11
+
+- Scope is frozen at V6. V8, external research, Tavily, and external sending were not started.
+- Final checkpoint QA: automated tests PASS (57/57) and Next.js production build PASS (29 routes).
+- Read-only Supabase verification confirms the business source of truth is remote: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,939 agent jobs, 2,730 runs, and 692 manual-research jobs. Duplicate company/contact/job groups remain zero. Browser storage contains only the sidebar-collapse preference, never CRM data.
+- Supabase server access, Auth Admin access, ownership RLS continuity, and anonymous denial PASS. No production record was created, changed, deleted, reprocessed, or copied locally during this checkpoint.
+- Migration synchronization remains blocked and must not be reported as complete: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are committed but their required Data API shapes are not present remotely. The ignored local `SUPABASE_ACCESS_TOKEN` is not a valid `sbp_` Personal Access Token.
+- Vercel readiness PASS: `vercel.json`, Next.js production build, dynamic site URL fallback, protected routes, and the public Supabase client configuration are ready. Required hosted variables are only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL`. Server secrets, PATs, service-role credentials, and Tavily must not be added to Vercel.
+- Vercel CLI is not installed/linked on this device, so no deployment or share URL was created. Use the Vercel Dashboard to import `wallo-cyber/AJ-EDGE`, select branch `codex/aj-edge-mvp`, set Root Directory to `app`, add the three public variables, and deploy. Keep Supabase Auth enabled and add the final deployment URL to Supabase Auth URL Configuration.
+- Exact clean-device resume command (PowerShell): `git clone https://github.com/wallo-cyber/AJ-EDGE.git; Set-Location AJ-EDGE; git switch --track origin/codex/aj-edge-mvp; Set-Location app; npm ci`
+- After cloning, create ignored `app/.env.local` from `.env.example`, add the public Supabase values, optionally add the server-only audit secret, then run `npm test` and `npm run build`. Do not seed or re-import production data.
