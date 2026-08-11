@@ -78,6 +78,10 @@ npm run audit:resume
 
 See `PROJECT_STATUS.md` for the latest verified operational handoff.
 
+## Internal CRM completion
+
+The internal workflow is ready to operate without an external research provider: Today and Company 360 expose the next action; evidence-gated Contacts and Manual Research prepare verified decision-maker data; Outreach separates drafts, approval, and actual communication history; Pipeline connects communication, follow-up, and opportunity state; and Agent Center reports paused external research separately from healthy internal agents. External sending remains disabled. The current verified production baseline is 181 companies with no duplicate company, contact, or job groups.
+
 ## Real-world Pilot Phase 1
 
 The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.

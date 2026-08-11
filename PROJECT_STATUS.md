@@ -143,3 +143,15 @@ These deferred dependencies are not production blockers for the current draft-an
 8. Start stable mode with `npm start` after a successful build and open `http://localhost:3000`.
 9. External Tavily research remains paused and external sending remains disabled. Internal agents and Cron continue server-side without an open browser; pending external research stays persisted for later resume.
 10. Before new work, read this file and verify `git status`, the current Supabase project, queue counts, and the latest migration. Continue on `codex/aj-edge-mvp`; do not merge to `main` unless explicitly requested.
+
+## Internal completion before external search — 2026-08-11
+
+- Today remains the operating center: live signals, the ranked Next Best Action list, and the persisted Pilot Top 20 all lead to one evidence-safe human action.
+- Company 360 now supplies the complete company and vendor-registration record to its operational tabs, keeps one evidence-based Next Best Action, and confines the technical agent timeline to the Activity tab.
+- Contacts rejects a verified decision maker without an evidence source. No contact or decision maker was fabricated; production contacts remain 0.
+- Manual Research clearly separates available internal work, 692 persisted manual tasks, and paused external research. A paused provider is shown as a dependency, not a system failure.
+- Outreach now loads the complete persisted message set before stage classification, separates preparation, review, approved, and communication history, and only records Contacted/Replied through real direction-specific communication events. External sending remains disabled.
+- Pipeline adds consistent Arabic operational summaries for opportunities, linked follow-ups, source communication events, and active stages. Agent Center uses business-readable internal status labels and keeps external research separate.
+- Final verification: TypeScript PASS, ESLint PASS, tests PASS (33/33), production build PASS (29 routes), Supabase/Auth/RLS continuity audit PASS, 181 companies preserved, and duplicate company/contact/job groups remain zero.
+- Responsive public/login behavior was checked at desktop, tablet, and mobile sizes. The automation browser did not inherit the authenticated user session; protected workspaces were therefore verified through source, TypeScript, server-side data checks, and production rendering without bypassing Auth.
+- Production counts remain 181 companies, 0 contacts, 881 drafts, 1 follow-up, 0 opportunities, 1,939 jobs, and 692 manual-research jobs. External research is PAUSED and external sending is DISABLED.

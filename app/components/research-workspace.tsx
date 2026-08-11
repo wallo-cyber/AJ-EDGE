@@ -41,6 +41,7 @@ export function ResearchWorkspace() {
   };
 
   return <CRMPage title="البحث" description="مسار موحّد لاكتشاف الشركات واستكمال البيانات وحل مهام البحث اليدوي دون تشغيل أي مزود خارجي.">
+    <div className="grid gap-3 sm:grid-cols-3"><div className="crm-card p-3"><span className="crm-chip status-success">البحث الداخلي · جاهز</span><p className="mt-2 text-xs text-[#75664d]">تصنيف وترتيب والتحقق من البيانات المحفوظة.</p></div><div className="crm-card p-3"><span className="crm-chip status-warning">البحث اليدوي · {jobs.length} مهمة</span><p className="mt-2 text-xs text-[#75664d]">يُحل بالدليل أو بسبب واضح لتعذر التحقق.</p></div><div className="crm-card p-3"><span className="crm-chip status-neutral">البحث الخارجي · متوقف</span><p className="mt-2 text-xs text-[#75664d]">ليس فشلاً للنظام ولا يعطل بقية العمل.</p></div></div>
     <div className="flex gap-2 overflow-x-auto rounded-2xl border bg-[#f7efdf] p-2">{tabs.map(([id,label])=><Link key={id} href={`/research?tab=${id}`} className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold ${tab===id?'bg-[#2f2417] text-white':'bg-white text-[#6f6044]'}`}>{label}</Link>)}</div>
     {error&&<p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}{notice&&<p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
     {tab==='discovery'&&<CompanyDiscoveryWorkspace/>}

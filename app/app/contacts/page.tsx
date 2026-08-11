@@ -40,6 +40,10 @@ export default function ContactsPage() {
 
   const refresh = async () => { const result = await supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification }); setContacts(result.rows as Contact[]); setTotal(result.count); };
   const save = async (contact: Contact) => {
+    if (contact.decisionMaker && contact.verificationStatus === 'VERIFIED' && !contact.sourceUrl?.trim() && !contact.source?.trim()) {
+      setError('لا يمكن اعتماد صانع قرار كموثق دون مصدر أو رابط دليل.');
+      return;
+    }
     const company = companies.find(item => item.id === contact.companyId || item.companyName === contact.companyName);
     const payload = { ...contact, companyId: company?.id ?? contact.companyId, companyName: company?.companyName ?? contact.companyName };
     try { if (editing) await supabaseCrm.contacts.update(editing.id, payload); else await supabaseCrm.contacts.create(payload); setNotice('تم حفظ جهة الاتصال في Supabase.'); setShowForm(false); setEditing(null); await refresh(); }
