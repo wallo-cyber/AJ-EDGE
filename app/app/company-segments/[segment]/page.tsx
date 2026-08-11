@@ -1,0 +1,1 @@
+import { CompanySegmentWorkspace } from '@/components/company-segment-workspace'; export default async function Page({params}:{params:Promise<{segment:string}>}){const {segment}=await params;return <CompanySegmentWorkspace segment={segment}/>}
