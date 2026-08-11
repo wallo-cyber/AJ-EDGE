@@ -113,6 +113,10 @@ Campaign Center creates a separate persisted outreach draft for every selected c
 
 Company 360 includes **Network Intelligence**. Relationship rows are evidence-backed Supabase records with source/target company, relationship type, optional project/opportunity reference, evidence, source URL, confidence, verification timestamp, and status. A row without sufficient evidence is visibly **AI SUGGESTION — NOT VERIFIED** and is never treated as a fact. Migration `20260811183344_campaign_network_blocker_closure.sql` is already applied; do not re-seed or recreate existing data.
 
+## Smart Nurture
+
+`/email-center` is a manual-only operational inbox for campaigns, drafts, approvals, history, attachments, and evidence-safe nurture suggestions. Suggestions are saved to Supabase only when a real reason to contact exists. Open opportunities route to direct follow-up, recently-contacted companies wait, and companies without a verified email channel are excluded. External sending remains disabled.
+
 ## Real-world Pilot Phase 1
 
 The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.

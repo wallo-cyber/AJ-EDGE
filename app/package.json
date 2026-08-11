@@ -13,7 +13,7 @@
     "test:operational": "node --experimental-strip-types --test lib/operational/core.test.ts",
     "test:agents": "node --experimental-strip-types --test lib/agents/orchestrator.test.ts",
     "test:domain": "node --experimental-strip-types --test lib/domain/business.test.ts",
-    "test:intelligence": "node --experimental-strip-types --test lib/intelligence/core.test.ts lib/intelligence/v6.test.ts lib/intelligence/bd-core.test.ts",
+    "test:intelligence": "node --experimental-strip-types --test lib/intelligence/core.test.ts lib/intelligence/v6.test.ts lib/intelligence/bd-core.test.ts lib/intelligence/smart-nurture.test.ts",
     "test": "npm run test:discovery && npm run test:operational && npm run test:agents && npm run test:domain && npm run test:intelligence"
   },
   "dependencies": {

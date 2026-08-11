@@ -239,3 +239,9 @@ These deferred dependencies are not production blockers for the current draft-an
 - Campaign Center now creates and persists a distinct company-specific draft for every selected company. Review, edit/save, regenerate, approve, reject, and reset-to-draft are persisted; approval marks the company ready for manual send. External sending remains disabled.
 - Company 360 now includes Network Intelligence with type, project/opportunity reference, evidence, source URL, confidence, verification date, and verified/unverified filters. Unverified rows are explicitly labelled `AI SUGGESTION — NOT VERIFIED`; no relationship is inferred or written automatically.
 - Verification: TypeScript PASS, ESLint PASS, automated tests 61/61 PASS, production build PASS (33 routes), npm audit PASS (0 vulnerabilities), and Supabase anonymous-denial/RLS smoke test PASS. `company_relationships` has ownership RLS enabled and the new message columns are present remotely.
+
+## Smart Nurture operations — 2026-08-11
+
+- Added the manual-only Nurture decision layer and the `/email-center` workspace. It uses the existing companies, contacts, messages, campaigns, opportunities, communication history, and Sales Kit; no external sender or provider was introduced.
+- Migration `20260811184344_smart_nurture_operations.sql` is applied to production. It adds per-company nurture state and a protected, owner-scoped `nurture_suggestions` table. No business records were removed or reprocessed.
+- Conservative rules block contact without a verified email channel, prevent newsletter-style nurture for open opportunities, respect recent-contact cooldowns and paused/do-not-contact state, and never generate a message merely because time passed.
