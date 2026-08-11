@@ -9,6 +9,7 @@ ALGAEU is an Arabic RTL Business Development Platform for a contracting company.
 - All 11 agents run server-side in deterministic internal mode and continue when the browser or local computer is closed.
 - Tavily-backed external research is paused safely while the external search quota is unavailable. Persisted research tasks are retained for later resume.
 - External sending is disabled. Outreach remains draft and manual-approval only.
+- The Arabic RTL workspace includes a collapsible responsive navigation, a Daily Command Center with live quick actions, Company 360, operational vendor registration, and a dedicated paginated queue for manual research.
 
 ## Run from a new computer
 
@@ -31,6 +32,8 @@ ALGAEU is an Arabic RTL Business Development Platform for a contracting company.
    ```
 
    `app/.env.local` is ignored by Git. Never place a service-role key or any secret in frontend code. Tavily is currently paused and is not required to run the production application; its hosted secret remains server-side in Supabase Edge Function Secrets.
+
+   For a local server-only continuity audit, optionally add `SUPABASE_SECRET_KEY` to the same ignored file and run `npm run audit:resume`. The audit never exposes the key and performs no writes unless explicitly started with its resume flag.
 
 4. Start the application:
 
@@ -60,6 +63,7 @@ npm test
 npm audit --audit-level=high
 npm run build
 npm run test:supabase
+npm run audit:resume
 ```
 
 ## Persistence and safety

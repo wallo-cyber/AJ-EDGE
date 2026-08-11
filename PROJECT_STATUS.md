@@ -22,6 +22,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - Login and protected-route handling are operational.
 - Dashboard exposes live executive KPIs, conversion funnel, top targets, priorities, upcoming follow-ups, activity, and agent state.
 - Daily Center is a persistent task inbox with Today, Overdue, Priority A, Ready for Outreach, research, vendor, reply, and opportunity signals.
+- Daily Center now includes direct quick actions, upcoming-meeting visibility, and live Supabase counts without hardcoded business metrics.
 - Companies provides search, sorting, operational filters, pagination, safe archive/restore, bulk priority/research/export actions, and current Supabase data.
 - Company 360 provides Overview, Contacts, Decision Makers, Research, Vendor Registration, Outreach, Follow-ups, Meetings, Opportunities, and Activity information.
 - Contacts persists verification source, source URL, confidence, decision role, and contact score without auto-verifying unsupported details.
@@ -29,6 +30,8 @@ Final handoff: the latest commit containing this document on the branch above.
 - Search covers Companies, Contacts/Decision Makers, Opportunities, Meetings, Follow-ups, persisted tasks, and nested notes/results.
 - Reports include conversion and agent metrics plus filtered CSV export. Settings persists company profile, targets, thresholds, work limits, and follow-up timing.
 - Vendor Registration and System Status have dedicated protected routes; loading, empty, error, success, not-found, and application-error states are operational.
+- Manual Research has a dedicated protected, filtered, paginated workspace for all 692 retained external-research tasks; it never invokes Tavily and never deletes pending work.
+- The desktop navigation is collapsible, mobile navigation remains drawer-based, and the application metadata consistently uses `ALGAEU Business Development Platform`.
 - Arabic RTL and responsive login/auth boundaries were verified at desktop and 390px mobile width with no horizontal overflow.
 
 ## Agents and persistence
@@ -64,12 +67,13 @@ Final handoff: the latest commit containing this document on the branch above.
 - ESLint: PASS
 - Automated tests: PASS (28/28)
 - npm audit: PASS (0 vulnerabilities)
-- Production build: PASS (26 application routes)
+- Production build: PASS (27 application routes)
 - Supabase connectivity/RLS smoke: PASS
 - Server-side resume audit: PASS (`npm run audit:resume`) with Auth Admin access, anonymous data denial, complete application-table counts, and zero duplicate company/contact/job groups.
 - Auth and anonymous redirect: PASS
-- HTTP smoke: PASS for Login, Dashboard, Daily Center, Companies, Company 360, Discovery, Enrichment, Vendor Registration, Ready for Outreach, Agent Center, Contacts, Follow-ups, Meetings, Opportunities, Proposals, Contracts, Search, Reports, Export, Settings, and System Status.
+- HTTP smoke: PASS for Login, Dashboard, Daily Center, Companies, Company 360, Discovery, Enrichment, Vendor Registration, Ready for Outreach, Agent Center, Manual Research, Contacts, Follow-ups, Meetings, Opportunities, Proposals, Contracts, Search, Reports, Export, Settings, and System Status.
 - Local stable production server: `http://localhost:3000`
+- 2026-08-11 development batch: TypeScript PASS, ESLint PASS, automated tests PASS (28/28), npm audit PASS (0 vulnerabilities), Supabase server audit/RLS PASS, and production build PASS (27 routes).
 
 ## Cross-device handoff
 
