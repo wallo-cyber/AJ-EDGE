@@ -21,20 +21,28 @@ Date: 2026-08-11
 
 Migration: `app/supabase/migrations/20260811075453_algaeu_v1_core_consolidation.sql`
 
-The migration is additive, preserves existing records, creates `communication_events`, adds decision-maker/evidence/archive fields, normalizes opportunity stages, enables RLS, revokes anonymous access, and grants ownership-scoped authenticated access. It has **not been applied remotely on this device** because Supabase CLI has no Personal Access Token. `SUPABASE_SECRET_KEY` remains server-only and was not misused as a DDL credential.
+The migration is additive, preserves existing records, creates `communication_events`, adds decision-maker/evidence/archive fields, normalizes opportunity stages, enables RLS, revokes anonymous access, and grants ownership-scoped authenticated access. It was applied on 2026-08-11 to project `vbdgfrkthvurbqeofeyj` and recorded as remote migration `20260811075453`.
+
+Pre/post production counts are identical: 181 companies, 0 contacts, 882 messages, 881 Draft/Approved records, 1 follow-up, 0 opportunities, 1,919 jobs, 2,710 runs, 692 manual-research jobs, and 114 intelligence records. A real insert path was exercised inside a database transaction and rolled back; `communication_events` remained at 0 and test residue was 0.
 
 ## Verification
 
 - TypeScript: PASS
 - ESLint: PASS with two non-blocking hook dependency warnings
-- Automated tests: PASS, 28/28
+- Automated tests: PASS, 33/33, including centralized outreach-state rules
 - Production build: PASS, 29 routes
 - Server-side Supabase continuity audit: PASS
 - Auth Admin access: PASS
 - Anonymous data denial: PASS
+- npm audit: PASS, 0 vulnerabilities
 - Production data preserved: 181 companies, 0 contacts, 881 drafts, 1 follow-up, 1,919 jobs
 - Duplicate groups: companies 0, contacts 0, jobs 0
 
-## Release blocker
+## Final V1 verification
 
-Apply the committed migration to Supabase before deploying this code. Required local-only credential: `SUPABASE_ACCESS_TOKEN` (Supabase Personal Access Token) for the CLI. Do not place it in Git or client code.
+- Communication readiness is centralized and tested: generic email is not a decision maker; Approved requires a linked verified decision maker; Contacted requires OUTBOUND; Replied requires INBOUND.
+- Agent Center uses the same readiness definition and paginates recent runs/logs/errors instead of loading the full history.
+- Legacy local agent, enrichment, and ready-outreach components were removed after their routes were consolidated.
+- Supervisor/internal worker resume was idempotent and created no jobs. External research stayed paused; external sending stayed disabled.
+- Desktop 1440px and mobile 390px checks passed for public/login/protected-route behavior without overflow. Authenticated visual navigation was not bypassed; protected workspaces passed server-side/static/build verification.
+- No production contact, decision maker, communication event, opportunity, or other synthetic business record was created.

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 import { getSupabaseClient } from '../lib/supabase/client';
 import { AGENT_NAMES, agentRequiresCompany, type AgentName } from '../lib/agents/orchestrator';
+import { companyOutreachState } from '../lib/domain/business';
 
 const safe = (value: unknown) => String(value ?? '').trim();
 const INTERNAL_RESEARCH_AGENTS = new Set<AgentName>(['Verification', 'Enrichment', 'Decision Maker', 'Vendor Registration', 'Discovery adapter']);
@@ -18,11 +19,24 @@ export function AgentControlCenter() {
   const [companies, setCompanies] = useState<SimpleRow[]>([]);
   const [contacts, setContacts] = useState<SimpleRow[]>([]);
   const [intelligence, setIntelligence] = useState<SimpleRow[]>([]);
+  const [messages, setMessages] = useState<SimpleRow[]>([]);
+  const [events, setEvents] = useState<SimpleRow[]>([]);
   const [selected, setSelected] = useState('Supervisor');
   const [targetCompanyId, setTargetCompanyId] = useState('');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
-  const load = () => Promise.all(['agent_settings', 'agent_jobs', 'agent_runs', 'agent_logs', 'agent_errors', 'companies', 'contacts', 'company_intelligence'].map((table) => simpleCrud.list(table))).then(([a, b, c, d, e, f, g, h]) => { setSettings(a); setJobs(b); setRuns(c); setLogs(d); setErrors(e); setCompanies(f); setContacts(g); setIntelligence(h); }).finally(() => setLoading(false));
+  const load = useCallback(() => Promise.all([
+    simpleCrud.page('agent_settings', 1, 50),
+    simpleCrud.page('agent_jobs', 1, 2500, { order: 'created_at' }),
+    simpleCrud.page('agent_runs', 1, 100, { order: 'created_at' }),
+    simpleCrud.page('agent_logs', 1, 100, { column: 'agent_name', value: selected, order: 'created_at' }),
+    simpleCrud.page('agent_errors', 1, 250, { order: 'created_at' }),
+    simpleCrud.page('companies', 1, 500, { order: 'lead_score' }),
+    simpleCrud.page('contacts', 1, 500, { order: 'created_at' }),
+    simpleCrud.page('company_intelligence', 1, 500, { order: 'created_at' }),
+    simpleCrud.page('messages', 1, 1000, { order: 'created_at' }),
+    simpleCrud.page('communication_events', 1, 1000, { order: 'occurred_at' }),
+  ]).then(([a,b,c,d,e,f,g,h,i,j]) => { setSettings(a.rows); setJobs(b.rows); setRuns(c.rows); setLogs(d.rows); setErrors(e.rows); setCompanies(f.rows); setContacts(g.rows); setIntelligence(h.rows); setMessages(i.rows); setEvents(j.rows); }).finally(() => setLoading(false)), [selected]);
   useEffect(() => {
     let timer: number | undefined;
     let cancelled = false;
@@ -35,10 +49,10 @@ export function AgentControlCenter() {
       cancelled = true;
       if (timer) window.clearInterval(timer);
     };
-  }, []);
+  }, [load]);
   const global = settings.find((item) => item.agent_name === '_global');
   const today = new Date().toISOString().slice(0, 10);
-  const readyForOutreach = companies.filter((company) => ['A', 'B'].includes(safe(company.priority)) && Boolean(company.general_email || company.email || company.general_phone || company.phone || contacts.some((contact) => contact.company_id === company.id))).length;
+  const readyForOutreach = companies.filter((company) => ['DRAFT_READY', 'APPROVED'].includes(companyOutreachState(company, contacts, messages, events))).length;
   const operationalMetrics = [
     ['Queued', jobs.filter((job) => job.status === 'queued').length], ['Running', jobs.filter((job) => job.status === 'running').length], ['Completed', jobs.filter((job) => job.status === 'completed').length], ['Failed', jobs.filter((job) => job.status === 'failed').length],
     ['Enriched', new Set(intelligence.map((row) => safe(row.company_id)).filter(Boolean)).size], ['Decision Makers Found', contacts.filter((contact) => contact.decision_maker === true && contact.verification_status === 'VERIFIED').length], ['Vendor Portals Found', companies.filter((company) => safe(company.vendor_registration_url)).length], ['Ready for Outreach', readyForOutreach], ['Needs Manual Research', jobs.filter((job) => job.status === 'manual_research_required').length],

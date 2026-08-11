@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps -- load is intentionally keyed by page in this compact client workspace. */
 import Link from 'next/link';
 import { useEffect,useState } from 'react';
 import { CRMPage } from '../../components/crm-shell';

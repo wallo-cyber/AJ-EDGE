@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/exhaustive-deps -- load is intentionally keyed by route tab and page. */
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';

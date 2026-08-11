@@ -1,201 +1,71 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ContactForm } from '../../components/contact-form';
 import { CRMPage } from '../../components/crm-shell';
-import { type Company } from '../../lib/company-store';
-import { type Contact, type ContactDepartment, type ContactDecisionLevel } from '../../lib/contact-store';
-import { filterItems, searchItems, sortItems } from '../../lib/crm/search';
+import type { Company } from '../../lib/company-store';
+import type { Contact, ContactDepartment, ContactDecisionLevel } from '../../lib/contact-store';
 import { supabaseCrm } from '../../lib/supabase/crm';
+
+const ALL = 'الكل';
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingContactId, setEditingContactId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('الكل');
-  const [departmentFilter, setDepartmentFilter] = useState<ContactDepartment | 'الكل'>('الكل');
-  const [decisionFilter, setDecisionFilter] = useState<ContactDecisionLevel | 'الكل'>('الكل');
-  const [verificationFilter, setVerificationFilter] = useState('الكل');
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [search, setSearch] = useState('');
+  const [companyId, setCompanyId] = useState(ALL);
+  const [department, setDepartment] = useState<ContactDepartment | typeof ALL>(ALL);
+  const [decisionLevel, setDecisionLevel] = useState<ContactDecisionLevel | typeof ALL>(ALL);
+  const [verification, setVerification] = useState(ALL);
+  const [editing, setEditing] = useState<Contact | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [selected, setSelected] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [notice, setNotice] = useState('');
 
+  useEffect(() => { void supabaseCrm.companies.list().then(rows => setCompanies(rows as Company[])).catch(reason => setError(reason.message)); }, []);
   useEffect(() => {
-    void Promise.all([supabaseCrm.contacts.list(), supabaseCrm.companies.list()]).then(([contactItems, companyItems]) => {
-      setContacts(contactItems as Contact[]);
-      setCompanies(companyItems as Company[]);
-    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
-  }, []);
+    const timer = window.setTimeout(() => {
+      setLoading(true); setError('');
+      void supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification })
+        .then(result => { setContacts(result.rows as Contact[]); setTotal(result.count); })
+        .catch(reason => setError(reason.message)).finally(() => setLoading(false));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [companyId, decisionLevel, department, page, search, verification]);
 
-  const filteredContacts = useMemo(() => {
-    const searched = searchItems(contacts, searchTerm, ['fullName', 'companyName', 'position', 'email']);
-    const filtered = filterItems(searched, {
-      companyName: companyFilter === 'الكل' ? '' : companyFilter,
-      department: departmentFilter === 'الكل' ? '' : departmentFilter,
-      decisionLevel: decisionFilter === 'الكل' ? '' : decisionFilter,
-    });
-    const verified = (filtered as Contact[]).filter((contact) => !contact.archivedAt && (verificationFilter === 'الكل' || contact.verificationStatus === verificationFilter));
-    return sortItems(verified, 'fullName' as keyof Contact, 'asc');
-  }, [companyFilter, contacts, decisionFilter, departmentFilter, searchTerm, verificationFilter]);
-
-  const openNewForm = () => {
-    setEditingContactId(null);
-    setIsFormOpen(true);
-    setSelectedContact(null);
+  const refresh = async () => { const result = await supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification }); setContacts(result.rows as Contact[]); setTotal(result.count); };
+  const save = async (contact: Contact) => {
+    const company = companies.find(item => item.id === contact.companyId || item.companyName === contact.companyName);
+    const payload = { ...contact, companyId: company?.id ?? contact.companyId, companyName: company?.companyName ?? contact.companyName };
+    try { if (editing) await supabaseCrm.contacts.update(editing.id, payload); else await supabaseCrm.contacts.create(payload); setNotice('تم حفظ جهة الاتصال في Supabase.'); setShowForm(false); setEditing(null); await refresh(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حفظ جهة الاتصال.'); }
   };
+  const archive = async (contact: Contact) => { if (!window.confirm('أرشفة جهة الاتصال مع الاحتفاظ بسجلها؟')) return; try { await supabaseCrm.contacts.update(contact.id, { ...contact, archivedAt: new Date().toISOString() }); setNotice('تمت الأرشفة دون حذف.'); await refresh(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذرت الأرشفة.'); } };
+  const pages = Math.max(1, Math.ceil(total / 25));
 
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setEditingContactId(null);
-    setSelectedContact(null);
-  };
+  return <CRMPage title="جهات الاتصال" description="الأشخاص المرتبطون بالشركات، مع حالة مستقلة لصانع القرار والتحقق ومصدر الدليل." action={<button onClick={() => { setEditing(null); setShowForm(true); }} className="rounded-full bg-[#2f2417] px-5 py-3 text-sm font-semibold text-white">إضافة جهة اتصال</button>}>
+    {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}{notice && <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
+    <div className="crm-card grid gap-3 p-4 md:grid-cols-5">
+      <input value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="بحث بالاسم أو البريد أو المنصب" className="rounded-xl border p-2.5" />
+      <select value={companyId} onChange={event => { setCompanyId(event.target.value); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>الشركة: الكل</option>{companies.map(company => <option key={company.id} value={company.id}>{company.companyName}</option>)}</select>
+      <select value={department} onChange={event => { setDepartment(event.target.value as ContactDepartment | typeof ALL); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>القسم: الكل</option>{['الإدارة العامة','المشاريع','المشتريات','الصيانة','التشغيل','العقود','الهندسة','المالية'].map(value => <option key={value}>{value}</option>)}</select>
+      <select value={decisionLevel} onChange={event => { setDecisionLevel(event.target.value as ContactDecisionLevel | typeof ALL); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>مستوى القرار: الكل</option>{['Primary','Influencer','Procurement','Projects','Engineering','Management','Unknown'].map(value => <option key={value}>{value}</option>)}</select>
+      <select value={verification} onChange={event => { setVerification(event.target.value); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>التحقق: الكل</option><option>VERIFIED</option><option>PARTIALLY_VERIFIED</option><option>UNVERIFIED</option></select>
+    </div>
+    {showForm && <ContactForm initialContact={editing ?? undefined} companyId={editing?.companyId} companyName={editing?.companyName} onSubmit={save} onCancel={() => { setShowForm(false); setEditing(null); }} submitLabel={editing ? 'حفظ التعديلات' : 'إضافة جهة اتصال'} />}
+    {loading ? <div className="crm-empty animate-pulse">جارٍ تحميل جهات الاتصال...</div> : contacts.length === 0 ? <div className="crm-empty">لا توجد جهات اتصال مطابقة. لا يُنشئ النظام أشخاصاً أو صناع قرار دون دليل.</div> : <>
+      <div className="hidden overflow-x-auto rounded-2xl border bg-white md:block"><table className="min-w-full text-right text-sm"><thead><tr><th className="p-3">الاسم</th><th className="p-3">الشركة</th><th className="p-3">المنصب</th><th className="p-3">صانع قرار</th><th className="p-3">التحقق</th><th className="p-3">الإجراءات</th></tr></thead><tbody>{contacts.map(contact => <tr key={contact.id} className="border-t"><td className="p-3 font-bold">{contact.fullName}</td><td className="p-3">{contact.companyName || '—'}</td><td className="p-3">{contact.position || '—'}</td><td className="p-3">{contact.decisionMaker ? 'نعم' : 'لا'}</td><td className="p-3"><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></td><td className="p-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></td></tr>)}</tbody></table></div>
+      <div className="grid gap-3 md:hidden">{contacts.map(contact => <article key={contact.id} className="crm-card p-4"><div className="flex items-start justify-between gap-2"><div><strong>{contact.fullName}</strong><p className="text-xs text-[#75664d]">{contact.companyName || 'بدون شركة'} · {contact.position || 'بدون منصب'}</p></div><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></div><p className="mt-3 text-sm">صانع قرار موثق: {contact.decisionMaker && contact.verificationStatus === 'VERIFIED' ? 'نعم' : 'لا'}</p><div className="mt-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></div></article>)}</div>
+    </>}
+    <div className="flex items-center justify-between text-sm"><span>{total} جهة اتصال · صفحة {page} من {pages}</span><div className="flex gap-2"><button disabled={page <= 1} onClick={() => setPage(value => value - 1)} className="rounded-xl border px-4 py-2 disabled:opacity-40">السابق</button><button disabled={page >= pages} onClick={() => setPage(value => value + 1)} className="rounded-xl border px-4 py-2 disabled:opacity-40">التالي</button></div></div>
+    {selected && <section className="crm-card p-5"><div className="flex justify-between"><h3 className="font-bold">{selected.fullName}</h3><button onClick={() => setSelected(null)}>إغلاق</button></div><dl className="mt-4 grid gap-3 text-sm md:grid-cols-2"><div><dt className="text-[#75664d]">البريد</dt><dd dir="ltr">{selected.email || '—'}</dd></div><div><dt className="text-[#75664d]">الجوال</dt><dd dir="ltr">{selected.mobile || '—'}</dd></div><div><dt className="text-[#75664d]">المصدر</dt><dd>{selected.source || '—'}</dd></div><div><dt className="text-[#75664d]">الثقة</dt><dd>{selected.confidence || 0}%</dd></div></dl></section>}
+  </CRMPage>;
+}
 
-  const handleSubmit = async (contact: Contact) => {
-    const selectedCompany = companies.find((company) => company.id === contact.companyId || company.companyName === contact.companyName);
-    const linkedContact = { ...contact, companyId: selectedCompany?.id ?? contact.companyId, companyName: selectedCompany?.companyName ?? contact.companyName };
-    setError(''); setSuccess('');
-    try {
-      if (editingContactId) {
-        const updated = await supabaseCrm.contacts.update(editingContactId, linkedContact);
-        setContacts((items) => items.map((item) => item.id === editingContactId ? updated as Contact : item));
-      } else {
-        const created = await supabaseCrm.contacts.create(linkedContact);
-        setContacts((items) => [created as Contact, ...items]);
-      }
-      setSuccess('تم حفظ جهة الاتصال.'); closeForm();
-    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحفظ.'); }
-  };
-
-  const handleArchive = async (contact: Contact) => {
-    if (!window.confirm('أرشفة جهة الاتصال مع الاحتفاظ بسجلها؟')) return;
-    try { const updated = await supabaseCrm.contacts.update(contact.id, { ...contact, archivedAt: new Date().toISOString() }); setContacts((items) => items.map((item) => item.id === contact.id ? updated as Contact : item)); setSuccess('تمت الأرشفة دون حذف.'); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذرت الأرشفة.'); }
-  };
-
-  const handleEdit = (contact: Contact) => {
-    setEditingContactId(contact.id);
-    setSelectedContact(contact);
-    setIsFormOpen(true);
-  };
-
-  const editingContact = contacts.find((contact) => contact.id === editingContactId) ?? selectedContact ?? undefined;
-
-  return (
-    <CRMPage
-      title="جهات الاتصال"
-      description="إدارة جهات الاتصال المرتبطة بالشركات المستهدفة والموقعين الرئيسيين في الأعمال."
-      action={
-        <button onClick={openNewForm} className="rounded-full bg-[#2f2417] px-5 py-3 text-sm font-semibold text-[#fef8ec]">إضافة جهة اتصال</button>
-      }
-    >
-      {error ? <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">{error}</div> : null}
-      {success ? <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-700">{success}</div> : null}
-      {loading ? <div className="rounded-2xl bg-white p-6 text-center text-[#6f6044]">جارٍ تحميل جهات الاتصال...</div> : null}
-      <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
-        <div className="grid gap-3 md:grid-cols-5">
-          <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="بحث بالاسم أو البريد أو المنصب" className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
-          <select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
-            <option value="الكل">الشركة: الكل</option>
-            {companies.map((company) => <option key={company.id} value={company.companyName}>{company.companyName}</option>)}
-          </select>
-          <select value={departmentFilter} onChange={(event) => setDepartmentFilter(event.target.value as ContactDepartment | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
-            <option value="الكل">القسم: الكل</option>
-            <option value="الإدارة العامة">الإدارة العامة</option>
-            <option value="المشاريع">المشاريع</option>
-            <option value="المشتريات">المشتريات</option>
-            <option value="الصيانة">الصيانة</option>
-            <option value="التشغيل">التشغيل</option>
-            <option value="العقود">العقود</option>
-            <option value="الهندسة">الهندسة</option>
-            <option value="المالية">المالية</option>
-          </select>
-          <select value={decisionFilter} onChange={(event) => setDecisionFilter(event.target.value as ContactDecisionLevel | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
-            <option value="الكل">مستوى القرار: الكل</option>
-            <option value="Primary">Primary</option>
-            <option value="Influencer">Influencer</option>
-            <option value="Procurement">Procurement</option>
-            <option value="Projects">Projects</option>
-            <option value="Engineering">Engineering</option>
-            <option value="Management">Management</option>
-            <option value="Unknown">Unknown</option>
-          </select>
-          <select value={verificationFilter} onChange={(event) => setVerificationFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
-            <option value="الكل">التحقق: الكل</option>
-            <option value="VERIFIED">VERIFIED</option>
-            <option value="PARTIALLY_VERIFIED">PARTIALLY_VERIFIED</option>
-            <option value="UNVERIFIED">UNVERIFIED</option>
-          </select>
-        </div>
-      </div>
-
-      {isFormOpen ? <ContactForm initialContact={editingContact} companyId={editingContact?.companyId} companyName={editingContact?.companyName} onSubmit={handleSubmit} onCancel={closeForm} submitLabel={editingContact ? 'حفظ التعديلات' : 'إضافة جهة اتصال'} /> : null}
-
-      <div className="overflow-x-auto rounded-[24px] border border-[#ead9b3] bg-white p-3">
-        <table className="min-w-full text-right text-sm text-[#2f2417]">
-          <thead>
-            <tr className="border-b border-[#ead9b3] text-[#9a7b2f]">
-              <th className="px-3 py-3">الاسم</th>
-              <th className="px-3 py-3">الشركة</th>
-              <th className="px-3 py-3">القسم</th>
-              <th className="px-3 py-3">مستوى القرار</th>
-              <th className="px-3 py-3">الجوال</th>
-              <th className="px-3 py-3">المصدر</th>
-              <th className="px-3 py-3">الثقة</th>
-              <th className="px-3 py-3">التحقق</th>
-              <th className="px-3 py-3">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredContacts.length === 0 ? (
-              <tr><td colSpan={9} className="px-3 py-6 text-center text-[#6f6044]">لا توجد جهات اتصال تطابق هذه المعايير بعد.</td></tr>
-            ) : filteredContacts.map((contact) => (
-              <tr key={contact.id} className="border-b border-[#f4ebd7]">
-                <td className="px-3 py-3">
-                  <div className="font-semibold">{contact.fullName}</div>
-                  <div className="mt-1 text-xs text-[#6f6044]">{contact.position || '—'}</div>
-                </td>
-                <td className="px-3 py-3">{contact.companyName || '—'}</td>
-                <td className="px-3 py-3">{contact.department}</td>
-                <td className="px-3 py-3">{contact.decisionLevel}</td>
-                <td className="px-3 py-3">{contact.mobile || '—'}</td>
-                <td className="px-3 py-3">{contact.source || '—'}</td>
-                <td className="px-3 py-3">{contact.confidence || 0}%</td>
-                <td className="px-3 py-3"><span className={`crm-chip ${contact.verificationStatus === 'VERIFIED' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{contact.verificationStatus || 'UNVERIFIED'}</span></td>
-                <td className="px-3 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setSelectedContact(contact)} className="rounded-full border border-[#d8c08d] bg-[#fdf8ee] px-3 py-1.5 text-xs font-semibold text-[#6f6044]">عرض</button>
-                    <button onClick={() => handleEdit(contact)} className="rounded-full border border-[#d8c08d] bg-[#f8efe0] px-3 py-1.5 text-xs font-semibold text-[#2f2417]">تعديل</button>
-                    <button onClick={() => void handleArchive(contact)} className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-3 py-1.5 text-xs font-semibold text-[#9a4b2d]">أرشفة</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {selectedContact ? (
-        <div className="rounded-[24px] border border-[#ead9b3] bg-white p-5">
-          <h3 className="text-lg font-semibold text-[#2f2417]">تفاصيل جهة الاتصال</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <div><p className="text-sm text-[#9a7b2f]">الاسم</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.fullName}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">الشركة</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.companyName}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">المنصب</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.position || '—'}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">القسم</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.department}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">الجوال</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.mobile || '—'}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">البريد</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.email || '—'}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">LinkedIn</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.linkedIn || '—'}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">طريقة التواصل</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.preferredContactMethod}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">المصدر</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.source || '—'}</p></div>
-            <div><p className="text-sm text-[#9a7b2f]">الثقة والتحقق</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.confidence || 0}% · {selectedContact.verificationStatus || 'Needs Verification'}</p></div>
-            <div className="md:col-span-2"><p className="text-sm text-[#9a7b2f]">رابط المصدر</p>{selectedContact.sourceUrl ? <a href={selectedContact.sourceUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all font-semibold text-[#8d6926] underline">فتح المصدر</a> : <p className="mt-1 font-semibold">—</p>}</div>
-            <div className="md:col-span-2"><p className="text-sm text-[#9a7b2f]">ملاحظات</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.notes || '—'}</p></div>
-          </div>
-        </div>
-      ) : null}
-    </CRMPage>
-  );
+function Actions({ contact, view, edit, archive }: { contact: Contact; view: (contact: Contact) => void; edit: (contact: Contact) => void; archive: (contact: Contact) => Promise<void> }) {
+  return <div className="flex flex-wrap gap-2"><button onClick={() => view(contact)} className="rounded-lg border px-3 py-1.5">عرض</button><button onClick={() => edit(contact)} className="rounded-lg border px-3 py-1.5">تعديل</button><button onClick={() => void archive(contact)} className="rounded-lg border px-3 py-1.5 text-red-700">أرشفة</button></div>;
 }

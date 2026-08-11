@@ -15,10 +15,14 @@ export default function SystemStatusPage() {
   useEffect(() => {
     void Promise.all([
       getSupabaseClient().auth.getUser(),
-      ...['agent_settings', 'agent_jobs', 'agent_runs', 'agent_errors', 'companies'].map((table) => simpleCrud.list(table)),
+      simpleCrud.page('agent_settings', 1, 50),
+      simpleCrud.page('agent_jobs', 1, 2500, { order: 'created_at' }),
+      simpleCrud.page('agent_runs', 1, 100, { order: 'created_at' }),
+      simpleCrud.page('agent_errors', 1, 250, { order: 'created_at' }),
+      simpleCrud.page('companies', 1, 500, { order: 'created_at' }),
     ]).then(([user, settings, jobs, runs, errors, companies]) => {
       setAuth(Boolean(user.data.user));
-      setData({ settings, jobs, runs, errors, companies });
+      setData({ settings: settings.rows, jobs: jobs.rows, runs: runs.rows, errors: errors.rows, companies: companies.rows });
     }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, []);
   const jobs = useMemo(() => data.jobs ?? [], [data.jobs]);

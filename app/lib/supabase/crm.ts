@@ -132,6 +132,19 @@ export const supabaseCrm = {
   },
   contacts: {
     list: () => list('contacts', contactFromRow) as Promise<Contact[]>,
+    page: async (page = 1, pageSize = 25, filters?: { search?: string; companyId?: string; department?: string; decisionLevel?: string; verificationStatus?: string }) => {
+      const from = Math.max(0, page - 1) * pageSize;
+      let query = getSupabaseClient().from('contacts').select('*', { count: 'exact' }).is('archived_at', null);
+      const search = filters?.search?.trim().replaceAll(',', ' ');
+      if (search) query = query.or(`full_name.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,position.ilike.%${search}%`);
+      if (filters?.companyId) query = query.eq('company_id', filters.companyId);
+      if (filters?.department) query = query.eq('department', filters.department);
+      if (filters?.decisionLevel) query = query.eq('decision_level', filters.decisionLevel);
+      if (filters?.verificationStatus) query = query.eq('verification_status', filters.verificationStatus);
+      const { data, error, count } = await query.order('full_name', { ascending: true }).range(from, from + pageSize - 1);
+      throwIfError(error);
+      return { rows: (data ?? []).map(row => contactFromRow(row as DbRow)), count: count ?? 0 };
+    },
     create: (item: Partial<Contact>) => insert('contacts', contactToRow(item), contactFromRow),
     update: (id: string, item: Partial<Contact>) => update('contacts', id, contactToRow(item), contactFromRow),
     remove: (id: string) => remove('contacts', id),

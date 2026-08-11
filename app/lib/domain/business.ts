@@ -23,7 +23,7 @@ export function companyOutreachState(company: BusinessRow, contacts: BusinessRow
   const ownEvents = events.filter((row) => row.company_id === company.id && !row.archived_at);
   if (ownEvents.some((row) => value(row.direction) === 'INBOUND')) return 'REPLIED';
   if (ownEvents.some((row) => value(row.direction) === 'OUTBOUND')) return 'CONTACTED';
-  if (ownDrafts.some((row) => value(row.status) === 'Approved')) return 'APPROVED';
+  if (ownDrafts.some((row) => value(row.status) === 'Approved' && row.contact_id && ownContacts.some((contact) => contact.id === row.contact_id && isVerifiedDecisionMaker(contact)))) return 'APPROVED';
   if (ownDrafts.some((row) => value(row.status) === 'Draft' && row.contact_id && ownContacts.some((contact) => contact.id === row.contact_id && isVerifiedDecisionMaker(contact)))) return 'DRAFT_READY';
   if (ownContacts.some(isVerifiedDecisionMaker)) return 'DECISION_MAKER_VERIFIED';
   if (ownContacts.length === 0) return 'CONTACT_NEEDED';
@@ -44,4 +44,3 @@ export function canonicalOpportunityStage(stage: unknown): OpportunityStage {
   if (normalized.includes('MEETING') || normalized.includes('QUALIFIED')) return 'QUALIFIED';
   return 'IDENTIFIED';
 }
-

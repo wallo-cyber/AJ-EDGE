@@ -11,8 +11,12 @@ Branch: `codex/aj-edge-mvp`
 - V1 application consolidation is implemented locally: eight primary workspaces, centralized business states, evidence-based research resolution, verified decision-maker gating, communication events, canonical pipeline stages, ranked Today actions, invite-only login, targeted manual agent runs, and focused/paginated queries.
 - TypeScript passes, 28/28 automated tests pass, and the production build passes with 29 routes.
 - A read-only server audit confirms the production state remains unchanged: 181 companies, 0 contacts, 881 drafts, 1 follow-up, 1,919 jobs, and zero duplicate company/contact/job groups. External research and external sending remain disabled.
-- The additive migration `20260811075453_algaeu_v1_core_consolidation.sql` is committed-ready but is not applied remotely because this device lacks a Supabase Personal Access Token for CLI DDL. The existing server secret is intentionally not used for schema administration.
-- Do not deploy the consolidated application until that migration has been applied and its RLS policies verified. See `audit/ALGAEU_V1_IMPLEMENTATION.md`.
+- The additive migration `20260811075453_algaeu_v1_core_consolidation.sql` is applied to project `vbdgfrkthvurbqeofeyj` and recorded in remote migration history. No destructive statement was present.
+- Pre/post counts are identical: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,919 jobs, 2,710 runs, and 114 intelligence records. The transactional Communication Event test rolled back with zero residue.
+- Communication Events have RLS enabled, explicit ownership policies for authenticated users, no anonymous table privileges, and no public anonymous policies. Security Advisor reports only the existing optional leaked-password-protection warning.
+- V1 verification: TypeScript PASS, ESLint PASS, automated tests PASS (33/33), npm audit PASS (0 vulnerabilities), production build PASS (29 routes), server access/Auth Admin/anonymous denial PASS.
+- Browser verification: public/login and protected-route redirect PASS at 1440px and 390px with no horizontal overflow. Authenticated internal screens were verified through server-side data checks, static implementation, TypeScript, tests, and production build; browser credentials were not bypassed.
+- Supervisor and the internal worker were run idempotently after migration: zero new jobs, zero reprocessing, zero queued/running/failed jobs, and no changes to production counts. External research remains paused and external sending remains disabled.
 
 Final handoff: the latest commit containing this document on the branch above.
 
