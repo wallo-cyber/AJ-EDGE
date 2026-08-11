@@ -101,6 +101,15 @@ Final handoff: the latest commit containing this document on the branch above.
 
 These deferred dependencies are not production blockers for the current draft-and-manual-approval workflow.
 
+## V2 UX consolidation — 2026-08-11
+
+- Primary navigation now follows the eight-step business flow: Today, Companies, Contacts, Research & Enrichment, Outreach, Pipeline, Agents, and Reports. Search, Export, Settings, and System Status remain secondary; legacy routes remain compatible.
+- Today is the executive action inbox with seven live clickable signals and at most 20 contextual actions. Reports is the analytics workspace with decision KPIs, a conversion funnel, business breakdowns, filters, and CSV export.
+- Shared UI tokens now provide consistent action/status hierarchy, RTL-safe LTR data, compact cards, and mobile table/card behavior. Navigation collapse is the only new local UI preference and is not business data.
+- Login visual QA passed at 1440, 1024, 768, and 390 pixels with RTL and no horizontal overflow. Authenticated surfaces passed TypeScript, production rendering, responsive source review, and server-side Supabase checks; the automation browser did not inherit the signed-in session.
+- TypeScript PASS, ESLint PASS, automated tests PASS (33/33), production build PASS (27 application routes), server Supabase/Auth/RLS audit PASS, and duplicate company/contact/job groups remain zero.
+- Data is unchanged: 181 active companies, 881 drafts, 1 follow-up, 1,919 jobs, and 2,710 runs. All 11 internal agents remain enabled and unpaused. External research is PAUSED and external sending is DISABLED.
+
 ## NEXT DEVICE RESUME
 
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.

@@ -78,6 +78,12 @@ npm run audit:resume
 
 See `PROJECT_STATUS.md` for the latest verified operational handoff.
 
+## V2 user experience
+
+ALGAEU now opens into **Today**, a compact action inbox fed by persisted Supabase data. It explains what needs attention, why it matters, who is involved, and where to act next. The primary navigation follows the business-development journey; administrative tools are secondary. Reports is the analytics destination and keeps Ready, Contacted, Replied, and Opportunity aligned with the domain rules. The responsive shell uses a drawer on small screens, compact KPI grids, card fallbacks for data tables, correct RTL, and isolated LTR rendering for technical values.
+
+External research remains paused and external sending remains disabled. No V2 interface action changes those safety controls.
+
 ## V1 consolidated workspaces
 
 The primary product flow is now: Today → Companies → Contacts → Research → Outreach → Pipeline → Agents → Reports. Legacy deep links redirect to the matching workspace tab. The additive V1 migration documented in `audit/ALGAEU_V1_IMPLEMENTATION.md` is applied to production; it provides the protected communication-event ledger and supporting decision-maker, pipeline, and research fields.
