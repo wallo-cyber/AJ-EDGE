@@ -38,7 +38,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - The Tavily worker Cron is inactive. Research-capable agents execute safe internal checks and record missing evidence as manual research without calling Tavily.
 - External sending remains disabled; outreach is draft plus manual approval only.
 - Persisted agent state: 1,919 jobs, 2,710 runs, 4,814 logs, and 84 historical error records.
-- Job state: 692 `manual_research_required`, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
+- Job state: 1,227 completed, 692 `manual_research_required`, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
 - Each job retains owner, agent, status, payload, result, attempts, maximum attempts, schedule, timestamps, and error information. Runs and logs remain available after browser or computer shutdown.
 
 ## Queue resume and duplicate protection
@@ -47,6 +47,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - The production supervisor pass processed all eligible internal work, returned PGMQ to zero, and left no failed jobs.
 - A supervisor tick after completion created zero new work. The database contains zero duplicate idempotency-key groups.
 - Company-scoped work is re-enqueued only when relevant persisted business inputs change. Daily Planner and Discovery work are date-guarded.
+- Cross-device server resume was re-verified on 2026-08-11 using the local-only Supabase secret: the supervisor created no new jobs, the worker had nothing to drain, all 11 internal agents remained enabled and unpaused, and the persisted counts stayed unchanged.
 
 ## Database, Auth, and security
 
@@ -65,6 +66,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - npm audit: PASS (0 vulnerabilities)
 - Production build: PASS (26 application routes)
 - Supabase connectivity/RLS smoke: PASS
+- Server-side resume audit: PASS (`npm run audit:resume`) with Auth Admin access, anonymous data denial, complete application-table counts, and zero duplicate company/contact/job groups.
 - Auth and anonymous redirect: PASS
 - HTTP smoke: PASS for Login, Dashboard, Daily Center, Companies, Company 360, Discovery, Enrichment, Vendor Registration, Ready for Outreach, Agent Center, Contacts, Follow-ups, Meetings, Opportunities, Proposals, Contracts, Search, Reports, Export, Settings, and System Status.
 - Local stable production server: `http://localhost:3000`
@@ -88,7 +90,7 @@ These deferred dependencies are not production blockers for the current draft-an
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
 2. Confirm the latest commit subject is `ALGAEU cross-device checkpoint`; do not reset, re-seed, or re-import production data.
 3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
-4. Add only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. Never put the Tavily key or a Supabase service-role key in Git or frontend variables.
+4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. For the optional server-only cross-device audit, add `SUPABASE_SECRET_KEY` to the ignored `.env.local`; never put it in Git or any `NEXT_PUBLIC_` variable.
 5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
 6. Do not apply destructive migrations. The committed migration directory contains the complete production migration history, including the already-applied `enable_pg_net_for_tavily_worker` migration.
 7. Resume checks with `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run test:supabase`, and `npm run build` before changing code.

@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:supabase": "node scripts/supabase-smoke.mjs",
+    "audit:resume": "node scripts/server-resume-audit.mjs",
     "test:discovery": "node --experimental-strip-types --test lib/discovery/core.test.ts",
     "test:operational": "node --experimental-strip-types --test lib/operational/core.test.ts",
     "test:agents": "node --experimental-strip-types --test lib/agents/orchestrator.test.ts",
