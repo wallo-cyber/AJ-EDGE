@@ -40,6 +40,7 @@ export type Contact = {
   fullName: string;
   position: string;
   department: string;
+  phone: string;
   mobile: string;
   email: string;
   linkedIn: string;

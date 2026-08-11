@@ -8,6 +8,18 @@
 - Daily Center is capped at the top 10 actions. External search remains paused and external sending remains disabled.
 - QA: TypeScript PASS, ESLint PASS, tests PASS (61/61), npm audit PASS, production build PASS, Supabase connectivity/RLS smoke PASS.
 
+## Core feature completion checkpoint (2026-08-11)
+
+- Company Segments were completed on one Companies source only for Developers, Factories, Industrial, Main Contractors, Consultants, Owners, and Partners, each with KPIs, filters, search, Company 360 links, and Add-to-Campaign actions.
+- Email/Communication Center was completed with a single-company composer, multi-company personalized campaign drafting, periodic smart-nurture recommendation flow, review/edit/approve workflow, and persisted communication history. External sending remains disabled.
+- Sales Kit and campaign flows were completed to support metadata edit plus active/inactive state and recipient/segment-aware attachment recommendation using existing assets only.
+- Smart Nurture now surfaces CONTACT_NOW, FOLLOW_UP, NURTURE, WAIT, RE_ENGAGE, and DO_NOT_CONTACT decisions from stored priority, relationship history, last contact, opportunities, and evidence-backed signals; periodic email is blocked without a valid reason.
+- Business Directory coverage was completed across Contacts and Company 360 views for company, department, person, role, phone, mobile, email, LinkedIn, source, confidence, and verified date, with no synthetic contact creation.
+- Company 360 now includes a Prepare Outreach action that builds recipient-aware personalized draft text, recommends an existing attachment, and suggests a follow-up path without triggering external sending.
+- Opportunity Radar was completed with evidence-first filters and review actions while external search remains paused.
+- QA for this batch: TypeScript PASS (`npx tsc --noEmit`), ESLint PASS with warnings only (no lint errors), tests PASS (64/64), npm audit PASS (0 vulnerabilities), and production build PASS (34 routes).
+- Supabase smoke in this local run is blocked until local public Supabase variables are present (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`).
+
 ## Final UI controls (2026-08-11)
 
 - Sales Kit metadata now supports add, edit, active state and local list filtering.

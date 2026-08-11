@@ -63,6 +63,7 @@ function contactFromRow(row: DbRow): Contact {
   return {
     id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
     fullName: text(row.full_name) || text(row.name), position: text(row.position), department: text(row.department),
+    phone: text(row.phone),
     mobile: text(row.mobile) || text(row.phone), email: text(row.email), linkedIn: text(row.linked_in) || text(row.linkedin),
     decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), source: text(row.source), sourceUrl: text(row.source_url), confidence: Number(row.confidence || 0), verificationStatus: text(row.verification_status), decisionMaker: Boolean(row.decision_maker), verifiedAt: text(row.verified_at), archivedAt: text(row.archived_at), notes: text(row.notes),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
@@ -70,11 +71,11 @@ function contactFromRow(row: DbRow): Contact {
 }
 
 function contactToRow(contact: Partial<Contact>) {
-  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + (contact.mobile ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'Unknown' ? 15 : 0));
+  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + ((contact.mobile || contact.phone) ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'Unknown' ? 15 : 0));
   return {
     company_id: nullable(contact.companyId ?? ''), company_name: contact.companyName ?? '', name: nullable(contact.fullName ?? ''),
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
-    phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
+    phone: nullable(contact.phone ?? contact.mobile ?? ''), mobile: contact.mobile ?? contact.phone ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
     preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', decision_maker: Boolean(contact.decisionMaker), contact_classification: contact.decisionMaker ? 'Decision Maker' : contact.decisionLevel === 'Influencer' ? 'Influencer' : 'General Contact', verification_status: contact.verificationStatus ?? 'UNVERIFIED', verified_at: contact.verificationStatus === 'VERIFIED' ? (contact.verifiedAt || new Date().toISOString()) : null, archived_at: nullable(contact.archivedAt ?? ''), contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
