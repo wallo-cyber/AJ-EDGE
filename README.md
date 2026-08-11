@@ -78,6 +78,12 @@ npm run audit:resume
 
 See `PROJECT_STATUS.md` for the latest verified operational handoff.
 
+## Real-world Pilot Phase 1
+
+The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.
+
+The production cohort contains all 12 available Priority A companies plus the eight highest-ranked remaining companies. This is explicit because changing stored priority merely to claim 20 Priority A records would corrupt business data.
+
 ## Operational workflow
 
 The operational path is Company → data completion → verified decision maker → outreach preparation → recorded communication → follow-up → opportunity → proposal → result. Company lists, Company 360, Today, Research, Outreach, Pipeline, Agents, and Reports derive status from the same Supabase records and domain functions. Manual research groups tasks by company without deleting the underlying queue records. Internal agents remain usable without Tavily; external research is paused and external sending is disabled.

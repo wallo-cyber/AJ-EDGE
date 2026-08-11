@@ -120,6 +120,17 @@ These deferred dependencies are not production blockers for the current draft-an
 - Supervisor was invoked after the repair and created zero work, processed zero work, and recreated no completed jobs. Counts remained unchanged and duplicate company/contact/job groups stayed at zero.
 - TypeScript PASS, ESLint PASS, tests PASS (33/33), production build PASS (27 application routes), Supabase/Auth/RLS PASS, and localhost responds on port 3000.
 
+## Real-world Pilot Phase 1 — 2026-08-11
+
+- Pilot cohort: all 12 active Priority A companies followed by the highest-ranked 8 remaining active companies. The stored business priority was not changed to fabricate a 20-company A cohort.
+- Selection uses priority, lead score, data completeness, and construction/industrial/real-estate relevance. The cohort is persisted through `agent_jobs.payload.pilot = real-world-pilot-phase-1` with stable rank and workflow metadata.
+- 78 existing manual-research jobs were attached to 20 company workflows and reprioritized; no job was deleted. All 20 companies currently require a verified decision maker. Four have a vendor-registration URL and 16 require vendor-registration review.
+- 20 idempotent Qualification jobs ran against current Supabase data and completed successfully. Supervisor then ran and created or processed no duplicate work. Queue/running/failed are zero.
+- No contacts or opportunities were fabricated. No new drafts were created because no contact satisfies the verified decision-maker evidence gate. The 881 pre-existing drafts remain preparation only and were not treated as communication.
+- Today now contains `PILOT — TOP 20`, showing company, stored priority, lead score, decision-maker/contact verification, vendor registration, contact-linked draft state, and one direct next action.
+- Counts after Pilot: 181 companies, 0 contacts, 0 verified decision makers, 692 manual-research jobs, 881 drafts, 0 communication events, 1 follow-up, 0 opportunities, 1,939 total jobs, and 1,247 completed jobs. Duplicate company/contact/idempotency groups remain zero.
+- External research remains PAUSED and external sending remains DISABLED.
+
 ## NEXT DEVICE RESUME
 
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
