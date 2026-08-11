@@ -1,0 +1,20 @@
+'use client';
+import Link from 'next/link';
+import { businessAngle,generateMessage,messageQuality,nextBestAction,weightedCompleteness,type IntelligenceRow } from '../lib/intelligence/core';
+
+const safe=(value:unknown)=>String(value??'').trim();
+const segmentLabel:Record<string,string>={INDUSTRIAL_FACTORY:'مصنع صناعي',REAL_ESTATE_DEVELOPER:'مطور عقاري',MAIN_CONTRACTOR:'مقاول رئيسي',INDUSTRIAL_CONTRACTOR:'مقاول صناعي',ENGINEERING_CONSULTANT:'استشاري هندسي',MANUFACTURER:'مصنّع',SUPPLIER:'مورد',FACILITY_OPERATOR:'مشغل مرافق',OTHER:'يحتاج تصنيفاً يدوياً'};
+
+export function OutreachIntelligenceCard({company,contacts=[],drafts=[],events=[],followups=[],opportunities=[]}:{company:IntelligenceRow;contacts?:IntelligenceRow[];drafts?:IntelligenceRow[];events?:IntelligenceRow[];followups?:IntelligenceRow[];opportunities?:IntelligenceRow[]}){
+ const intelligence=businessAngle(company),completeness=weightedCompleteness(company,contacts),next=nextBestAction(company,contacts,drafts,events,followups,opportunities);
+ const language=safe(company.recommended_language)==='ENGLISH'?'ENGLISH':'ARABIC',channel=(safe(company.recommended_channel)||'Email') as 'Email'|'LinkedIn'|'WhatsApp'|'Call';
+ const message=generateMessage({companyName:safe(company.company_name||company.companyName),segment:intelligence.segment,angle:safe(company.business_angle)||intelligence.angle,role:safe(company.recommended_role)||intelligence.role,language,style:intelligence.style,type:intelligence.type,channel});
+ const quality=messageQuality(message,{companyName:safe(company.company_name||company.companyName),angle:safe(company.business_angle)||intelligence.angle,channel},drafts.map(row=>safe(row.body)));
+ const risk=quality.maxSimilarity>=82?'مرتفع — توجد صياغة مشابهة':completeness.score<55?'مرتفع — السياق ناقص':'منخفض عند مراجعة المسودة';
+ return <section className="crm-card p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold text-[#9a7b2f]">ذكاء التواصل</p><h3 className="mt-1 text-lg font-bold">لماذا نتواصل؟ ومن هو الشخص المناسب؟</h3></div><span className={`crm-chip ${quality.score>=80?'status-success':quality.score>=65?'status-warning':'status-danger'}`}>جودة الاستراتيجية {quality.score}/100</span></div>
+  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Info label="الفئة المستهدفة" value={segmentLabel[intelligence.segment]}/><Info label="زاوية التعاون" value={safe(company.business_angle)||intelligence.angle}/><Info label="نقطة الدخول" value={intelligence.department}/><Info label="الدور الموصى به" value={safe(company.recommended_role)||intelligence.role}/><Info label="سبب الاستهداف" value={intelligence.reason}/><Info label="قوة الدليل" value={`${intelligence.evidenceLevel} · ${intelligence.confidence}%`}/><Info label="اللغة والقناة" value={`${language==='ARABIC'?'العربية':'English'} · ${channel}`}/><Info label="خطر الرسالة العامة" value={risk}/></div>
+  <div className="mt-4 grid gap-3 md:grid-cols-3"><div className="rounded-xl bg-[#f8f1e4] p-3"><p className="text-xs text-[#75664d]">اكتمال البيانات</p><strong className="text-xl">{completeness.score}%</strong></div><div className="rounded-xl bg-amber-50 p-3"><p className="text-xs text-amber-800">البيانات الحرجة الناقصة</p><strong className="text-sm">{completeness.missingCritical.join('، ')||'لا توجد'}</strong></div><div className="rounded-xl bg-emerald-50 p-3"><p className="text-xs text-emerald-800">الإجراء الأساسي</p><strong className="text-sm">{next.label}</strong><p className="mt-1 text-xs">{next.reason}</p></div></div>
+  <div className="mt-4 flex flex-wrap gap-2"><Link href={`/research?tab=manual&company_id=${safe(company.id)}`} className="btn-primary">تنفيذ الإجراء التالي</Link><Link href={`/outreach?tab=strategy&company_id=${safe(company.id)}`} className="btn-secondary">فتح استراتيجية التواصل</Link></div>
+ </section>;
+}
+function Info({label,value}:{label:string;value:string}){return <div className="rounded-xl border border-[#eadfc9] bg-white p-3"><p className="text-xs text-[#75664d]">{label}</p><p className="mt-1 text-sm font-semibold leading-6">{value||'غير محدد'}</p></div>}

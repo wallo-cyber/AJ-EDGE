@@ -167,3 +167,13 @@ These deferred dependencies are not production blockers for the current draft-an
 - Visual checks passed at 1440px, 1024px, and 390px on the local authenticated boundary with RTL and zero horizontal overflow. Protected workspaces were not accessed by bypassing Supabase Auth.
 - Final gates: TypeScript PASS, ESLint PASS, tests 33/33 PASS, production build 29 routes PASS, and Supabase/Auth/RLS audit PASS. Production remains 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, and zero duplicate company/contact/job groups.
 - No schema change, production mutation, external search, Tavily call, or external sending occurred during V4.
+
+## V5 intelligence upgrade — implementation checkpoint
+
+- Added a deterministic, provider-free intelligence engine for nine target segments, evidence-safe cooperation angles, recommended departments/roles, weighted completeness, one Next Best Action, Arabic/English message generation, channel-aware length, contextual follow-ups, quality scoring, and duplicate similarity.
+- Added seven V5 domain tests; the full suite is 40/40 PASS. TypeScript, ESLint, and the 29-route production build pass.
+- Company 360 now exposes Outreach Intelligence from current saved facts only. Recommended Role is explicitly a target role, never a fabricated contact.
+- Outreach includes Strategy plus a simple Arabic/English editor, message type/style/channel controls, quality analysis, duplicate warnings, copy, and save-for-review. Approval is blocked below quality score 65 and still requires a verified decision maker.
+- Added an additive migration for V5 company/contact/message/agent output metadata and protected user feedback. It contains no DROP, TRUNCATE, DELETE, reset, or production backfill.
+- Migration application is blocked: the local `SUPABASE_ACCESS_TOKEN` is present but rejected by both Supabase CLI and Management API (HTTP 401). Its value was never printed or logged. The UI prevents V5 draft persistence while the columns are unavailable.
+- Production remains unchanged: 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, zero duplicate company/contact/job groups. External research is PAUSED and external sending is DISABLED.

@@ -86,6 +86,10 @@ The internal workflow is ready to operate without an external research provider:
 
 V4 focuses ALGAEU on daily decisions rather than product noise. Today prioritizes human actions, Companies uses an eight-column decision view, Company 360 opens company-scoped contact work, Reports follows the real business-development funnel, and Agent Center describes internal/external states in business language. Global loading/error handling and responsive overflow guards support desktop, tablet, and mobile. No external research or sending integration is activated.
 
+## V5 intelligence checkpoint
+
+The repository contains a provider-free business intelligence and outreach engine with segment classification, business angles, role targeting, bilingual/channel-aware drafts, contextual follow-ups, quality scoring, duplicate detection, weighted completeness, and Next Best Action. Apply `20260811153000_algaeu_v5_intelligence.sql` before enabling V5 persistence. The migration is additive and must be applied only after the Supabase project is verified with a valid local personal access token. External research and sending remain disabled.
+
 ## Real-world Pilot Phase 1
 
 The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.
