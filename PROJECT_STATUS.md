@@ -1,10 +1,21 @@
 # ALGAEU Project Status
 
-Status: **V4 PRODUCTION READY / V6 CODE READY — DATABASE MIGRATION BLOCKED**
+Status: **ALGAEU OPERATIONAL — V6 DATABASE + INTERNAL AGENTS READY**
 
 Status date: 2026-08-11 (Asia/Riyadh)
 
 Branch: `codex/aj-edge-mvp`
+
+## Operational activation checkpoint (2026-08-11)
+
+- The committed V5 and V6 additive migrations are now applied to Supabase project `vbdgfrkthvurbqeofeyj` and recorded in remote migration history. All six new intelligence tables have RLS enabled, anonymous access is blocked, and external sending remains database-locked to `false`.
+- The 692 retained manual-research jobs were reviewed from persisted company and contact evidence. No missing fact could be completed safely from current data without fabrication.
+- 155 superseded historical duplicates were closed as `cancelled` with an audit log and a preserved reason. No job row was deleted. The 537 unique tasks remain `manual_research_required` and are explicitly classified `PENDING_EXTERNAL_RESEARCH` with `requires_external_provider=true`.
+- Supervisor and the internal worker completed an idempotent pass: 0 queued, 0 running, 0 failed, 0 duplicate job groups, and no completed company was reprocessed. Tavily Cron remains inactive while all five internal Cron jobs remain active.
+- Current source-of-truth counts: 181 companies, 12 Priority A, 114 Priority B, 55 Priority C, 114 enriched company-intelligence records, 0 verified decision makers, 7 vendor portals, 881 saved drafts, 1 follow-up, and 0 opportunities.
+- Today is the operating entry point and exposes the exact daily queues: top companies, ready outreach, user decisions, pending external research, due follow-ups, vendor portals, potential opportunities, and upcoming meetings/actions.
+- External sending is disabled. No email, WhatsApp, LinkedIn message, or other external communication was sent.
+- Historical checkpoint notes below are retained for traceability; this section and the top status are the current authority.
 
 ## V1 consolidation checkpoint (2026-08-11)
 
@@ -42,7 +53,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - Search covers Companies, Contacts/Decision Makers, Opportunities, Meetings, Follow-ups, persisted tasks, and nested notes/results.
 - Reports include conversion and agent metrics plus filtered CSV export. Settings persists company profile, targets, thresholds, work limits, and follow-up timing.
 - Vendor Registration and System Status have dedicated protected routes; loading, empty, error, success, not-found, and application-error states are operational.
-- Manual Research has a dedicated protected, filtered, paginated workspace for all 692 retained external-research tasks; it never invokes Tavily and never deletes pending work.
+- Manual Research has a dedicated protected, filtered, paginated workspace for 537 unique external-research tasks; 155 superseded duplicates remain preserved as cancelled audit history.
 - The desktop navigation is collapsible, mobile navigation remains drawer-based, and the application metadata consistently uses `ALGAEU Business Development Platform`.
 - Arabic RTL and responsive login/auth boundaries were verified at desktop and 390px mobile width with no horizontal overflow.
 
@@ -53,7 +64,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - The Tavily worker Cron is inactive. Research-capable agents execute safe internal checks and record missing evidence as manual research without calling Tavily.
 - External sending remains disabled; outreach is draft plus manual approval only.
 - Persisted agent state: 1,919 jobs, 2,710 runs, 4,814 logs, and 84 historical error records.
-- Job state: 1,227 completed, 692 `manual_research_required`, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
+- Job state: 1,247 completed, 537 `manual_research_required`, 155 safely cancelled duplicates, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
 - Each job retains owner, agent, status, payload, result, attempts, maximum attempts, schedule, timestamps, and error information. Runs and logs remain available after browser or computer shutdown.
 
 ## Queue resume and duplicate protection
@@ -138,7 +149,7 @@ These deferred dependencies are not production blockers for the current draft-an
 3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
 4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. For the optional server-only cross-device audit, add `SUPABASE_SECRET_KEY` to the ignored `.env.local`; never put it in Git or any `NEXT_PUBLIC_` variable.
 5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
-6. Do not apply destructive migrations. The committed migration directory contains the complete production migration history, including the already-applied `enable_pg_net_for_tavily_worker` migration.
+6. Do not reapply or recreate migrations. V5 and V6 are recorded remotely; the committed migration directory is the complete production history.
 7. Resume checks with `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run test:supabase`, and `npm run build` before changing code.
 8. Start stable mode with `npm start` after a successful build and open `http://localhost:3000`.
 9. External Tavily research remains paused and external sending remains disabled. Internal agents and Cron continue server-side without an open browser; pending external research stays persisted for later resume.
@@ -175,8 +186,8 @@ These deferred dependencies are not production blockers for the current draft-an
 - Company 360 now exposes Outreach Intelligence from current saved facts only. Recommended Role is explicitly a target role, never a fabricated contact.
 - Outreach includes Strategy plus a simple Arabic/English editor, message type/style/channel controls, quality analysis, duplicate warnings, copy, and save-for-review. Approval is blocked below quality score 65 and still requires a verified decision maker.
 - Added an additive migration for V5 company/contact/message/agent output metadata and protected user feedback. It contains no DROP, TRUNCATE, DELETE, reset, or production backfill.
-- Migration application is blocked: the local `SUPABASE_ACCESS_TOKEN` is present but rejected by both Supabase CLI and Management API (HTTP 401). Its value was never printed or logged. The UI prevents V5 draft persistence while the columns are unavailable.
-- Production remains unchanged: 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, zero duplicate company/contact/job groups. External research is PAUSED and external sending is DISABLED.
+- This historical migration blocker was cleared during the operational activation checkpoint using the authorized Supabase connection; V5 persistence columns and protected `user_feedback` are now present.
+- Production business records remain preserved: 181 companies, 537 unique pending-external-research tasks, 155 cancelled duplicate task records, 881 drafts, and one follow-up. External research is PAUSED and external sending is DISABLED.
 
 ## V6 intelligence core — 2026-08-11
 
@@ -184,11 +195,11 @@ These deferred dependencies are not production blockers for the current draft-an
 - Today now exposes high-value signals and one primary action per company. Company 360 uses eight business tabs and shows Lead Score, Opportunity Signal, Relationship Stage, memory, signals, outreach strategy, and Deal Coach. Outreach remains copy/manual-event only; Agent Center groups the existing internal agents into teams; Reports adds only evidence-backed V6 analytics.
 - Automation is hard-locked to Level 0. External research remains PAUSED and external sending remains DISABLED. No Gmail, Resend, Tavily, WhatsApp, LinkedIn, or other external provider was called or connected.
 - Added additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql`. They contain no destructive DDL/DML or production backfill, revoke anonymous access to new tables, enable ownership RLS, grant only authenticated/service roles, and tolerate pre-existing policies.
-- Production migration application is **blocked**. The local `SUPABASE_ACCESS_TOKEN` exists but is not a valid `sbp_` Personal Access Token, and no cached Supabase CLI login or database password exists. The value was never displayed, logged, or committed. No unsafe workaround was used.
+- Production migration application is complete. V5 and V6 are recorded remotely and their Data API shapes are present.
 - Read-only server verification passes with server access, Auth Admin access, anonymous denial, and unchanged production counts: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 0 communication events, 1 follow-up, 0 opportunities, 1,939 jobs, 2,730 runs, 692 manual-research jobs, and zero duplicate company/contact/job groups.
-- The Data API confirms the V5/V6 company/message columns and required intelligence-table shapes are not yet available. The migrations now reconcile any protected placeholder tables additively. Until both migrations are recorded remotely, V6 persistence is intentionally blocked while existing V4 workflows remain usable.
-- Local QA passes: TypeScript, ESLint, 57/57 tests, npm audit (0 vulnerabilities), and the 29-route Next.js production build. Supabase/Auth/current RLS continuity passes; V6 schema/RLS application verification remains pending the valid Personal Access Token.
-- Cross-device handoff is safe after the V6 commit is pushed to `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. The only required external action is replacing local `SUPABASE_ACCESS_TOKEN` with a valid Personal Access Token from Supabase Dashboard → Account → Access Tokens.
+- The Data API confirms all V5/V6 company/message columns and intelligence tables are available. Ownership RLS and anonymous denial are verified.
+- Final QA is rerun at each operational checkpoint. Supabase/Auth/RLS continuity and the expanded seven-table anonymous-denial smoke test pass.
+- Cross-device handoff is safe on `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. No local Personal Access Token is required for normal application use.
 
 ## Master checkpoint before V8 — 2026-08-11
 
@@ -196,7 +207,7 @@ These deferred dependencies are not production blockers for the current draft-an
 - Final checkpoint QA: automated tests PASS (57/57) and Next.js production build PASS (29 routes).
 - Read-only Supabase verification confirms the business source of truth is remote: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,939 agent jobs, 2,730 runs, and 692 manual-research jobs. Duplicate company/contact/job groups remain zero. Browser storage contains only the sidebar-collapse preference, never CRM data.
 - Supabase server access, Auth Admin access, ownership RLS continuity, and anonymous denial PASS. No production record was created, changed, deleted, reprocessed, or copied locally during this checkpoint.
-- Migration synchronization remains blocked and must not be reported as complete: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are committed but their required Data API shapes are not present remotely. The ignored local `SUPABASE_ACCESS_TOKEN` is not a valid `sbp_` Personal Access Token.
+- This checkpoint's migration limitation is superseded: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are now applied and verified remotely.
 - Vercel readiness PASS: `vercel.json`, Next.js production build, dynamic site URL fallback, protected routes, and the public Supabase client configuration are ready. Required hosted variables are only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL`. Server secrets, PATs, service-role credentials, and Tavily must not be added to Vercel.
 - Vercel CLI is not installed/linked on this device, so no deployment or share URL was created. Use the Vercel Dashboard to import `wallo-cyber/AJ-EDGE`, select branch `codex/aj-edge-mvp`, set Root Directory to `app`, add the three public variables, and deploy. Keep Supabase Auth enabled and add the final deployment URL to Supabase Auth URL Configuration.
 - Exact clean-device resume command (PowerShell): `git clone https://github.com/wallo-cyber/AJ-EDGE.git; Set-Location AJ-EDGE; git switch --track origin/codex/aj-edge-mvp; Set-Location app; npm ci`

@@ -22,3 +22,9 @@ export function getSupabaseClient() {
   });
   return browserClient;
 }
+
+export async function getAuthenticatedSupabaseClient() {
+  const client = getSupabaseClient();
+  const { data } = await client.auth.getSession();
+  return data.session ? client : null;
+}

@@ -39,9 +39,12 @@ try {
   if (!email || !password) {
     const health = await fetch(`${url}/auth/v1/health`, { headers: { apikey: key } });
     assert(health.ok, `Supabase connectivity failed (${health.status}).`);
-    const protectedTable = await fetch(`${url}/rest/v1/company_discovery?select=id&limit=1`, { headers: { apikey: key } });
-    assert(protectedTable.status === 401, `Anonymous RLS check returned ${protectedTable.status} instead of 401.`);
-    console.log('Supabase connectivity passed and anonymous access to company_discovery is blocked; authenticated CRUD deferred without test credentials.');
+    const protectedTables = ['company_discovery', 'user_feedback', 'relationship_memories', 'business_signals', 'conversation_strategies', 'learning_events', 'automation_rules'];
+    for (const table of protectedTables) {
+      const response = await fetch(`${url}/rest/v1/${table}?select=id&limit=1`, { headers: { apikey: key } });
+      assert(response.status === 401, `Anonymous RLS check for ${table} returned ${response.status} instead of 401.`);
+    }
+    console.log(`Supabase connectivity passed and anonymous access is blocked for ${protectedTables.length} protected tables; authenticated CRUD deferred without test credentials.`);
     process.exitCode = 0;
   } else {
   const { error: authError } = await supabase.auth.signInWithPassword({ email, password });

@@ -1,5 +1,5 @@
 import type { Company, Contact, FollowUp, Meeting, Opportunity } from '../crm/types';
-import { getSupabaseClient, isSupabaseConfigured } from './client';
+import { getAuthenticatedSupabaseClient, isSupabaseConfigured } from './client';
 
 type DbRow = Record<string, unknown>;
 
@@ -101,25 +101,33 @@ function followUpToRow(item: Partial<FollowUp>) {
 }
 
 async function list(table: string, mapper: (row: DbRow) => unknown) {
-  const { data, error } = await getSupabaseClient().from(table).select('*').order('created_at', { ascending: false });
+  const client = await getAuthenticatedSupabaseClient();
+  if (!client) return [];
+  const { data, error } = await client.from(table).select('*').order('created_at', { ascending: false });
   throwIfError(error);
   return (data ?? []).map((row) => mapper(row as DbRow));
 }
 
 async function insert<T>(table: string, row: DbRow, mapper: (row: DbRow) => T) {
-  const { data, error } = await getSupabaseClient().from(table).insert(row).select('*').single();
+  const client = await getAuthenticatedSupabaseClient();
+  if (!client) throw new Error('يجب تسجيل الدخول قبل حفظ البيانات.');
+  const { data, error } = await client.from(table).insert(row).select('*').single();
   throwIfError(error);
   return mapper(data as DbRow);
 }
 
 async function update<T>(table: string, id: string, row: DbRow, mapper: (row: DbRow) => T) {
-  const { data, error } = await getSupabaseClient().from(table).update(row).eq('id', id).select('*').single();
+  const client = await getAuthenticatedSupabaseClient();
+  if (!client) throw new Error('يجب تسجيل الدخول قبل تعديل البيانات.');
+  const { data, error } = await client.from(table).update(row).eq('id', id).select('*').single();
   throwIfError(error);
   return mapper(data as DbRow);
 }
 
 async function remove(table: string, id: string) {
-  const { error } = await getSupabaseClient().from(table).delete().eq('id', id);
+  const client = await getAuthenticatedSupabaseClient();
+  if (!client) throw new Error('يجب تسجيل الدخول قبل حذف البيانات.');
+  const { error } = await client.from(table).delete().eq('id', id);
   throwIfError(error);
 }
 
@@ -127,7 +135,7 @@ export const supabaseCrm = {
   configured: isSupabaseConfigured,
   companies: {
     list: () => list('companies', companyFromRow) as Promise<Company[]>,
-    get: async (id: string) => { const { data, error } = await getSupabaseClient().from('companies').select('*').eq('id', id).single(); throwIfError(error); return companyFromRow(data as DbRow); },
+    get: async (id: string) => { const client=await getAuthenticatedSupabaseClient(); if(!client)throw new Error('يجب تسجيل الدخول لعرض الشركة.'); const { data, error } = await client.from('companies').select('*').eq('id', id).single(); throwIfError(error); return companyFromRow(data as DbRow); },
     create: (item: Partial<Company>) => insert('companies', companyToRow(item), companyFromRow),
     update: (id: string, item: Partial<Company>) => update('companies', id, companyToRow(item), companyFromRow),
     remove: (id: string) => remove('companies', id),
@@ -135,8 +143,10 @@ export const supabaseCrm = {
   contacts: {
     list: () => list('contacts', contactFromRow) as Promise<Contact[]>,
     page: async (page = 1, pageSize = 25, filters?: { search?: string; companyId?: string; department?: string; decisionLevel?: string; verificationStatus?: string }) => {
+      const client = await getAuthenticatedSupabaseClient();
+      if (!client) return { rows: [] as Contact[], count: 0 };
       const from = Math.max(0, page - 1) * pageSize;
-      let query = getSupabaseClient().from('contacts').select('*', { count: 'exact' }).is('archived_at', null);
+      let query = client.from('contacts').select('*', { count: 'exact' }).is('archived_at', null);
       const search = filters?.search?.trim().replaceAll(',', ' ');
       if (search) query = query.or(`full_name.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,position.ilike.%${search}%`);
       if (filters?.companyId) query = query.eq('company_id', filters.companyId);

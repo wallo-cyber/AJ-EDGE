@@ -14,10 +14,10 @@ export default function Home() {
           </p>
           <div className="mt-6 flex flex-wrap justify-end gap-3">
             <Link
-              href="/dashboard"
+              href="/daily"
               className="rounded-full bg-[#2f2417] px-5 py-3 text-sm font-semibold text-[#fef8ec] transition hover:bg-[#47361f]"
             >
-              الدخول إلى لوحة القيادة
+              الدخول إلى مركز العمل اليومي
             </Link>
             <Link
               href="/companies"
@@ -38,8 +38,8 @@ export default function Home() {
             <p className="mt-2 text-sm leading-7 text-[#6f6044]">الدمام، الخبر، الظهران، الجبيل، رأس تنورة، القطيف، بقيق، الخفجي، النيريه.</p>
           </div>
           <div className="rounded-[24px] border border-[#e8d9b7] bg-[#fdf8ee] p-5">
-            <h2 className="text-lg font-semibold text-[#2f2417]">المرحلة الحالية</h2>
-            <p className="mt-2 text-sm leading-7 text-[#6f6044]">بنية تطبيق نظيفة ومهيأة للتكامل مع Supabase بدون بيانات تجريبية.</p>
+            <h2 className="text-lg font-semibold text-[#2f2417]">الحالة التشغيلية</h2>
+            <p className="mt-2 text-sm leading-7 text-[#6f6044]">بيانات العمل والوكلاء والمهام محفوظة في Supabase، مع تعطيل الإرسال الخارجي افتراضياً.</p>
           </div>
         </section>
       </div>
