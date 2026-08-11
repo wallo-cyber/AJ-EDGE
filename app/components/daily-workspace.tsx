@@ -78,7 +78,7 @@ export function DailyWorkspace() {
     const ordered=list.sort((a,b)=>a.rank-b.rank||safe(a.due).localeCompare(safe(b.due))||Number(b.company?.lead_score??0)-Number(a.company?.lead_score??0));
     const unique=new Map<string,Action>();
     ordered.forEach(item=>{const key=safe(item.company?.id)||item.id;if(!unique.has(key))unique.set(key,item)});
-    return [...unique.values()].slice(0,20);
+    return [...unique.values()].slice(0,10);
   }, [data, today]);
 
   const complete = async (item: Action) => { if (!item.followUp) return; await simpleCrud.update('follow_ups', item.followUp.id, { status:'Completed' }); setNotice('تم إكمال المتابعة وحفظها.'); await load(); };

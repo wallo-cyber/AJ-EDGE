@@ -1,5 +1,9 @@
 # ALGAEU
 
+## Business Development Intelligence Core
+
+The evidence-first intelligence core derives a company lifecycle, explainable qualification gate, segment-specific target role, project/signal recommendation, and one next action from persisted Supabase facts. It never fabricates contacts, projects, values, or scope. Company segments remain views over one Companies table, external search can stay paused, and all outreach remains draft plus manual approval.
+
 ## Intelligence Expansion Phase 1
 
 Phase 1 adds safe, Supabase-persisted segmentation fields, Business Directory contact intelligence, Sales Kit metadata, Campaign Center review audiences, and source-required Opportunity Radar records. The migration is additive and does not seed or alter production companies. Campaigns are manual-review only; default limits are 10 new companies and 15 follow-ups per day with a 14-day company interval. External search stays paused and external sending stays disabled.

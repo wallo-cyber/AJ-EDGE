@@ -1,5 +1,13 @@
 # ALGAEU Project Status
 
+## Business Development Intelligence Core (2026-08-11)
+
+- Added a deterministic, evidence-first BD core for the unified company lifecycle (`DISCOVER` through `WIN_LOSS`), explainable qualification, segment-specific decision-maker targeting, and source-gated project intelligence.
+- Company 360 now loads persisted Opportunity Radar signals, exposes a project/signal tab, and shows the current lifecycle stage plus qualification score without changing stored company priorities.
+- Segment routes now use the same Companies source with live contacts, signals, opportunities, lifecycle, qualification, search, sort, filters, KPIs, campaign links, and Company 360 navigation. No duplicate company records or segment tables were created.
+- Daily Center is capped at the top 10 actions. External search remains paused and external sending remains disabled.
+- QA: TypeScript PASS, ESLint PASS, tests PASS (61/61), npm audit PASS, production build PASS, Supabase connectivity/RLS smoke PASS.
+
 ## Final UI controls (2026-08-11)
 
 - Sales Kit metadata now supports add, edit, active state and local list filtering.
