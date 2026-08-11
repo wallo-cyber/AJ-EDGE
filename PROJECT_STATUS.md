@@ -232,3 +232,10 @@ These deferred dependencies are not production blockers for the current draft-an
 - Vercel CLI is not installed/linked on this device, so no deployment or share URL was created. Use the Vercel Dashboard to import `wallo-cyber/AJ-EDGE`, select branch `codex/aj-edge-mvp`, set Root Directory to `app`, add the three public variables, and deploy. Keep Supabase Auth enabled and add the final deployment URL to Supabase Auth URL Configuration.
 - Exact clean-device resume command (PowerShell): `git clone https://github.com/wallo-cyber/AJ-EDGE.git; Set-Location AJ-EDGE; git switch --track origin/codex/aj-edge-mvp; Set-Location app; npm ci`
 - After cloning, create ignored `app/.env.local` from `.env.example`, add the public Supabase values, optionally add the server-only audit secret, then run `npm test` and `npm run build`. Do not seed or re-import production data.
+
+## Campaign and Network Intelligence blocker closure — 2026-08-11
+
+- Applied additive migration `20260811183344_campaign_network_blocker_closure.sql` to production Supabase. It adds campaign-owned draft metadata and the protected `company_relationships` evidence ledger. No production data was deleted or reset.
+- Campaign Center now creates and persists a distinct company-specific draft for every selected company. Review, edit/save, regenerate, approve, reject, and reset-to-draft are persisted; approval marks the company ready for manual send. External sending remains disabled.
+- Company 360 now includes Network Intelligence with type, project/opportunity reference, evidence, source URL, confidence, verification date, and verified/unverified filters. Unverified rows are explicitly labelled `AI SUGGESTION — NOT VERIFIED`; no relationship is inferred or written automatically.
+- Verification: TypeScript PASS, ESLint PASS, automated tests 61/61 PASS, production build PASS (33 routes), npm audit PASS (0 vulnerabilities), and Supabase anonymous-denial/RLS smoke test PASS. `company_relationships` has ownership RLS enabled and the new message columns are present remotely.

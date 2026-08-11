@@ -107,6 +107,12 @@ The additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `2026081
 
 Run `npm run audit:resume` for a read-only server check of production counts, Auth, anonymous denial, V5/V6 schema availability, and duplicate protection. The command never prints secrets and performs no writes without the explicit `--resume` flag.
 
+## Campaign Center and Network Intelligence
+
+Campaign Center creates a separate persisted outreach draft for every selected company. Draft generation uses only saved company data, a saved target contact/role, stored opportunity signals, and existing Sales Kit assets. Drafts can be reviewed, edited, saved, regenerated, approved, rejected, or reset. Approval only makes a draft **Ready for Manual Send**; external sending remains disabled.
+
+Company 360 includes **Network Intelligence**. Relationship rows are evidence-backed Supabase records with source/target company, relationship type, optional project/opportunity reference, evidence, source URL, confidence, verification timestamp, and status. A row without sufficient evidence is visibly **AI SUGGESTION — NOT VERIFIED** and is never treated as a fact. Migration `20260811183344_campaign_network_blocker_closure.sql` is already applied; do not re-seed or recreate existing data.
+
 ## Real-world Pilot Phase 1
 
 The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.
