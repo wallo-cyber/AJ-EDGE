@@ -27,7 +27,8 @@ function companyFromRow(row: DbRow): Company {
     contactPerson: text(row.contact_person), position: text(row.position), mobile: text(row.mobile),
     linkedIn: text(row.linked_in) || text(row.linkedin), serviceOpportunity: text(row.service_opportunity),
     status: text(row.status), lastContact: text(row.last_contact), nextFollowUp: text(row.next_follow_up),
-    notes: text(row.notes), priority:text(row.priority), leadScore:Number(row.lead_score||0), dataCompleteness:Number(row.data_completeness||0), dataQualityStatus:text(row.data_quality_status), missingFields:jsonArray<string>(row.missing_fields), scoreReasons:jsonArray<string>(row.score_reasons), sourceName:text(row.source_name), communicationHistory: jsonArray(row.communication_history),
+    notes: text(row.notes), priority:text(row.priority), leadScore:Number(row.lead_score||0), dataCompleteness:Number(row.data_completeness||0), dataQualityStatus:text(row.data_quality_status), missingFields:jsonArray<string>(row.missing_fields), scoreReasons:jsonArray<string>(row.score_reasons), sourceName:text(row.source_name), sourceUrl:text(row.source_url),
+    qualificationStatus:text(row.qualification_status), qualificationReason:text(row.qualification_reason), contractingAngle:text(row.contracting_angle), nextAction:text(row.next_action), vendorRegistrationUrl:text(row.vendor_registration_url), vendorRegistrationStatus:text(row.vendor_registration_status), outreachStatus:text(row.outreach_status), verificationStatus:text(row.verification_status), communicationHistory: jsonArray(row.communication_history),
     followUps: jsonArray(row.follow_ups), opportunities: jsonArray(row.opportunities),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
   };
@@ -41,7 +42,14 @@ function companyToRow(company: Partial<Company>) {
     contact_person: nullable(company.contactPerson ?? ''), position: nullable(company.position ?? ''), mobile: company.mobile ?? '',
     linkedin: nullable(company.linkedIn ?? ''), linked_in: company.linkedIn ?? '', service_opportunity: company.serviceOpportunity ?? '',
     status: nullable(company.status ?? ''), last_contact: company.lastContact ?? '', next_follow_up: nullable(company.nextFollowUp ?? ''),
-    notes: nullable(company.notes ?? ''), communication_history: company.communicationHistory ?? [],
+    notes: nullable(company.notes ?? ''), priority: company.priority ?? 'C', lead_score: company.leadScore ?? 0,
+    data_completeness: company.dataCompleteness ?? 0, data_quality_status: company.dataQualityStatus ?? 'Poor Data',
+    missing_fields: company.missingFields ?? [], score_reasons: company.scoreReasons ?? [], source_name: company.sourceName ?? '',
+    source_url: company.sourceUrl ?? '', qualification_status: company.qualificationStatus ?? 'Needs Research',
+    qualification_reason: company.qualificationReason ?? '', contracting_angle: company.contractingAngle ?? '',
+    next_action: company.nextAction ?? '', vendor_registration_url: company.vendorRegistrationUrl ?? '',
+    vendor_registration_status: company.vendorRegistrationStatus ?? 'Not Checked', outreach_status: company.outreachStatus ?? 'Not Contacted',
+    verification_status: company.verificationStatus ?? 'Needs Verification', communication_history: company.communicationHistory ?? [],
     follow_ups: company.followUps ?? [], opportunities: company.opportunities ?? [], updated_at: new Date().toISOString(),
   };
 }
@@ -51,7 +59,7 @@ function contactFromRow(row: DbRow): Contact {
     id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
     fullName: text(row.full_name) || text(row.name), position: text(row.position), department: text(row.department),
     mobile: text(row.mobile) || text(row.phone), email: text(row.email), linkedIn: text(row.linked_in) || text(row.linkedin),
-    decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), notes: text(row.notes),
+    decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), source: text(row.source), sourceUrl: text(row.source_url), confidence: Number(row.confidence || 0), verificationStatus: text(row.verification_status), notes: text(row.notes),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
   };
 }
@@ -63,7 +71,7 @@ function contactToRow(contact: Partial<Contact>) {
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
     phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
-    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel || 'General Contact', verification_status: contact.email || contact.mobile ? 'Verified' : 'Needs Verification', contact_score: contactScore, source: 'ALGAEU', notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
+    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel === 'صاحب قرار' ? 'Decision Maker' : contact.decisionLevel === 'مؤثر' ? 'Influencer' : contact.decisionLevel === 'منسق' ? 'Gatekeeper' : 'General Contact', verification_status: contact.verificationStatus ?? 'Needs Verification', contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
 }
 

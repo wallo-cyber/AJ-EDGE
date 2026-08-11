@@ -23,6 +23,10 @@ export type Contact = {
   linkedIn: string;
   decisionLevel: ContactDecisionLevel;
   preferredContactMethod: ContactMethod;
+  source: string;
+  sourceUrl: string;
+  confidence: number;
+  verificationStatus: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -54,6 +58,10 @@ export function createEmptyContact(companyId?: string, companyName = ''): Omit<C
     linkedIn: '',
     decisionLevel: 'غير محدد',
     preferredContactMethod: 'واتساب',
+    source: '',
+    sourceUrl: '',
+    confidence: 0,
+    verificationStatus: 'Needs Verification',
     notes: '',
   };
 }

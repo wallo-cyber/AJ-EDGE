@@ -1,6 +1,6 @@
-export type FollowUpType = 'اتصال' | 'بريد إلكتروني' | 'واتساب' | 'زيارة' | 'اجتماع' | 'LinkedIn';
-export type FollowUpPriority = 'عالية' | 'متوسطة' | 'منخفضة';
-export type FollowUpStatus = 'مجدولة' | 'مكتملة' | 'متأخرة' | 'ملغاة';
+export type FollowUpType = 'Call' | 'Email' | 'WhatsApp' | 'LinkedIn' | 'Meeting' | 'Proposal Follow-up' | 'General' | 'اتصال' | 'بريد إلكتروني' | 'واتساب' | 'زيارة' | 'اجتماع';
+export type FollowUpPriority = 'High' | 'Medium' | 'Low' | 'عالية' | 'متوسطة' | 'منخفضة';
+export type FollowUpStatus = 'Pending' | 'Due Today' | 'Overdue' | 'Completed' | 'Cancelled' | 'مجدولة' | 'مكتملة' | 'متأخرة' | 'ملغاة';
 
 export type FollowUp = {
   id: string;
@@ -22,20 +22,20 @@ export type FollowUp = {
   updatedAt: string;
 };
 
-export const followUpTypes: FollowUpType[] = ['اتصال', 'بريد إلكتروني', 'واتساب', 'زيارة', 'اجتماع', 'LinkedIn'];
-export const followUpPriorities: FollowUpPriority[] = ['عالية', 'متوسطة', 'منخفضة'];
-export const followUpStatuses: FollowUpStatus[] = ['مجدولة', 'مكتملة', 'متأخرة', 'ملغاة'];
+export const followUpTypes: FollowUpType[] = ['Call', 'Email', 'WhatsApp', 'LinkedIn', 'Meeting', 'Proposal Follow-up', 'General'];
+export const followUpPriorities: FollowUpPriority[] = ['High', 'Medium', 'Low'];
+export const followUpStatuses: FollowUpStatus[] = ['Pending', 'Due Today', 'Overdue', 'Completed', 'Cancelled'];
 
 export function createEmptyFollowUp(companyId = '', companyName = '', contactPerson = ''): Omit<FollowUp, 'id' | 'createdAt' | 'updatedAt'> {
   return {
     companyId,
     companyName,
     contactPerson,
-    followUpType: 'اتصال',
+    followUpType: 'Call',
     date: '',
     time: '',
-    priority: 'متوسطة',
-    status: 'مجدولة',
+    priority: 'Medium',
+    status: 'Pending',
     subject: '',
     notes: '',
     result: '',

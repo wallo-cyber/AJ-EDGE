@@ -6,24 +6,23 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 
 const navItems = [
-  { href: '/agent-center', label: 'مركز الوكلاء', icon: '⚙' },
   { href: '/daily', label: 'مركز العمل اليومي', icon: '✓' },
-  { href: '/search', label: 'البحث الشامل', icon: '⌕' },
-  { href: '/exports', label: 'تصدير البيانات', icon: '↓' },
-  { href: '/discovery', label: 'اكتشاف الشركات', icon: '⌕' },
-  { href: '/enrichment', label: 'استكمال البيانات', icon: '+' },
-  { href: '/ready-outreach', label: 'جاهز للتواصل', icon: '→' },
   { href: '/dashboard', label: 'لوحة القيادة', icon: '◈' },
   { href: '/companies', label: 'الشركات', icon: '◉' },
   { href: '/contacts', label: 'جهات الاتصال', icon: '◎' },
-  { href: '/agents', label: 'الوكلاء', icon: '◖' },
-  { href: '/outreach', label: 'التواصل', icon: '◌' },
+  { href: '/discovery', label: 'اكتشاف الشركات', icon: '⌕' },
+  { href: '/enrichment', label: 'استكمال البيانات', icon: '+' },
+  { href: '/ready-outreach', label: 'جاهز للتواصل', icon: '→' },
   { href: '/follow-ups', label: 'المتابعات', icon: '◍' },
   { href: '/meetings', label: 'الاجتماعات', icon: '◎' },
   { href: '/opportunities', label: 'الفرص', icon: '◐' },
   { href: '/quotations', label: 'العروض', icon: '◑' },
   { href: '/contracts', label: 'العقود', icon: '◒' },
+  { href: '/agents', label: 'الوكلاء والمعرّفون', icon: '◖' },
+  { href: '/agent-center', label: 'مركز الوكلاء', icon: '⚙' },
+  { href: '/search', label: 'البحث الشامل', icon: '⌕' },
   { href: '/reports', label: 'التقارير', icon: '◓' },
+  { href: '/exports', label: 'تصدير البيانات', icon: '↓' },
   { href: '/settings', label: 'الإعدادات', icon: '◔' },
 ];
 

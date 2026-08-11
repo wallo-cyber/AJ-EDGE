@@ -1,11 +1,19 @@
 # ALGAEU
 
-ALGAEU is an Arabic RTL Business Development Intelligence platform for a contracting company. The application uses Next.js for the UI and the existing hosted Supabase project for authentication, operational data, queues, scheduled agents, logs, and enrichment state.
+ALGAEU is an Arabic RTL Business Development Intelligence platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
 
-## Continue from a new computer
+## Production status
 
-1. Install Git and Node.js 24 or a currently supported Node.js release.
-2. Clone the repository and check out the working branch:
+- The Next.js production build, Supabase Authentication, ownership-based RLS, persistent queues, and internal Cron workers are operational.
+- Supabase is the source of truth for companies, contacts, drafts, follow-ups, opportunities, agent jobs, runs, logs, results, attempts, and errors.
+- Internal agents run server-side and continue when the browser or local computer is closed.
+- External research agents are paused safely while the external search quota is unavailable. Their persisted state is retained for later resume.
+- External sending is disabled. Outreach remains draft and manual-approval only.
+
+## Run from a new computer
+
+1. Install Git and Node.js 24 (or another release supported by Next.js 16).
+2. Clone the repository and check out the production working branch:
 
    ```bash
    git clone https://github.com/wallo-cyber/AJ-EDGE.git
@@ -15,25 +23,31 @@ ALGAEU is an Arabic RTL Business Development Intelligence platform for a contrac
    npm ci
    ```
 
-3. Copy `app/.env.example` to `app/.env.local` and provide these values locally:
+3. Copy `app/.env.example` to `app/.env.local` and set only the local Supabase public values:
 
    ```env
    NEXT_PUBLIC_SUPABASE_URL=<project URL>
    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key>
-   TAVILY_API_KEY=<local Tavily key, only when testing Tavily locally>
    ```
 
-   Never commit `.env.local`. The hosted Edge Function reads `TAVILY_API_KEY` from Supabase Edge Function Secrets, not from Git or the browser.
+   `app/.env.local` is ignored by Git. Never place a service-role key or any secret in frontend code. Tavily is currently paused and is not required to run the production application; its hosted secret remains server-side in Supabase Edge Function Secrets.
 
-4. Start the app:
+4. Start the application:
 
    ```bash
    npm run dev
    ```
 
-5. Open `http://localhost:3000`, then sign in with the same Supabase account. The companies, CRM records, agent state, progress, results, and logs will load from Supabase.
+   For stable production mode:
 
-The hosted internal Cron workers continue processing even when the browser and development computer are off. External research remains paused while Tavily quota is unavailable. A new computer must not recreate, import, or seed the existing production data.
+   ```bash
+   npm run build
+   npm start
+   ```
+
+5. Open `http://localhost:3000` and sign in with the existing Supabase account. The same persisted data, tasks, drafts, progress, and agent history will appear on every device.
+
+Do not seed, recreate, or re-import the production data when moving to another computer.
 
 ## Verification
 
@@ -50,12 +64,12 @@ npm run test:supabase
 
 ## Persistence and safety
 
-- Business data is stored in Supabase tables protected by ownership-based RLS.
-- Agent jobs retain status, payload, result, attempts, timestamps, and errors in `agent_jobs`.
-- Executions and audit details persist in `agent_runs`, `agent_logs`, and `agent_errors`.
-- Enrichment evidence, source URLs, and confidence are persisted in `company_intelligence` and the relevant company/contact fields.
-- Duplicate open processing is prevented by the queue/enqueue guards; completed jobs are not recreated during a normal restart.
-- Outreach is draft-only and requires manual approval. No automatic external sending is enabled.
-- Secrets remain in `.env.local` or Supabase Edge Function Secrets and are excluded from Git.
+- All operational collections are stored in Supabase; browser storage is not a source of truth.
+- `agent_jobs` persists owner, status, payload, result, attempts, timestamps, scheduling state, and errors.
+- `agent_runs`, `agent_logs`, and `agent_errors` persist execution and audit history.
+- PGMQ and Supabase Cron provide durable server-side delivery and execution.
+- Enqueue guards prevent duplicate active work and do not recreate completed work unless source data has changed.
+- External search and external sending can remain unavailable without breaking the CRM.
+- Secrets are excluded from Git and are never rendered in the UI or logs.
 
-See `PROJECT_STATUS.md` for the current operational handoff.
+See `PROJECT_STATUS.md` for the latest verified operational handoff.

@@ -17,6 +17,7 @@ export default function ContactsPage() {
   const [companyFilter, setCompanyFilter] = useState('الكل');
   const [departmentFilter, setDepartmentFilter] = useState<ContactDepartment | 'الكل'>('الكل');
   const [decisionFilter, setDecisionFilter] = useState<ContactDecisionLevel | 'الكل'>('الكل');
+  const [verificationFilter, setVerificationFilter] = useState('الكل');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -36,8 +37,9 @@ export default function ContactsPage() {
       department: departmentFilter === 'الكل' ? '' : departmentFilter,
       decisionLevel: decisionFilter === 'الكل' ? '' : decisionFilter,
     });
-    return sortItems(filtered as Contact[], 'fullName' as keyof Contact, 'asc');
-  }, [companyFilter, contacts, decisionFilter, departmentFilter, searchTerm]);
+    const verified = (filtered as Contact[]).filter((contact) => verificationFilter === 'الكل' || contact.verificationStatus === verificationFilter);
+    return sortItems(verified, 'fullName' as keyof Contact, 'asc');
+  }, [companyFilter, contacts, decisionFilter, departmentFilter, searchTerm, verificationFilter]);
 
   const openNewForm = () => {
     setEditingContactId(null);
@@ -68,6 +70,7 @@ export default function ContactsPage() {
   };
 
   const handleDelete = async (contactId: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف جهة الاتصال؟')) return;
     try { await supabaseCrm.contacts.remove(contactId); setContacts((items) => items.filter((contact) => contact.id !== contactId)); setSuccess('تم الحذف.'); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
   };
@@ -92,7 +95,7 @@ export default function ContactsPage() {
       {success ? <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-700">{success}</div> : null}
       {loading ? <div className="rounded-2xl bg-white p-6 text-center text-[#6f6044]">جارٍ تحميل جهات الاتصال...</div> : null}
       <div className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="بحث بالاسم أو البريد أو المنصب" className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
           <select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">الشركة: الكل</option>
@@ -116,6 +119,12 @@ export default function ContactsPage() {
             <option value="منسق">منسق</option>
             <option value="غير محدد">غير محدد</option>
           </select>
+          <select value={verificationFilter} onChange={(event) => setVerificationFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
+            <option value="الكل">التحقق: الكل</option>
+            <option value="Verified">Verified</option>
+            <option value="Needs Verification">Needs Verification</option>
+            <option value="Rejected">Rejected</option>
+          </select>
         </div>
       </div>
 
@@ -130,12 +139,15 @@ export default function ContactsPage() {
               <th className="px-3 py-3">القسم</th>
               <th className="px-3 py-3">مستوى القرار</th>
               <th className="px-3 py-3">الجوال</th>
+              <th className="px-3 py-3">المصدر</th>
+              <th className="px-3 py-3">الثقة</th>
+              <th className="px-3 py-3">التحقق</th>
               <th className="px-3 py-3">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
             {filteredContacts.length === 0 ? (
-              <tr><td colSpan={6} className="px-3 py-6 text-center text-[#6f6044]">لا توجد جهات اتصال تطابق هذه المعايير بعد.</td></tr>
+              <tr><td colSpan={9} className="px-3 py-6 text-center text-[#6f6044]">لا توجد جهات اتصال تطابق هذه المعايير بعد.</td></tr>
             ) : filteredContacts.map((contact) => (
               <tr key={contact.id} className="border-b border-[#f4ebd7]">
                 <td className="px-3 py-3">
@@ -146,6 +158,9 @@ export default function ContactsPage() {
                 <td className="px-3 py-3">{contact.department}</td>
                 <td className="px-3 py-3">{contact.decisionLevel}</td>
                 <td className="px-3 py-3">{contact.mobile || '—'}</td>
+                <td className="px-3 py-3">{contact.source || '—'}</td>
+                <td className="px-3 py-3">{contact.confidence || 0}%</td>
+                <td className="px-3 py-3"><span className={`crm-chip ${contact.verificationStatus === 'Verified' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{contact.verificationStatus || 'Needs Verification'}</span></td>
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setSelectedContact(contact)} className="rounded-full border border-[#d8c08d] bg-[#fdf8ee] px-3 py-1.5 text-xs font-semibold text-[#6f6044]">عرض</button>
@@ -171,6 +186,9 @@ export default function ContactsPage() {
             <div><p className="text-sm text-[#9a7b2f]">البريد</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.email || '—'}</p></div>
             <div><p className="text-sm text-[#9a7b2f]">LinkedIn</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.linkedIn || '—'}</p></div>
             <div><p className="text-sm text-[#9a7b2f]">طريقة التواصل</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.preferredContactMethod}</p></div>
+            <div><p className="text-sm text-[#9a7b2f]">المصدر</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.source || '—'}</p></div>
+            <div><p className="text-sm text-[#9a7b2f]">الثقة والتحقق</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.confidence || 0}% · {selectedContact.verificationStatus || 'Needs Verification'}</p></div>
+            <div className="md:col-span-2"><p className="text-sm text-[#9a7b2f]">رابط المصدر</p>{selectedContact.sourceUrl ? <a href={selectedContact.sourceUrl} target="_blank" rel="noreferrer" className="mt-1 block break-all font-semibold text-[#8d6926] underline">فتح المصدر</a> : <p className="mt-1 font-semibold">—</p>}</div>
             <div className="md:col-span-2"><p className="text-sm text-[#9a7b2f]">ملاحظات</p><p className="mt-1 font-semibold text-[#2f2417]">{selectedContact.notes || '—'}</p></div>
           </div>
         </div>

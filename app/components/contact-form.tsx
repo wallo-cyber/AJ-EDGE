@@ -38,7 +38,7 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
   }, [companyId, companyName, initialContact]);
 
   function updateField(key: keyof Contact, value: string) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm((current) => ({ ...current, [key]: key === 'confidence' ? Number(value) : value }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -100,6 +100,26 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
           <label className="mb-2 block text-sm font-semibold text-[#2f2417]">طريقة التواصل المفضلة</label>
           <select value={form.preferredContactMethod} onChange={(event) => updateField('preferredContactMethod', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             {preferredMethods.map((method) => <option key={method} value={method}>{method}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">مصدر المعلومة</label>
+          <input value={form.source} onChange={(event) => updateField('source', event.target.value)} placeholder="الموقع الرسمي أو LinkedIn" className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">رابط المصدر</label>
+          <input type="url" value={form.sourceUrl} onChange={(event) => updateField('sourceUrl', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">الثقة بالمعلومة %</label>
+          <input type="number" min="0" max="100" value={form.confidence} onChange={(event) => updateField('confidence', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">حالة التحقق</label>
+          <select value={form.verificationStatus} onChange={(event) => updateField('verificationStatus', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
+            <option value="Needs Verification">Needs Verification</option>
+            <option value="Verified">Verified</option>
+            <option value="Rejected">Rejected</option>
           </select>
         </div>
         <div className="md:col-span-2">

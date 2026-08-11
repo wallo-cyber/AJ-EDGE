@@ -8,6 +8,8 @@ import { type FollowUp, type FollowUpPriority, type FollowUpStatus, type FollowU
 import { supabaseCrm } from '../../lib/supabase/crm';
 
 const viewOptions = ['today', 'upcoming', 'overdue', 'completed'] as const;
+const pendingStatuses = new Set(['Pending', 'Due Today', 'Overdue', 'مجدولة', 'متأخرة']);
+const completedStatuses = new Set(['Completed', 'مكتملة']);
 
 type ViewOption = (typeof viewOptions)[number];
 
@@ -48,11 +50,11 @@ export default function FollowUpsPage() {
       if (view === 'today') {
         matchesView = item.date === today;
       } else if (view === 'upcoming') {
-        matchesView = item.date >= today && item.status === 'مجدولة';
+        matchesView = item.date >= today && pendingStatuses.has(item.status);
       } else if (view === 'overdue') {
-        matchesView = item.date < today && item.status === 'مجدولة';
+        matchesView = item.date < today && pendingStatuses.has(item.status);
       } else if (view === 'completed') {
-        matchesView = item.status === 'مكتملة';
+        matchesView = completedStatuses.has(item.status);
       }
 
       return matchesSearch && matchesCompany && matchesStatus && matchesType && matchesPriority && matchesView;
@@ -84,6 +86,7 @@ export default function FollowUpsPage() {
   };
 
   const handleDelete = async (followUpId: string) => {
+    if (!window.confirm('هل أنت متأكد من حذف المتابعة؟')) return;
     await supabaseCrm.followUps.remove(followUpId);
     setFollowUps((items) => items.filter((item) => item.id !== followUpId));
   };
@@ -96,12 +99,13 @@ export default function FollowUpsPage() {
   const handleMarkCompleted = async (followUpId: string) => {
     const current = followUps.find((item) => item.id === followUpId);
     if (!current) return;
-    const updated = await supabaseCrm.followUps.update(followUpId, { ...current, status: 'مكتملة' });
+    const updated = await supabaseCrm.followUps.update(followUpId, { ...current, status: 'Completed' });
     setFollowUps((items) => items.map((item) => item.id === followUpId ? updated as FollowUp : item));
   };
 
   const handleReschedule = async (followUp: FollowUp) => {
-    const updated = await supabaseCrm.followUps.update(followUp.id, { ...followUp, status: 'مجدولة', nextFollowUpDate: new Date().toISOString().slice(0, 10) });
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+    const updated = await supabaseCrm.followUps.update(followUp.id, { ...followUp, status: 'Pending', date: tomorrow, nextFollowUpDate: tomorrow });
     setFollowUps((items) => items.map((item) => item.id === followUp.id ? updated as FollowUp : item));
   };
 
@@ -133,25 +137,27 @@ export default function FollowUpsPage() {
           </select>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as FollowUpStatus | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">الحالة: الكل</option>
-            <option value="مجدولة">مجدولة</option>
-            <option value="مكتملة">مكتملة</option>
-            <option value="متأخرة">متأخرة</option>
-            <option value="ملغاة">ملغاة</option>
+            <option value="Pending">Pending</option>
+            <option value="Due Today">Due Today</option>
+            <option value="Overdue">Overdue</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
           <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as FollowUpType | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">النوع: الكل</option>
-            <option value="اتصال">اتصال</option>
-            <option value="بريد إلكتروني">بريد إلكتروني</option>
-            <option value="واتساب">واتساب</option>
-            <option value="زيارة">زيارة</option>
-            <option value="اجتماع">اجتماع</option>
+            <option value="Call">Call</option>
+            <option value="Email">Email</option>
+            <option value="WhatsApp">WhatsApp</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Proposal Follow-up">Proposal Follow-up</option>
+            <option value="General">General</option>
             <option value="LinkedIn">LinkedIn</option>
           </select>
           <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value as FollowUpPriority | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">الأولوية: الكل</option>
-            <option value="عالية">عالية</option>
-            <option value="متوسطة">متوسطة</option>
-            <option value="منخفضة">منخفضة</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
           </select>
         </div>
       </div>

@@ -23,6 +23,8 @@ export type Company = {
   nextFollowUp: string;
   notes: string;
   priority?: string; leadScore?: number; dataCompleteness?: number; dataQualityStatus?: string; missingFields?: string[]; scoreReasons?: string[]; sourceName?: string;
+  qualificationStatus?: string; qualificationReason?: string; contractingAngle?: string; nextAction?: string;
+  vendorRegistrationUrl?: string; vendorRegistrationStatus?: string; outreachStatus?: string; verificationStatus?: string; sourceUrl?: string;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];
@@ -42,6 +44,10 @@ export type Contact = {
   linkedIn: string;
   decisionLevel: string;
   preferredContactMethod: string;
+  source: string;
+  sourceUrl: string;
+  confidence: number;
+  verificationStatus: string;
   notes: string;
   createdAt: string;
   updatedAt: string;

@@ -14,16 +14,26 @@ export function EnrichmentWorkspace() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const load = () => simpleCrud.list('companies').then(setCompanies).finally(() => setLoading(false));
+  const [error, setError] = useState('');
+  const load = () => simpleCrud.list('companies').then(setCompanies).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   useEffect(() => { void load(); }, []);
   const rows = useMemo(() => companies.filter((company) => {
     const missing = Array.isArray(company.missing_fields) ? company.missing_fields : [];
     return safe(company.company_name).toLowerCase().includes(search.toLowerCase()) && (missing.length > 0 || safe(company.verification_status) !== 'Verified');
   }).sort((a, b) => safe(a.priority).localeCompare(safe(b.priority)) || Number(b.lead_score ?? 0) - Number(a.lead_score ?? 0)), [companies, search]);
-  const update = async (row: SimpleRow, values: Record<string, string | number | null>, notice: string) => { await simpleCrud.update('companies', row.id, values); setMessage(notice); await load(); };
+  const update = async (row: SimpleRow, values: Record<string, string | number | null>, notice: string) => { setError(''); try { await simpleCrud.update('companies', row.id, values); setMessage(notice); await load(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حفظ التحديث.'); } };
+  const invalidUrl = (value: unknown) => { const url = safe(value); if (!url) return false; try { const parsed = new URL(url.startsWith('http') ? url : `https://${url}`); return !parsed.hostname.includes('.'); } catch { return true; } };
+  const quality = [
+    ['موقع مفقود', companies.filter((row) => !safe(row.website)).length], ['هاتف مفقود', companies.filter((row) => !safe(row.general_phone || row.phone)).length],
+    ['بريد مفقود', companies.filter((row) => !safe(row.general_email || row.email)).length], ['مدينة مفقودة', companies.filter((row) => !safe(row.city)).length],
+    ['قطاع مفقود', companies.filter((row) => !safe(row.sector)).length], ['مصدر مفقود', companies.filter((row) => !safe(row.source_url || row.source_name)).length],
+    ['رابط غير صالح', companies.filter((row) => invalidUrl(row.website) || invalidUrl(row.source_url)).length], ['إجراء تالٍ مفقود', companies.filter((row) => !safe(row.next_action || row.next_follow_up)).length],
+  ];
 
   return <CRMPage title="استكمال البيانات" description="طابور قانوني يبدأ بـ Priority A ثم B، ولا يحفظ أي معلومة غير موثقة.">
     <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-900">PAUSED — EXTERNAL SEARCH UNAVAILABLE. البحث اليدوي والبيانات المحفوظة يعملان بصورة طبيعية.</p>
+    {error ? <p className="rounded-xl bg-red-50 p-3 text-red-700">تعذر إكمال العملية: {error}</p> : null}
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{quality.map(([label, count]) => <div key={String(label)} className="crm-kpi"><p className="text-xs text-[#75664d]">{label}</p><strong className="mt-2 block text-2xl">{count}</strong></div>)}</div>
     <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="بحث عن شركة" className="w-full rounded-xl border p-3" />
     {message && <p className="rounded-xl bg-emerald-50 p-3 text-emerald-700">{message}</p>}
     {loading ? <p className="p-8 text-center">جارٍ التحميل...</p> : <div className="grid gap-3">{rows.map((row) => {

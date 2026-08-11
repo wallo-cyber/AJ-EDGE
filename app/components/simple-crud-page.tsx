@@ -5,14 +5,16 @@ import { CRMPage } from './crm-shell';
 import { supabaseCrm } from '../lib/supabase/crm';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 
-export type CrudField = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'company' | 'select'; options?: string[]; required?: boolean };
+export type CrudField = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'company' | 'contact' | 'opportunity' | 'select'; options?: string[]; required?: boolean };
 
-type Props = { table: string; title: string; description: string; fields: CrudField[] };
+type Props = { table: string; title: string; description: string; fields: CrudField[]; summaryField?: string };
 
-export function SimpleCrudPage({ table, title, description, fields }: Props) {
+export function SimpleCrudPage({ table, title, description, fields, summaryField }: Props) {
   const emptyForm = useMemo(() => Object.fromEntries(fields.map((field) => [field.key, ''])), [fields]);
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [companies, setCompanies] = useState<Array<{ id: string; companyName: string }>>([]);
+  const [contacts, setContacts] = useState<SimpleRow[]>([]);
+  const [opportunities, setOpportunities] = useState<SimpleRow[]>([]);
   const [form, setForm] = useState<Record<string, string>>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,8 +24,8 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
 
   useEffect(() => {
     setLoading(true);
-    void Promise.all([simpleCrud.list(table), supabaseCrm.companies.list()])
-      .then(([items, companyItems]) => { setRows(items); setCompanies(companyItems); })
+    void Promise.all([simpleCrud.list(table), supabaseCrm.companies.list(), simpleCrud.list('contacts'), simpleCrud.list('opportunities')])
+      .then(([items, companyItems, contactItems, opportunityItems]) => { setRows(items); setCompanies(companyItems); setContacts(contactItems); setOpportunities(opportunityItems); })
       .catch((reason: Error) => setError(reason.message))
       .finally(() => setLoading(false));
   }, [table]);
@@ -33,7 +35,7 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
     try {
       const payload: Record<string, string | number | null> = { ...form };
       for (const field of fields) {
-        if (field.type === 'number') payload[field.key] = Number(form[field.key] || 0);
+        if (field.type === 'number') payload[field.key] = form[field.key].trim() ? Number(form[field.key]) : null;
         if ((field.type === 'date' || field.type === 'datetime-local') && !form[field.key]) payload[field.key] = null;
       }
       if (payload.company_id) payload.company_name = companies.find((company) => company.id === payload.company_id)?.companyName ?? '';
@@ -57,6 +59,8 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
     setSuccess('');
   }
 
+  const summary = useMemo(() => summaryField ? Object.entries(rows.reduce<Record<string, number>>((result, row) => { const label = String(row[summaryField] ?? 'غير محدد'); result[label] = (result[label] ?? 0) + 1; return result; }, {})).sort((a, b) => b[1] - a[1]) : [], [rows, summaryField]);
+
   async function remove(id: string) {
     if (!window.confirm('هل أنت متأكد من حذف هذا السجل؟')) return;
     setError('');
@@ -66,11 +70,14 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
 
   return (
     <CRMPage title={title} description={description}>
+      {summaryField ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{summary.map(([label, count]) => <div key={label} className="crm-kpi"><p className="text-xs text-[#75664d]">{label}</p><strong className="mt-2 block text-2xl">{count}</strong></div>)}{!summary.length && !loading ? <div className="crm-empty sm:col-span-2 xl:col-span-5">لا توجد بيانات في المسار بعد.</div> : null}</div> : null}
       <form onSubmit={submit} className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {fields.map((field) => <label key={field.key} className="text-sm text-[#6f6044]">{field.label}
             {field.type === 'textarea' ? <textarea required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 min-h-24 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5" />
               : field.type === 'company' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">اختر الشركة</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.companyName}</option>)}</select>
+              : field.type === 'contact' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">بدون جهة اتصال</option>{contacts.filter((contact) => !form.company_id || contact.company_id === form.company_id).map((contact) => <option key={contact.id} value={contact.id}>{String(contact.full_name || contact.name || 'جهة اتصال')}</option>)}</select>
+              : field.type === 'opportunity' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">بدون فرصة مرتبطة</option>{opportunities.filter((opportunity) => !form.company_id || opportunity.company_id === form.company_id).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{String(opportunity.title || 'فرصة')}</option>)}</select>
               : field.type === 'select' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">اختر</option>{field.options?.map((option) => <option key={option} value={option}>{option}</option>)}</select>
               : <input required={field.required} type={field.type ?? 'text'} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5" />}
           </label>)}
@@ -78,7 +85,7 @@ export function SimpleCrudPage({ table, title, description, fields }: Props) {
         <div className="mt-4 flex gap-2"><button disabled={saving} className="rounded-full bg-[#2f2417] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{saving ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديلات' : 'إضافة'}</button>{editingId ? <button type="button" onClick={() => { setEditingId(null); setForm(emptyForm); }} className="rounded-full border border-[#ead9b3] px-5 py-2.5 text-sm">إلغاء</button> : null}</div>
         {error ? <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}{success ? <p className="mt-3 rounded-xl bg-green-50 p-3 text-sm text-green-700">{success}</p> : null}
       </form>
-      <div className="overflow-x-auto rounded-[24px] border border-[#ead9b3] bg-white p-3">{loading ? <p className="p-6 text-center text-[#6f6044]">جارٍ تحميل البيانات...</p> : rows.length === 0 ? <p className="p-6 text-center text-[#6f6044]">لا توجد بيانات بعد.</p> : <table className="min-w-full text-right text-sm"><thead><tr className="border-b border-[#ead9b3] text-[#9a7b2f]">{fields.slice(0, 5).map((field) => <th key={field.key} className="px-3 py-3">{field.label}</th>)}<th className="px-3 py-3">الإجراءات</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-b border-[#f4ebd7]">{fields.slice(0, 5).map((field) => <td key={field.key} className="px-3 py-3">{field.type === 'company' ? companies.find((company) => company.id === row[field.key])?.companyName ?? '—' : String(row[field.key] ?? '—')}</td>)}<td className="px-3 py-3"><div className="flex gap-2"><button onClick={() => edit(row)} className="rounded-full border px-3 py-1.5">تعديل</button><button onClick={() => void remove(row.id)} className="rounded-full border px-3 py-1.5 text-red-700">حذف</button></div></td></tr>)}</tbody></table>}</div>
+      <div className="overflow-x-auto rounded-[24px] border border-[#ead9b3] bg-white p-3">{loading ? <p className="p-6 text-center text-[#6f6044]">جارٍ تحميل البيانات...</p> : rows.length === 0 ? <p className="p-6 text-center text-[#6f6044]">لا توجد بيانات بعد.</p> : <table className="min-w-full text-right text-sm"><thead><tr className="border-b border-[#ead9b3] text-[#9a7b2f]">{fields.slice(0, 6).map((field) => <th key={field.key} className="px-3 py-3">{field.label}</th>)}<th className="px-3 py-3">الإجراءات</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id} className="border-b border-[#f4ebd7]">{fields.slice(0, 6).map((field) => <td key={field.key} className="px-3 py-3">{field.type === 'company' ? companies.find((company) => company.id === row[field.key])?.companyName ?? '—' : field.type === 'contact' ? String(contacts.find((contact) => contact.id === row[field.key])?.full_name || '—') : field.type === 'opportunity' ? String(opportunities.find((opportunity) => opportunity.id === row[field.key])?.title || '—') : String(row[field.key] ?? '—')}</td>)}<td className="px-3 py-3"><div className="flex gap-2"><button onClick={() => edit(row)} className="rounded-full border px-3 py-1.5">تعديل</button><button onClick={() => void remove(row.id)} className="rounded-full border px-3 py-1.5 text-red-700">حذف</button></div></td></tr>)}</tbody></table>}</div>
     </CRMPage>
   );
 }
