@@ -15,9 +15,7 @@ export default function CompanyDetailsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    void supabaseCrm.companies.list().then((items) => {
-      setCompany(items.find((item) => item.id === params.id) as Company ?? null);
-    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
+    void supabaseCrm.companies.get(params.id).then((item) => setCompany(item as Company)).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, [params.id]);
 
   const toggleArchive = async () => {
@@ -52,7 +50,7 @@ export default function CompanyDetailsPage() {
     <CRMPage
       title="تفاصيل الشركة"
       description="ملف كامل للشركة مع معلومات الاتصال، السجل التواصل، المتابعات، والفرص."
-      action={<div className="flex flex-wrap gap-2"><button onClick={() => void toggleArchive()} className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-4 py-2.5 text-sm font-semibold text-[#9a4b2d]">{company.archivedAt ? 'استعادة' : 'أرشفة'}</button><Link href="/companies" className="rounded-full border border-[#d8c08d] bg-white px-4 py-2.5 text-sm font-semibold text-[#6f6044]">تعديل / العودة للشركات</Link></div>}
+      action={<div className="flex flex-wrap gap-2"><button onClick={() => void toggleArchive()} className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-4 py-2.5 text-sm font-semibold text-[#9a4b2d]">{company.archivedAt ? 'استعادة' : 'أرشفة'}</button><Link href={`/companies?edit=${company.id}`} className="rounded-full border border-[#d8c08d] bg-white px-4 py-2.5 text-sm font-semibold text-[#6f6044]">تعديل الشركة</Link><Link href="/companies" className="rounded-full border border-[#d8c08d] bg-white px-4 py-2.5 text-sm font-semibold text-[#6f6044]">العودة</Link></div>}
     >
       <CompanyDetailsView company={company} />
     </CRMPage>

@@ -27,6 +27,9 @@ export type Contact = {
   sourceUrl: string;
   confidence: number;
   verificationStatus: string;
+  decisionMaker: boolean;
+  verifiedAt: string;
+  archivedAt: string;
   notes: string;
   createdAt: string;
   updatedAt: string;
@@ -62,6 +65,9 @@ export function createEmptyContact(companyId?: string, companyName = ''): Omit<C
     sourceUrl: '',
     confidence: 0,
     verificationStatus: 'Needs Verification',
+    decisionMaker: false,
+    verifiedAt: '',
+    archivedAt: '',
     notes: '',
   };
 }

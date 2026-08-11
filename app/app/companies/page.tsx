@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useMemo, useState } from 'react';
 import { CompanyActions } from '../../components/company-actions';
 import { CompanyForm } from '../../components/company-form';
@@ -32,6 +34,8 @@ export default function CompaniesPage() {
   useEffect(() => {
     void supabaseCrm.companies.list().then((items) => setCompanies(items as Company[])).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => { const editId=new URLSearchParams(window.location.search).get('edit'); if(editId&&companies.some(item=>item.id===editId)){setEditingCompanyId(editId);setIsFormOpen(true)} },[companies]);
 
   const filteredCompanies = useMemo(() => {
     const searched = searchItems(companies, searchTerm, ['companyName', 'contactPerson', 'sector']);

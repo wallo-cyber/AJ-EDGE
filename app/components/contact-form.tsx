@@ -37,7 +37,7 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
     } as Contact);
   }, [companyId, companyName, initialContact]);
 
-  function updateField(key: keyof Contact, value: string) {
+  function updateField(key: keyof Contact, value: string | boolean) {
     setForm((current) => ({ ...current, [key]: key === 'confidence' ? Number(value) : value }));
   }
 
@@ -117,11 +117,12 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
         <div>
           <label className="mb-2 block text-sm font-semibold text-[#2f2417]">حالة التحقق</label>
           <select value={form.verificationStatus} onChange={(event) => updateField('verificationStatus', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
-            <option value="Needs Verification">Needs Verification</option>
-            <option value="Verified">Verified</option>
-            <option value="Rejected">Rejected</option>
+            <option value="UNVERIFIED">UNVERIFIED</option>
+            <option value="PARTIALLY_VERIFIED">PARTIALLY_VERIFIED</option>
+            <option value="VERIFIED">VERIFIED</option>
           </select>
         </div>
+        <label className="flex items-center gap-2 rounded-xl border bg-white p-3 text-sm font-semibold"><input type="checkbox" checked={form.decisionMaker} onChange={(event) => updateField('decisionMaker', event.target.checked)} /> صانع قرار</label>
         <div className="md:col-span-2">
           <label className="mb-2 block text-sm font-semibold text-[#2f2417]">ملاحظات</label>
           <textarea value={form.notes} onChange={(event) => updateField('notes', event.target.value)} className="min-h-24 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />

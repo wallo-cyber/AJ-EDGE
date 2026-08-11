@@ -1,1 +1,1 @@
-import { EnrichmentWorkspace } from '../../components/enrichment-workspace'; export default function EnrichmentPage(){return <EnrichmentWorkspace/>}
+import { redirect } from 'next/navigation'; export default function EnrichmentPage(){redirect('/research?tab=enrichment')}

@@ -77,3 +77,7 @@ npm run audit:resume
 - Secrets are excluded from Git and are never rendered in the UI or logs.
 
 See `PROJECT_STATUS.md` for the latest verified operational handoff.
+
+## V1 consolidated workspaces
+
+The primary product flow is now: Today → Companies → Contacts → Research → Outreach → Pipeline → Agents → Reports. Legacy deep links redirect to the matching workspace tab. Before deploying this consolidation, apply the pending additive migration documented in `audit/ALGAEU_V1_IMPLEMENTATION.md`; it creates the protected communication-event ledger and supporting decision-maker, pipeline, and research fields.

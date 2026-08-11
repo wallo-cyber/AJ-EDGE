@@ -6,24 +6,18 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 
 const navItems = [
-  { href: '/daily', label: 'مركز العمل اليومي', icon: '✓' },
-  { href: '/dashboard', label: 'لوحة القيادة', icon: '◈' },
+  { href: '/daily', label: 'اليوم', icon: '✓' },
   { href: '/companies', label: 'الشركات', icon: '◉' },
   { href: '/contacts', label: 'جهات الاتصال', icon: '◎' },
-  { href: '/discovery', label: 'اكتشاف الشركات', icon: '⌕' },
-  { href: '/enrichment', label: 'استكمال البيانات', icon: '+' },
-  { href: '/vendor-registration', label: 'تسجيل الموردين', icon: '◇' },
-  { href: '/ready-outreach', label: 'جاهز للتواصل', icon: '→' },
-  { href: '/follow-ups', label: 'المتابعات', icon: '◍' },
-  { href: '/meetings', label: 'الاجتماعات', icon: '◎' },
-  { href: '/opportunities', label: 'الفرص', icon: '◐' },
-  { href: '/quotations', label: 'العروض', icon: '◑' },
-  { href: '/contracts', label: 'العقود', icon: '◒' },
-  { href: '/agents', label: 'الوكلاء والمعرّفون', icon: '◖' },
-  { href: '/agent-center', label: 'مركز الوكلاء', icon: '⚙' },
-  { href: '/manual-research', label: 'البحث اليدوي', icon: '⌕' },
-  { href: '/search', label: 'البحث الشامل', icon: '⌕' },
+  { href: '/research', label: 'البحث', icon: '⌕' },
+  { href: '/outreach', label: 'التواصل', icon: '→' },
+  { href: '/pipeline', label: 'مسار الفرص', icon: '◐' },
+  { href: '/agent-center', label: 'الوكلاء', icon: '⚙' },
   { href: '/reports', label: 'التقارير', icon: '◓' },
+];
+
+const secondaryNavItems = [
+  { href: '/search', label: 'البحث الشامل', icon: '⌕' },
   { href: '/exports', label: 'تصدير البيانات', icon: '↓' },
   { href: '/settings', label: 'الإعدادات', icon: '◔' },
   { href: '/system-status', label: 'حالة النظام', icon: '●' },
@@ -108,6 +102,11 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
               );
             })}
           </nav>
+
+          <div className={`my-4 border-t border-[#eadfc9] pt-3 ${navCollapsed ? 'lg:hidden' : ''}`}>
+            <p className="mb-2 px-3 text-[10px] font-bold text-[#9a7b2f]">أدوات وإدارة</p>
+            {secondaryNavItems.map((item) => <Link key={item.href} href={item.href} onClick={() => setNavOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs ${pathname === item.href ? 'bg-[#f0e3ca] font-bold' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}><span>{item.label}</span><span>{item.icon}</span></Link>)}
+          </div>
 
           <div className={`mt-5 rounded-[18px] border border-[#ead9b3] bg-[#fdf9f1] p-3 text-xs text-[#6f6044] ${navCollapsed ? 'lg:hidden' : ''}`}><strong className="text-[#2f2417]">النطاق التشغيلي</strong><p className="mt-1">المنطقة الشرقية · تطوير أعمال المقاولات</p></div>
           <button onClick={signOut} title="تسجيل الخروج" className="mt-3 w-full rounded-xl border border-[#d8c08d] bg-white px-3 py-2.5 text-sm font-semibold text-[#6f6044] hover:bg-red-50 hover:text-red-700">{navCollapsed ? <span className="hidden lg:inline">↪</span> : null}<span className={navCollapsed ? 'lg:hidden' : ''}>تسجيل الخروج</span></button>

@@ -48,6 +48,9 @@ export type Contact = {
   sourceUrl: string;
   confidence: number;
   verificationStatus: string;
+  decisionMaker: boolean;
+  verifiedAt: string;
+  archivedAt: string;
   notes: string;
   createdAt: string;
   updatedAt: string;

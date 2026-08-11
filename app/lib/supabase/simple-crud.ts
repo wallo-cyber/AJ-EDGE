@@ -1,6 +1,7 @@
 import { getSupabaseClient } from './client';
 
-export type SimpleRow = Record<string, string | number | null> & { id: string };
+export type SimpleValue = string | number | boolean | null | Record<string, unknown> | unknown[];
+export type SimpleRow = Record<string, SimpleValue> & { id: string };
 
 function databaseError(operation: string, error: { code?: string; message?: string }) {
   console.error(`[Supabase:${operation}]`, error.code || 'request_failed');
@@ -8,6 +9,19 @@ function databaseError(operation: string, error: { code?: string; message?: stri
 }
 
 export const simpleCrud = {
+  async page(table: string, page = 1, pageSize = 25, options?: { column?: string; value?: string; order?: string; ascending?: boolean }) {
+    const from = Math.max(0, page - 1) * pageSize;
+    let query = getSupabaseClient().from(table).select('*', { count: 'exact' });
+    if (options?.column && options.value !== undefined) query = query.eq(options.column, options.value);
+    const { data, error, count } = await query.order(options?.order ?? 'created_at', { ascending: options?.ascending ?? false }).range(from, from + pageSize - 1);
+    if (error) throw databaseError('page', error);
+    return { rows: (data ?? []) as SimpleRow[], count: count ?? 0, page, pageSize };
+  },
+  async forCompany(table: string, companyId: string, pageSize = 100) {
+    const { data, error } = await getSupabaseClient().from(table).select('*').eq('company_id', companyId).order('created_at', { ascending: false }).limit(pageSize);
+    if (error) throw databaseError('forCompany', error);
+    return (data ?? []) as SimpleRow[];
+  },
   async list(table: string) {
     const pageSize = 1000;
     const rows: SimpleRow[] = [];

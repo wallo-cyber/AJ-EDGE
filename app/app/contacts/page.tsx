@@ -37,7 +37,7 @@ export default function ContactsPage() {
       department: departmentFilter === 'الكل' ? '' : departmentFilter,
       decisionLevel: decisionFilter === 'الكل' ? '' : decisionFilter,
     });
-    const verified = (filtered as Contact[]).filter((contact) => verificationFilter === 'الكل' || contact.verificationStatus === verificationFilter);
+    const verified = (filtered as Contact[]).filter((contact) => !contact.archivedAt && (verificationFilter === 'الكل' || contact.verificationStatus === verificationFilter));
     return sortItems(verified, 'fullName' as keyof Contact, 'asc');
   }, [companyFilter, contacts, decisionFilter, departmentFilter, searchTerm, verificationFilter]);
 
@@ -69,10 +69,10 @@ export default function ContactsPage() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحفظ.'); }
   };
 
-  const handleDelete = async (contactId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف جهة الاتصال؟')) return;
-    try { await supabaseCrm.contacts.remove(contactId); setContacts((items) => items.filter((contact) => contact.id !== contactId)); setSuccess('تم الحذف.'); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
+  const handleArchive = async (contact: Contact) => {
+    if (!window.confirm('أرشفة جهة الاتصال مع الاحتفاظ بسجلها؟')) return;
+    try { const updated = await supabaseCrm.contacts.update(contact.id, { ...contact, archivedAt: new Date().toISOString() }); setContacts((items) => items.map((item) => item.id === contact.id ? updated as Contact : item)); setSuccess('تمت الأرشفة دون حذف.'); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذرت الأرشفة.'); }
   };
 
   const handleEdit = (contact: Contact) => {
@@ -124,9 +124,9 @@ export default function ContactsPage() {
           </select>
           <select value={verificationFilter} onChange={(event) => setVerificationFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">التحقق: الكل</option>
-            <option value="Verified">Verified</option>
-            <option value="Needs Verification">Needs Verification</option>
-            <option value="Rejected">Rejected</option>
+            <option value="VERIFIED">VERIFIED</option>
+            <option value="PARTIALLY_VERIFIED">PARTIALLY_VERIFIED</option>
+            <option value="UNVERIFIED">UNVERIFIED</option>
           </select>
         </div>
       </div>
@@ -163,12 +163,12 @@ export default function ContactsPage() {
                 <td className="px-3 py-3">{contact.mobile || '—'}</td>
                 <td className="px-3 py-3">{contact.source || '—'}</td>
                 <td className="px-3 py-3">{contact.confidence || 0}%</td>
-                <td className="px-3 py-3"><span className={`crm-chip ${contact.verificationStatus === 'Verified' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{contact.verificationStatus || 'Needs Verification'}</span></td>
+                <td className="px-3 py-3"><span className={`crm-chip ${contact.verificationStatus === 'VERIFIED' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{contact.verificationStatus || 'UNVERIFIED'}</span></td>
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setSelectedContact(contact)} className="rounded-full border border-[#d8c08d] bg-[#fdf8ee] px-3 py-1.5 text-xs font-semibold text-[#6f6044]">عرض</button>
                     <button onClick={() => handleEdit(contact)} className="rounded-full border border-[#d8c08d] bg-[#f8efe0] px-3 py-1.5 text-xs font-semibold text-[#2f2417]">تعديل</button>
-                    <button onClick={() => handleDelete(contact.id)} className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-3 py-1.5 text-xs font-semibold text-[#9a4b2d]">حذف</button>
+                    <button onClick={() => void handleArchive(contact)} className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-3 py-1.5 text-xs font-semibold text-[#9a4b2d]">أرشفة</button>
                   </div>
                 </td>
               </tr>

@@ -6,6 +6,14 @@ Status date: 2026-08-11 (Asia/Riyadh)
 
 Branch: `codex/aj-edge-mvp`
 
+## V1 consolidation checkpoint (2026-08-11)
+
+- V1 application consolidation is implemented locally: eight primary workspaces, centralized business states, evidence-based research resolution, verified decision-maker gating, communication events, canonical pipeline stages, ranked Today actions, invite-only login, targeted manual agent runs, and focused/paginated queries.
+- TypeScript passes, 28/28 automated tests pass, and the production build passes with 29 routes.
+- A read-only server audit confirms the production state remains unchanged: 181 companies, 0 contacts, 881 drafts, 1 follow-up, 1,919 jobs, and zero duplicate company/contact/job groups. External research and external sending remain disabled.
+- The additive migration `20260811075453_algaeu_v1_core_consolidation.sql` is committed-ready but is not applied remotely because this device lacks a Supabase Personal Access Token for CLI DDL. The existing server secret is intentionally not used for schema administration.
+- Do not deploy the consolidated application until that migration has been applied and its RLS policies verified. See `audit/ALGAEU_V1_IMPLEMENTATION.md`.
+
 Final handoff: the latest commit containing this document on the branch above.
 
 ## Verified production state

@@ -62,7 +62,7 @@ function contactFromRow(row: DbRow): Contact {
     id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
     fullName: text(row.full_name) || text(row.name), position: text(row.position), department: text(row.department),
     mobile: text(row.mobile) || text(row.phone), email: text(row.email), linkedIn: text(row.linked_in) || text(row.linkedin),
-    decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), source: text(row.source), sourceUrl: text(row.source_url), confidence: Number(row.confidence || 0), verificationStatus: text(row.verification_status), notes: text(row.notes),
+    decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), source: text(row.source), sourceUrl: text(row.source_url), confidence: Number(row.confidence || 0), verificationStatus: text(row.verification_status), decisionMaker: Boolean(row.decision_maker), verifiedAt: text(row.verified_at), archivedAt: text(row.archived_at), notes: text(row.notes),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
   };
 }
@@ -74,7 +74,7 @@ function contactToRow(contact: Partial<Contact>) {
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
     phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
-    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel === 'Primary' ? 'Decision Maker' : contact.decisionLevel === 'Influencer' ? 'Influencer' : ['Procurement', 'Projects', 'Engineering', 'Management'].includes(contact.decisionLevel ?? '') ? 'Decision Maker' : 'General Contact', verification_status: contact.verificationStatus ?? 'Needs Verification', contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
+    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', decision_maker: Boolean(contact.decisionMaker), contact_classification: contact.decisionMaker ? 'Decision Maker' : contact.decisionLevel === 'Influencer' ? 'Influencer' : 'General Contact', verification_status: contact.verificationStatus ?? 'UNVERIFIED', verified_at: contact.verificationStatus === 'VERIFIED' ? (contact.verifiedAt || new Date().toISOString()) : null, archived_at: nullable(contact.archivedAt ?? ''), contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
 }
 
@@ -125,6 +125,7 @@ export const supabaseCrm = {
   configured: isSupabaseConfigured,
   companies: {
     list: () => list('companies', companyFromRow) as Promise<Company[]>,
+    get: async (id: string) => { const { data, error } = await getSupabaseClient().from('companies').select('*').eq('id', id).single(); throwIfError(error); return companyFromRow(data as DbRow); },
     create: (item: Partial<Company>) => insert('companies', companyToRow(item), companyFromRow),
     update: (id: string, item: Partial<Company>) => update('companies', id, companyToRow(item), companyFromRow),
     remove: (id: string) => remove('companies', id),

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CRMPage } from '../../components/crm-shell';
 import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
+import { companyOutreachState, decisionMakerCoverage } from '../../lib/domain/business';
 
 const safe = (value: unknown) => String(value ?? '').trim();
 const group = (rows: SimpleRow[], key: string) => Object.entries(rows.reduce<Record<string, number>>((result, row) => { const label = safe(row[key]) || 'غير محدد'; result[label] = (result[label] ?? 0) + 1; return result; }, {})).sort((a, b) => b[1] - a[1]);
@@ -19,7 +20,7 @@ export default function ReportsPage() {
   const [fromDate, setFromDate] = useState('');
 
   useEffect(() => {
-    void Promise.all(['companies', 'contacts', 'follow_ups', 'opportunities', 'messages', 'agent_jobs', 'agent_runs', 'meetings', 'quotations', 'contracts'].map(async (table) => [table, await simpleCrud.list(table)] as const))
+    void Promise.all(['companies', 'contacts', 'follow_ups', 'opportunities', 'messages', 'communication_events', 'agent_jobs', 'agent_runs', 'meetings', 'quotations', 'contracts'].map(async (table) => [table, (await simpleCrud.page(table, 1, table === 'agent_jobs' || table === 'agent_runs' ? 3000 : 1000)).rows] as const))
       .then((rows) => setData(Object.fromEntries(rows)))
       .catch((reason: Error) => setError(reason.message))
       .finally(() => setLoading(false));
@@ -35,12 +36,14 @@ export default function ReportsPage() {
   const companyIds = useMemo(() => new Set(companies.map((company) => company.id)), [companies]);
   const opportunities = (data.opportunities ?? []).filter((row) => companyIds.has(safe(row.company_id)));
   const messages = (data.messages ?? []).filter((row) => companyIds.has(safe(row.company_id)));
+  const events = (data.communication_events ?? []).filter((row) => companyIds.has(safe(row.company_id)));
+  const contacts = (data.contacts ?? []).filter((row) => companyIds.has(safe(row.company_id)));
   const jobs = (data.agent_jobs ?? []).filter((row) => !row.company_id || companyIds.has(safe(row.company_id)));
   const meetings = (data.meetings ?? []).filter((row) => companyIds.has(safe(row.company_id)));
   const quotations = (data.quotations ?? []).filter((row) => companyIds.has(safe(row.company_id)));
-  const contracts = (data.contracts ?? []).filter((row) => companyIds.has(safe(row.company_id)));
   const options = { sectors: [...new Set((data.companies ?? []).map((row) => safe(row.sector)).filter(Boolean))].sort(), types: [...new Set((data.companies ?? []).map((row) => safe(row.company_type)).filter(Boolean))].sort(), statuses: [...new Set((data.companies ?? []).map((row) => safe(row.status)).filter(Boolean))].sort() };
-  const cards = [['الشركات', companies.length], ['جاهزة للتواصل', companies.filter((row) => ['A','B'].includes(safe(row.priority)) && Boolean(row.general_email || row.email || row.general_phone || row.phone)).length], ['تم التواصل', companies.filter((row) => row.outreach_status === 'Contacted' || safe(row.last_contact)).length], ['الردود', companies.filter((row) => safe(row.last_outcome) && safe(row.last_outcome) !== 'No Response').length], ['الاجتماعات', meetings.length], ['الفرص', opportunities.length], ['RFQs', opportunities.filter((row) => /rfq/i.test(safe(row.stage))).length], ['العروض', quotations.length], ['الفوز/العقود', contracts.length + opportunities.filter((row) => row.stage === 'Won').length], ['الخسائر', opportunities.filter((row) => row.stage === 'Lost').length], ['المسودات', messages.filter((row) => ['Draft','Approved'].includes(safe(row.status))).length], ['بحث يدوي', jobs.filter((row) => row.status === 'manual_research_required').length]] as const;
+  const coverage = decisionMakerCoverage(companies, contacts);
+  const cards = [['الشركات', companies.length], ['صانع قرار موثق', coverage.covered], ['تغطية صانع القرار', `${coverage.percent}%`], ['Draft Ready', companies.filter((row) => ['DRAFT_READY','APPROVED'].includes(companyOutreachState(row, contacts, messages, events))).length], ['تم التواصل', new Set(events.filter((row) => row.direction === 'OUTBOUND').map((row) => row.company_id)).size], ['الردود', new Set(events.filter((row) => row.direction === 'INBOUND').map((row) => row.company_id)).size], ['الاجتماعات', meetings.length], ['الفرص', opportunities.filter((row) => !row.archived_at).length], ['RFQs', opportunities.filter((row) => row.stage === 'RFQ_RECEIVED').length], ['العروض', quotations.length], ['الفوز', opportunities.filter((row) => row.stage === 'WON').length], ['بحث يدوي', jobs.filter((row) => row.status === 'manual_research_required').length]] as const;
   const completeness = [['80–100%', companies.filter((row) => Number(row.data_completeness || 0) >= 80).length], ['50–79%', companies.filter((row) => Number(row.data_completeness || 0) >= 50 && Number(row.data_completeness || 0) < 80).length], ['أقل من 50%', companies.filter((row) => Number(row.data_completeness || 0) < 50).length]] as const;
 
   const exportCsv = () => { const cell = (value: unknown) => `"${safe(value).replaceAll('"', '""')}"`; const content = '\uFEFF' + [['company_name','priority','lead_score','data_completeness','status','city','sector','outreach_status'], ...companies.map((row) => [row.company_name,row.priority,row.lead_score,row.data_completeness,row.status,row.city,row.sector,row.outreach_status])].map((row) => row.map(cell).join(',')).join('\r\n'); const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8' })); const link = document.createElement('a'); link.href=url; link.download=`algaeu-report-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url); };

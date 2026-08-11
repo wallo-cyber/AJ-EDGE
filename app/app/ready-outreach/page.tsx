@@ -1,1 +1,1 @@
-import { ReadyOutreachWorkspace } from '../../components/ready-outreach-workspace'; export default function ReadyOutreachPage(){return <ReadyOutreachWorkspace/>}
+import { redirect } from 'next/navigation'; export default function ReadyOutreachPage(){redirect('/outreach?tab=ready')}
