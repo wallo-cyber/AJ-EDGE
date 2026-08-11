@@ -155,3 +155,15 @@ These deferred dependencies are not production blockers for the current draft-an
 - Final verification: TypeScript PASS, ESLint PASS, tests PASS (33/33), production build PASS (29 routes), Supabase/Auth/RLS continuity audit PASS, 181 companies preserved, and duplicate company/contact/job groups remain zero.
 - Responsive public/login behavior was checked at desktop, tablet, and mobile sizes. The automation browser did not inherit the authenticated user session; protected workspaces were therefore verified through source, TypeScript, server-side data checks, and production rendering without bypassing Auth.
 - Production counts remain 181 companies, 0 contacts, 881 drafts, 1 follow-up, 0 opportunities, 1,939 jobs, and 692 manual-research jobs. External research is PAUSED and external sending is DISABLED.
+
+## V4 final product polish — 2026-08-11
+
+- The daily command center now orders action types by business priority: Priority A, decision-maker evidence, outreach readiness, due follow-ups, replies, opportunities, vendor registration, then genuinely failed internal work. It remains an action list rather than an analytics dashboard.
+- The Companies desktop default was reduced to eight decision columns, long names wrap safely, mobile remains card-based, and an unused 3,000-row audit fetch was removed.
+- Company 360 now opens contact creation already scoped to the current company. Contacts preserves the company filter and pre-fills the relationship without inventing a person or verification evidence.
+- Agent Center replaced technical ON/OFF/provider-quota language with Arabic business states that separate healthy internal agents, waiting external research, and disabled external communication.
+- Reports now presents one ten-step decision funnel: targets, verified decision makers, ready, contacted, replies, active opportunities, won, lost, vendor portals, and manual-research backlog.
+- Global route loading and recoverable error states were added. Responsive guards prevent accidental horizontal page overflow and keep controls touch-friendly without changing the ALGAEU identity.
+- Visual checks passed at 1440px, 1024px, and 390px on the local authenticated boundary with RTL and zero horizontal overflow. Protected workspaces were not accessed by bypassing Supabase Auth.
+- Final gates: TypeScript PASS, ESLint PASS, tests 33/33 PASS, production build 29 routes PASS, and Supabase/Auth/RLS audit PASS. Production remains 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, and zero duplicate company/contact/job groups.
+- No schema change, production mutation, external search, Tavily call, or external sending occurred during V4.

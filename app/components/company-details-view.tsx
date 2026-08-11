@@ -145,7 +145,7 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-lg font-semibold text-[#2f2417]">جهات الاتصال</h3>
           <div className="flex flex-wrap gap-2">
-            <Link href="/contacts" className="rounded-full border border-[#d8c08d] bg-[#fdf8ee] px-3 py-1.5 text-xs font-semibold text-[#6f6044]">إضافة جهة اتصال</Link>
+            <Link href={`/contacts?company_id=${company.id}`} className="rounded-full border border-[#d8c08d] bg-[#fdf8ee] px-3 py-1.5 text-xs font-semibold text-[#6f6044]">إضافة جهة اتصال لهذه الشركة</Link>
             <button onClick={() => setIsFollowUpOpen(true)} className="rounded-full border border-[#d8c08d] bg-[#f8efe0] px-3 py-1.5 text-xs font-semibold text-[#2f2417]">إضافة متابعة</button>
             <Link href="/ready-outreach" className="rounded-full border border-[#d8c08d] bg-[#fff0e0] px-3 py-1.5 text-xs font-semibold text-[#9a4b2d]">مراجعة المسودات</Link>
           </div>

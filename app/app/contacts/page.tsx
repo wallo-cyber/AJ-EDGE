@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ContactForm } from '../../components/contact-form';
 import { CRMPage } from '../../components/crm-shell';
 import type { Company } from '../../lib/company-store';
@@ -11,6 +12,8 @@ import { supabaseCrm } from '../../lib/supabase/crm';
 const ALL = 'الكل';
 
 export default function ContactsPage() {
+  const params = useSearchParams();
+  const requestedCompanyId = params.get('company_id') ?? '';
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [page, setPage] = useState(1);
@@ -27,7 +30,7 @@ export default function ContactsPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
-  useEffect(() => { void supabaseCrm.companies.list().then(rows => setCompanies(rows as Company[])).catch(reason => setError(reason.message)); }, []);
+  useEffect(() => { void supabaseCrm.companies.list().then(rows => { const loaded=rows as Company[]; setCompanies(loaded); if(requestedCompanyId&&loaded.some(company=>company.id===requestedCompanyId)){setCompanyId(requestedCompanyId);setShowForm(true);} }).catch(reason => setError(reason.message)); }, [requestedCompanyId]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setLoading(true); setError('');
@@ -61,7 +64,7 @@ export default function ContactsPage() {
       <select value={decisionLevel} onChange={event => { setDecisionLevel(event.target.value as ContactDecisionLevel | typeof ALL); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>مستوى القرار: الكل</option>{['Primary','Influencer','Procurement','Projects','Engineering','Management','Unknown'].map(value => <option key={value}>{value}</option>)}</select>
       <select value={verification} onChange={event => { setVerification(event.target.value); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>التحقق: الكل</option><option>VERIFIED</option><option>PARTIALLY_VERIFIED</option><option>UNVERIFIED</option></select>
     </div>
-    {showForm && <ContactForm initialContact={editing ?? undefined} companyId={editing?.companyId} companyName={editing?.companyName} onSubmit={save} onCancel={() => { setShowForm(false); setEditing(null); }} submitLabel={editing ? 'حفظ التعديلات' : 'إضافة جهة اتصال'} />}
+    {showForm && <ContactForm initialContact={editing ?? undefined} companyId={editing?.companyId||(companyId===ALL?'':companyId)} companyName={editing?.companyName||companies.find(company=>company.id===companyId)?.companyName} onSubmit={save} onCancel={() => { setShowForm(false); setEditing(null); }} submitLabel={editing ? 'حفظ التعديلات' : 'إضافة جهة اتصال'} />}
     {loading ? <div className="crm-empty animate-pulse">جارٍ تحميل جهات الاتصال...</div> : contacts.length === 0 ? <div className="crm-empty"><h3 className="font-bold text-[#2f2417]">لا توجد جهات اتصال موثقة بعد</h3><p className="mx-auto mt-2 max-w-2xl text-sm">لن ينشئ ALGAEU أشخاصاً أو صناع قرار دون مصدر ودليل. ابدأ من شركة محددة ثم وثّق الشخص الصحيح.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary">إضافة جهة اتصال</button><a href="/companies?view=missing-dm" className="btn-secondary">الشركات التي تحتاج صانع قرار</a><a href="/research?tab=manual" className="btn-ghost">بدء بحث يدوي</a></div></div> : <>
       <div className="hidden overflow-x-auto rounded-2xl border bg-white md:block"><table className="min-w-full text-right text-sm"><thead><tr><th className="p-3">الاسم</th><th className="p-3">الشركة</th><th className="p-3">المنصب</th><th className="p-3">صانع قرار</th><th className="p-3">التحقق</th><th className="p-3">الإجراءات</th></tr></thead><tbody>{contacts.map(contact => <tr key={contact.id} className="border-t"><td className="p-3 font-bold">{contact.fullName}</td><td className="p-3">{contact.companyName || '—'}</td><td className="p-3">{contact.position || '—'}</td><td className="p-3">{contact.decisionMaker ? 'نعم' : 'لا'}</td><td className="p-3"><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></td><td className="p-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></td></tr>)}</tbody></table></div>
       <div className="grid gap-3 md:hidden">{contacts.map(contact => <article key={contact.id} className="crm-card p-4"><div className="flex items-start justify-between gap-2"><div><strong>{contact.fullName}</strong><p className="text-xs text-[#75664d]">{contact.companyName || 'بدون شركة'} · {contact.position || 'بدون منصب'}</p></div><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></div><p className="mt-3 text-sm">صانع قرار موثق: {contact.decisionMaker && contact.verificationStatus === 'VERIFIED' ? 'نعم' : 'لا'}</p><div className="mt-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></div></article>)}</div>

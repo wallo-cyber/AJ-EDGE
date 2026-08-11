@@ -20,6 +20,8 @@
 
 html {
   direction: rtl;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 body {
@@ -31,6 +33,8 @@ body {
   color: var(--foreground);
   font-family: "Segoe UI", Tahoma, Arial, sans-serif;
   line-height: 1.5;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 * {
@@ -45,7 +49,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline: 3px solid rgba(165, 124, 42, .24);
   outline-offset: 2px;
 }
-input, select, textarea { min-height: 42px; }
+input, select, textarea { min-height: 42px; max-width: 100%; }
 table { border-collapse: separate; border-spacing: 0; }
 thead { position: sticky; top: 0; z-index: 2; }
 tbody tr:hover { background: #fcf8f0; }
@@ -88,6 +92,7 @@ tbody tr:hover { background: #fcf8f0; }
 .btn-danger { background:#9f2f2f; color:white; }
 .section-title { font-size:1rem; font-weight:800; color:#2f2417; }
 .data-ltr { direction:ltr; unicode-bidi:isolate; display:inline-block; }
+.break-business-text { overflow-wrap:anywhere; word-break:normal; }
 .status-success { background:#dcfce7; color:#166534; }
 .status-warning { background:#fef3c7; color:#92400e; }
 .status-danger { background:#fee2e2; color:#991b1b; }
@@ -96,6 +101,8 @@ tbody tr:hover { background: #fcf8f0; }
 @media (max-width: 767px) {
   body { font-size: 14px; }
   .crm-kpi { min-height: 100px; padding: 14px; }
+  .crm-card { border-radius: 16px; }
+  .btn-primary, .btn-secondary, .btn-ghost, .btn-danger { min-height: 42px; }
   .desktop-table { display:none; }
 }
 @media (min-width: 768px) { .mobile-cards { display:none; } }

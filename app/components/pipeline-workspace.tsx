@@ -8,7 +8,7 @@ import { OPPORTUNITY_STAGES, canonicalOpportunityStage } from '../lib/domain/bus
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 
 const safe=(value:unknown)=>String(value??'').trim();
-const stageLabel:Record<string,string>={IDENTIFIED:'محددة',QUALIFIED:'مؤهلة',RFQ_RECEIVED:'طلب عرض مستلم',PROPOSAL:'عرض مقدم',NEGOTIATION:'تفاوض',WON:'فوز',LOST:'خسارة'};
+const stageLabel:Record<string,string>={IDENTIFIED:'مستهدفة',QUALIFIED:'مؤهلة',RFQ_RECEIVED:'طلب عرض مستلم',PROPOSAL:'عرض مقدم',NEGOTIATION:'تفاوض',WON:'فوز',LOST:'خسارة'};
 type Tab='opportunities'|'rfqs'|'proposals'|'closed';
 const tabs:Array<[Tab,string]>=[['opportunities','الفرص'],['rfqs','RFQs'],['proposals','العروض'],['closed','فوز / خسارة']];
 

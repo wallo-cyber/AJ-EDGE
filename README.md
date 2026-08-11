@@ -82,6 +82,10 @@ See `PROJECT_STATUS.md` for the latest verified operational handoff.
 
 The internal workflow is ready to operate without an external research provider: Today and Company 360 expose the next action; evidence-gated Contacts and Manual Research prepare verified decision-maker data; Outreach separates drafts, approval, and actual communication history; Pipeline connects communication, follow-up, and opportunity state; and Agent Center reports paused external research separately from healthy internal agents. External sending remains disabled. The current verified production baseline is 181 companies with no duplicate company, contact, or job groups.
 
+## V4 operational product
+
+V4 focuses ALGAEU on daily decisions rather than product noise. Today prioritizes human actions, Companies uses an eight-column decision view, Company 360 opens company-scoped contact work, Reports follows the real business-development funnel, and Agent Center describes internal/external states in business language. Global loading/error handling and responsive overflow guards support desktop, tablet, and mobile. No external research or sending integration is activated.
+
 ## Real-world Pilot Phase 1
 
 The first operational cohort is persisted through existing agent-job metadata and displayed in Today under `PILOT — TOP 20`. Run `node scripts/pilot-phase1.mjs` for a read-only preview; `--apply` is intentionally server-only and requires the ignored local Supabase secret. The script never calls an external research provider, never sends communication, never invents a contact, and uses an idempotency key for each internal Qualification job.
