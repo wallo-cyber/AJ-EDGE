@@ -78,6 +78,10 @@ npm run audit:resume
 
 See `PROJECT_STATUS.md` for the latest verified operational handoff.
 
+## Operational workflow
+
+The operational path is Company → data completion → verified decision maker → outreach preparation → recorded communication → follow-up → opportunity → proposal → result. Company lists, Company 360, Today, Research, Outreach, Pipeline, Agents, and Reports derive status from the same Supabase records and domain functions. Manual research groups tasks by company without deleting the underlying queue records. Internal agents remain usable without Tavily; external research is paused and external sending is disabled.
+
 ## V2 user experience
 
 ALGAEU now opens into **Today**, a compact action inbox fed by persisted Supabase data. It explains what needs attention, why it matters, who is involved, and where to act next. The primary navigation follows the business-development journey; administrative tools are secondary. Reports is the analytics destination and keeps Ready, Contacted, Replied, and Opportunity aligned with the domain rules. The responsive shell uses a drawer on small screens, compact KPI grids, card fallbacks for data tables, correct RTL, and isolated LTR rendering for technical values.

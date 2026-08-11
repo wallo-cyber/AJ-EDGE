@@ -31,11 +31,11 @@ export function DailyWorkspace() {
     const companies=data.companies??[], contacts=data.contacts??[], followups=data.follow_ups??[], events=data.communication_events??[], opportunities=data.opportunities??[], jobs=data.agent_jobs??[];
     return {
       priority: companies.filter(c=>c.priority==='A').length,
+      missingDecisionMaker: companies.filter(c=>!contacts.some(x=>x.company_id===c.id&&isVerifiedDecisionMaker(x))).length,
       due: followups.filter(f=>safe(f.date||f.due_date)<=today&&!['Completed','Cancelled'].includes(safe(f.status))).length,
       replies: events.filter(e=>e.direction==='INBOUND'&&safe(e.occurred_at).startsWith(today)).length,
       ready: companies.filter(c=>contacts.some(x=>x.company_id===c.id&&isVerifiedDecisionMaker(x))&&!events.some(e=>e.company_id===c.id&&e.direction==='OUTBOUND')).length,
       pipeline: opportunities.filter(o=>!['WON','LOST'].includes(safe(o.stage))).length,
-      agents: jobs.filter(j=>j.status==='completed'&&safe(j.completed_at).startsWith(today)).length,
       intervention: jobs.filter(j=>['failed','manual_research_required'].includes(safe(j.status))).length,
     };
   }, [data, today]);
@@ -61,7 +61,7 @@ export function DailyWorkspace() {
     {error&&<div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error} <button className="mr-2 underline" onClick={()=>void load()}>إعادة المحاولة</button></div>}
     {notice&&<p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
-      {([['أولوية A',stats.priority,'/companies?priority=A'],['متابعات اليوم',stats.due,'/follow-ups'],['ردود اليوم',stats.replies,'/outreach?tab=history'],['جاهز للتواصل',stats.ready,'/outreach?tab=ready'],['فرص نشطة',stats.pipeline,'/pipeline'],['أنجزها الوكلاء',stats.agents,'/agent-center'],['تحتاج تدخلك',stats.intervention,'/research?tab=manual']] as const).map(([label,value,href])=><Link key={label} href={href} className="crm-kpi min-h-0 p-4 hover:-translate-y-0.5"><p className="text-xs text-[#75664d]">{label}</p><strong className="mt-1 block text-2xl">{value}</strong></Link>)}
+      {([['أولوية A تحتاج إجراء',stats.priority,'/companies?view=a'],['بدون صانع قرار',stats.missingDecisionMaker,'/companies?view=missing-dm'],['جاهزة للتواصل',stats.ready,'/outreach?tab=ready'],['متابعات اليوم',stats.due,'/follow-ups'],['ردود جديدة',stats.replies,'/outreach?tab=history'],['فرص نشطة',stats.pipeline,'/pipeline'],['بحث يدوي متراكم',stats.intervention,'/research?tab=manual']] as const).map(([label,value,href])=><Link key={label} href={href} className="crm-kpi min-h-0 p-4 hover:-translate-y-0.5"><p className="text-xs text-[#75664d]">{label}</p><strong className="mt-1 block text-2xl">{value}</strong></Link>)}
     </section>
     {loading?<div className="crm-empty animate-pulse">جارٍ ترتيب أولويات يومك…</div>:<section className="crm-card overflow-hidden">
       <header className="flex items-center justify-between border-b bg-[#faf5eb] p-4"><div><h3 className="section-title">الإجراءات التالية الأفضل</h3><p className="mt-1 text-xs text-[#75664d]">مرتبة حسب الاستحقاق والأولوية والدليل؛ المسودة وحدها لا تعني أنه تم التواصل.</p></div><span className="crm-chip status-neutral">{actions.length} إجراء</span></header>

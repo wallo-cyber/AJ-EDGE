@@ -50,7 +50,18 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   }
 
   const companyRow = operational.company?.[0];
-  const decisionMakers = contacts.filter((contact) => ['Primary', 'Procurement', 'Projects', 'Engineering', 'Management'].includes(contact.decisionLevel) || /owner|ceo|director|manager|procurement|purchasing|projects|engineering|facility/i.test(contact.position));
+  const decisionMakers = contacts.filter((contact) => contact.decisionMaker && contact.verificationStatus === 'VERIFIED' && Boolean(contact.sourceUrl || contact.source));
+  const nextBestAction = useMemo(() => {
+    const hasOutbound=(operational.communication_events??[]).some(item=>item.direction==='OUTBOUND');
+    const hasInbound=(operational.communication_events??[]).some(item=>item.direction==='INBOUND');
+    const hasDraft=(operational.messages??[]).some(item=>['Draft','Approved'].includes(String(item.status)));
+    if (!decisionMakers.length) return {label:'استكمال صانع القرار',href:`/research?tab=manual&company_id=${company.id}`,detail:'حدد الشخص الصحيح ووثّق المصدر قبل تجهيز التواصل.'};
+    if (!hasDraft) return {label:'تجهيز رسالة',href:`/outreach?tab=drafts&company_id=${company.id}`,detail:'صانع القرار موثق؛ جهز مسودة مرتبطة به للمراجعة.'};
+    if (!hasOutbound) return {label:'مراجعة المسودة',href:`/outreach?tab=ready&company_id=${company.id}`,detail:'المسودة ليست تواصلاً. راجعها ثم سجل حدث التواصل الحقيقي.'};
+    if (hasInbound) return {label:'متابعة الرد',href:`/outreach?tab=history&company_id=${company.id}`,detail:'وصل رد موثق؛ حدد النتيجة والإجراء التالي.'};
+    if (upcomingFollowUps.length) return {label:'تنفيذ المتابعة',href:`/follow-ups?company_id=${company.id}`,detail:'توجد متابعة محفوظة ومستحقة لهذه الشركة.'};
+    return {label:'تقييم فرصة',href:`/pipeline?company_id=${company.id}`,detail:'راجع نتيجة التواصل وحدد إن كانت فرصة مؤهلة.'};
+  },[company.id,decisionMakers.length,operational.communication_events,operational.messages,upcomingFollowUps.length]);
   const activityItems = useMemo(() => [
     ...(operational.audit_events ?? []).map((item) => ({ id: `audit-${item.id}`, at: String(item.created_at ?? ''), source: 'Audit', title: `${String(item.entity_type ?? '')} · ${String(item.action ?? '')}` })),
     ...(operational.agent_logs ?? []).map((item) => ({ id: `agent-${item.id}`, at: String(item.created_at ?? ''), source: String(item.agent_name ?? 'Agent'), title: String(item.message ?? '') })),
@@ -60,6 +71,7 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
     <div className="space-y-4">
       {operationalError ? <div className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">تعذر تحميل بعض بيانات الشركة: {operationalError}</div> : null}
       {operationalLoading ? <div className="crm-empty animate-pulse">جارٍ تحميل ملف الشركة الكامل...</div> : null}
+      <section className="crm-card flex flex-col gap-3 border-r-4 border-r-[#b78d38] p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold text-[#9a742b]">الإجراء الأفضل التالي</p><h3 className="mt-1 text-lg font-bold">{nextBestAction.label}</h3><p className="mt-1 text-sm text-[#75664d]">{nextBestAction.detail}</p></div><Link href={nextBestAction.href} className="btn-primary shrink-0">ابدأ الآن</Link></section>
       <div className="flex gap-1 overflow-x-auto rounded-[18px] border border-[#ead9b3] bg-[#f7efdf] p-1.5">
         {companyTabs.map((tab) => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold ${activeTab === tab.id ? 'bg-[#2f2417] text-[#fef8ec] shadow-md' : 'text-[#6f6044] hover:bg-white'}`}>{tab.label}</button>)}
       </div>

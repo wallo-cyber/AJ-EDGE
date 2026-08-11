@@ -110,6 +110,16 @@ These deferred dependencies are not production blockers for the current draft-an
 - TypeScript PASS, ESLint PASS, automated tests PASS (33/33), production build PASS (27 application routes), server Supabase/Auth/RLS audit PASS, and duplicate company/contact/job groups remain zero.
 - Data is unchanged: 181 active companies, 881 drafts, 1 follow-up, 1,919 jobs, and 2,710 runs. All 11 internal agents remain enabled and unpaused. External research is PAUSED and external sending is DISABLED.
 
+## Operational V3 — 2026-08-11
+
+- Companies is now an operational ten-column workspace with six saved views, whole-row navigation, contextual actions, mobile cards, and derived outreach state from contacts, drafts, communication events, follow-ups, and opportunities.
+- Company 360 now exposes one evidence-based Next Best Action. A decision maker is shown as verified only when the contact is marked as a decision maker, has `VERIFIED` status, and retains a source/evidence reference.
+- Manual Research groups persisted work by company. All 692 tasks remain stored, but each company appears once with its task count and direct manual/company actions. External-provider failures remain manual work and are not retried automatically.
+- Agent Center derives every visible state from `agent_settings` plus live job counts. Enabled agents with no work show “ready and waiting for work,” never “paused.” Internal/external-research/external-sending states remain separate.
+- Today shows seven business-action KPIs and a ranked action list. Contacts has an evidence-safe empty state leading to company selection, manual research, or explicit contact entry; no contacts were fabricated.
+- Supervisor was invoked after the repair and created zero work, processed zero work, and recreated no completed jobs. Counts remained unchanged and duplicate company/contact/job groups stayed at zero.
+- TypeScript PASS, ESLint PASS, tests PASS (33/33), production build PASS (27 application routes), Supabase/Auth/RLS PASS, and localhost responds on port 3000.
+
 ## NEXT DEVICE RESUME
 
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
