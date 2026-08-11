@@ -1,13 +1,13 @@
 # ALGAEU
 
-ALGAEU is an Arabic RTL Business Development Intelligence platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
+ALGAEU is an Arabic RTL Business Development Platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
 
 ## Production status
 
 - The Next.js production build, Supabase Authentication, ownership-based RLS, persistent queues, and internal Cron workers are operational.
 - Supabase is the source of truth for companies, contacts, drafts, follow-ups, opportunities, agent jobs, runs, logs, results, attempts, and errors.
-- Internal agents run server-side and continue when the browser or local computer is closed.
-- External research agents are paused safely while the external search quota is unavailable. Their persisted state is retained for later resume.
+- All 11 agents run server-side in deterministic internal mode and continue when the browser or local computer is closed.
+- Tavily-backed external research is paused safely while the external search quota is unavailable. Persisted research tasks are retained for later resume.
 - External sending is disabled. Outreach remains draft and manual-approval only.
 
 ## Run from a new computer
@@ -65,10 +65,10 @@ npm run test:supabase
 ## Persistence and safety
 
 - All operational collections are stored in Supabase; browser storage is not a source of truth.
-- `agent_jobs` persists owner, status, payload, result, attempts, timestamps, scheduling state, and errors.
+- `agent_jobs` persists owner, status, payload, result, attempts, timestamps, scheduling state, errors, and a stable idempotency key.
 - `agent_runs`, `agent_logs`, and `agent_errors` persist execution and audit history.
 - PGMQ and Supabase Cron provide durable server-side delivery and execution.
-- Enqueue guards prevent duplicate active work and do not recreate completed work unless source data has changed.
+- Enqueue guards prevent duplicate active work and do not recreate completed work unless relevant source data has changed.
 - External search and external sending can remain unavailable without breaking the CRM.
 - Secrets are excluded from Git and are never rendered in the UI or logs.
 

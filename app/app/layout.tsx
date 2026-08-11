@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ALGAEU",
-  description: "Business Development Intelligence",
+  description: "Business Development Platform",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

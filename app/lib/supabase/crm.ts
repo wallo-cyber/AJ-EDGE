@@ -28,7 +28,7 @@ function companyFromRow(row: DbRow): Company {
     linkedIn: text(row.linked_in) || text(row.linkedin), serviceOpportunity: text(row.service_opportunity),
     status: text(row.status), lastContact: text(row.last_contact), nextFollowUp: text(row.next_follow_up),
     notes: text(row.notes), priority:text(row.priority), leadScore:Number(row.lead_score||0), dataCompleteness:Number(row.data_completeness||0), dataQualityStatus:text(row.data_quality_status), missingFields:jsonArray<string>(row.missing_fields), scoreReasons:jsonArray<string>(row.score_reasons), sourceName:text(row.source_name), sourceUrl:text(row.source_url),
-    qualificationStatus:text(row.qualification_status), qualificationReason:text(row.qualification_reason), contractingAngle:text(row.contracting_angle), nextAction:text(row.next_action), vendorRegistrationUrl:text(row.vendor_registration_url), vendorRegistrationStatus:text(row.vendor_registration_status), outreachStatus:text(row.outreach_status), verificationStatus:text(row.verification_status), communicationHistory: jsonArray(row.communication_history),
+    qualificationStatus:text(row.qualification_status), qualificationReason:text(row.qualification_reason), contractingAngle:text(row.contracting_angle), nextAction:text(row.next_action), vendorRegistrationUrl:text(row.vendor_registration_url), vendorRegistrationStatus:text(row.vendor_registration_status), vendorRegistrationRequirements:text(row.vendor_registration_requirements), vendorRegistrationAccountStatus:text(row.vendor_registration_account_status), vendorRegistrationLastChecked:text(row.vendor_registration_last_checked), vendorRegistrationNextAction:text(row.vendor_registration_next_action), vendorRegistrationNotes:text(row.vendor_registration_notes), outreachStatus:text(row.outreach_status), verificationStatus:text(row.verification_status), archivedAt:text(row.archived_at), communicationHistory: jsonArray(row.communication_history),
     followUps: jsonArray(row.follow_ups), opportunities: jsonArray(row.opportunities),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
   };
@@ -48,7 +48,7 @@ function companyToRow(company: Partial<Company>) {
     source_url: company.sourceUrl ?? '', qualification_status: company.qualificationStatus ?? 'Needs Research',
     qualification_reason: company.qualificationReason ?? '', contracting_angle: company.contractingAngle ?? '',
     next_action: company.nextAction ?? '', vendor_registration_url: company.vendorRegistrationUrl ?? '',
-    vendor_registration_status: company.vendorRegistrationStatus ?? 'Not Checked', outreach_status: company.outreachStatus ?? 'Not Contacted',
+    vendor_registration_status: company.vendorRegistrationStatus ?? 'Not Checked', vendor_registration_requirements: company.vendorRegistrationRequirements ?? '', vendor_registration_account_status: company.vendorRegistrationAccountStatus ?? '', vendor_registration_last_checked: nullable(company.vendorRegistrationLastChecked ?? ''), vendor_registration_next_action: company.vendorRegistrationNextAction ?? '', vendor_registration_notes: company.vendorRegistrationNotes ?? '', archived_at: nullable(company.archivedAt ?? ''), outreach_status: company.outreachStatus ?? 'Not Contacted',
     verification_status: company.verificationStatus ?? 'Needs Verification', communication_history: company.communicationHistory ?? [],
     follow_ups: company.followUps ?? [], opportunities: company.opportunities ?? [], updated_at: new Date().toISOString(),
   };

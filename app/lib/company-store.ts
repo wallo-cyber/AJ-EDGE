@@ -58,6 +58,12 @@ export type Company = {
   outreachStatus?: string;
   verificationStatus?: string;
   sourceUrl?: string;
+  archivedAt?: string;
+  vendorRegistrationRequirements?: string;
+  vendorRegistrationAccountStatus?: string;
+  vendorRegistrationLastChecked?: string;
+  vendorRegistrationNextAction?: string;
+  vendorRegistrationNotes?: string;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];

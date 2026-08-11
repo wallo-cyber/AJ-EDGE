@@ -11,7 +11,15 @@ const sources = [
   { table: 'opportunities', label: 'فرصة', href: () => '/opportunities' },
   { table: 'meetings', label: 'اجتماع', href: () => '/meetings' },
   { table: 'follow_ups', label: 'متابعة', href: () => '/follow-ups' },
+  { table: 'agent_jobs', label: 'مهمة', href: (row: SimpleRow) => row.company_id ? `/companies/${row.company_id}` : '/agent-center' },
 ] as const;
+
+const searchable = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(searchable).join(' ');
+  if (typeof value === 'object') return Object.values(value as Record<string, unknown>).map(searchable).join(' ');
+  return String(value);
+};
 
 export default function SearchPage() {
   const [query, setQuery] = useState('');
@@ -22,11 +30,11 @@ export default function SearchPage() {
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (needle.length < 2) return [];
-    return sources.flatMap((source) => (data[source.table] ?? []).filter((row) => Object.values(row).some((value) => String(value ?? '').toLowerCase().includes(needle))).map((row) => ({ source, row }))).slice(0, 75);
+    return sources.flatMap((source) => (data[source.table] ?? []).filter((row) => searchable(row).toLowerCase().includes(needle)).map((row) => ({ source, row }))).slice(0, 75);
   }, [data, query]);
   const title = (row: SimpleRow) => String(row.company_name || row.full_name || row.name || row.title || row.subject || 'سجل');
 
-  return <CRMPage title="البحث الشامل" description="بحث سريع عبر الشركات وجهات الاتصال والفرص والاجتماعات والمتابعات.">
+  return <CRMPage title="البحث الشامل" description="بحث سريع عبر الشركات وصنّاع القرار والفرص والاجتماعات والمتابعات والمهام والملاحظات.">
     {error ? <p className="rounded-xl bg-red-50 p-3 text-red-700">تعذر البحث: {error}</p> : null}
     <input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="اكتب اسم شركة أو شخص أو فرصة أو متابعة" className="w-full rounded-2xl border border-[#ead9b3] bg-white p-4" />
     <div className="rounded-2xl border bg-white p-4">{loading ? <p className="animate-pulse text-sm text-[#6f6044]">جارٍ تجهيز فهرس البحث...</p> : query.trim().length < 2 ? <p className="text-sm text-[#6f6044]">أدخل حرفين على الأقل.</p> : results.length === 0 ? <p className="text-sm text-[#6f6044]">لا توجد نتائج مطابقة.</p> : <div className="divide-y divide-[#eee3cd]">{results.map(({ source, row }) => <Link key={`${source.table}-${row.id}`} href={source.href(row)} className="flex items-center justify-between gap-3 p-3 hover:bg-[#fdf8ee]"><div><span className="crm-chip bg-[#f0e3ca] text-[#6d5125]">{source.label}</span><strong className="mr-3">{title(row)}</strong></div><span className="text-xs text-[#75664d]">فتح السجل ←</span></Link>)}</div>}</div>

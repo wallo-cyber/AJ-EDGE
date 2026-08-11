@@ -24,7 +24,7 @@ export type Company = {
   notes: string;
   priority?: string; leadScore?: number; dataCompleteness?: number; dataQualityStatus?: string; missingFields?: string[]; scoreReasons?: string[]; sourceName?: string;
   qualificationStatus?: string; qualificationReason?: string; contractingAngle?: string; nextAction?: string;
-  vendorRegistrationUrl?: string; vendorRegistrationStatus?: string; outreachStatus?: string; verificationStatus?: string; sourceUrl?: string;
+  vendorRegistrationUrl?: string; vendorRegistrationStatus?: string; vendorRegistrationRequirements?: string; vendorRegistrationAccountStatus?: string; vendorRegistrationLastChecked?: string; vendorRegistrationNextAction?: string; vendorRegistrationNotes?: string; outreachStatus?: string; verificationStatus?: string; sourceUrl?: string; archivedAt?: string;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];

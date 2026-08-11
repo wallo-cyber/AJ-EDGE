@@ -22,6 +22,7 @@ export default function CompaniesPage() {
   const [completenessFilter, setCompletenessFilter] = useState('الكل');
   const [vendorFilter, setVendorFilter] = useState('الكل');
   const [outreachFilter, setOutreachFilter] = useState('الكل');
+  const [archiveFilter, setArchiveFilter] = useState('نشطة');
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,14 +42,15 @@ export default function CompaniesPage() {
     });
     return [...filtered as Company[]].filter((company) => {
       const completeness = company.dataCompleteness ?? 0;
-      return (sectorFilter === 'الكل' || company.sector === sectorFilter)
+      return (archiveFilter === 'الكل' || (archiveFilter === 'مؤرشفة' ? Boolean(company.archivedAt) : !company.archivedAt))
+        && (sectorFilter === 'الكل' || company.sector === sectorFilter)
         && (priorityFilter === 'الكل' || (company.priority || 'C') === priorityFilter)
         && (contactFilter === 'الكل' || (contactFilter === 'متوفر' ? Boolean(company.contactPerson) : !company.contactPerson))
         && (completenessFilter === 'الكل' || (completenessFilter === 'عالي' ? completeness >= 80 : completenessFilter === 'متوسط' ? completeness >= 50 && completeness < 80 : completeness < 50))
         && (vendorFilter === 'الكل' || (vendorFilter === 'متوفر' ? Boolean(company.vendorRegistrationUrl) : !company.vendorRegistrationUrl))
         && (outreachFilter === 'الكل' || (company.outreachStatus || 'Not Contacted') === outreachFilter);
     }).sort((a,b)=>(a.priority??'C').localeCompare(b.priority??'C')||(b.leadScore??0)-(a.leadScore??0));
-  }, [companies, cityFilter, completenessFilter, contactFilter, outreachFilter, priorityFilter, searchTerm, sectorFilter, statusFilter, typeFilter, vendorFilter]);
+  }, [archiveFilter, companies, cityFilter, completenessFilter, contactFilter, outreachFilter, priorityFilter, searchTerm, sectorFilter, statusFilter, typeFilter, vendorFilter]);
 
   const paginatedCompanies = useMemo(() => paginateItems(filteredCompanies, page, 25), [filteredCompanies, page]);
   const options = useMemo(() => ({
@@ -59,7 +61,7 @@ export default function CompaniesPage() {
     outreach: [...new Set(companies.map((company) => company.outreachStatus || 'Not Contacted'))].sort(),
   }), [companies]);
 
-  useEffect(() => { setPage(1); }, [cityFilter, completenessFilter, contactFilter, outreachFilter, priorityFilter, searchTerm, sectorFilter, statusFilter, typeFilter, vendorFilter]);
+  useEffect(() => { setPage(1); }, [archiveFilter, cityFilter, completenessFilter, contactFilter, outreachFilter, priorityFilter, searchTerm, sectorFilter, statusFilter, typeFilter, vendorFilter]);
 
   const openNewForm = () => {
     setEditingCompanyId(null);
@@ -85,10 +87,14 @@ export default function CompaniesPage() {
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حفظ الشركة.'); }
   };
 
-  const handleDelete = async (companyId: string) => {
-    if (!window.confirm('هل أنت متأكد من حذف الشركة؟ لن تُحذف أي شركة بدون هذا التأكيد.')) return;
-    try { await supabaseCrm.companies.remove(companyId); setCompanies((items) => items.filter((company) => company.id !== companyId)); setSuccess('تم حذف الشركة.'); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
+  const handleArchive = async (company: Company) => {
+    const restoring = Boolean(company.archivedAt);
+    if (!window.confirm(restoring ? 'هل تريد استعادة الشركة إلى السجلات النشطة؟' : 'هل تريد أرشفة الشركة؟ ستبقى كل بياناتها محفوظة.')) return;
+    try {
+      const updated = await supabaseCrm.companies.update(company.id, { ...company, archivedAt: restoring ? '' : new Date().toISOString() });
+      setCompanies((items) => items.map((item) => item.id === company.id ? updated as Company : item));
+      setSuccess(restoring ? 'تمت استعادة الشركة.' : 'تمت أرشفة الشركة بدون حذف بياناتها.');
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر تحديث حالة الأرشفة.'); }
   };
 
   const handleEdit = (company: Company) => {
@@ -181,6 +187,7 @@ export default function CompaniesPage() {
           <select value={completenessFilter} onChange={(event) => setCompletenessFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm"><option value="الكل">اكتمال البيانات: الكل</option><option value="عالي">80% فأكثر</option><option value="متوسط">50–79%</option><option value="منخفض">أقل من 50%</option></select>
           <select value={vendorFilter} onChange={(event) => setVendorFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm"><option value="الكل">تسجيل الموردين: الكل</option><option value="متوفر">بوابة متوفرة</option><option value="مفقود">غير متوفرة</option></select>
           <select value={outreachFilter} onChange={(event) => setOutreachFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm"><option value="الكل">حالة التواصل: الكل</option>{options.outreach.map((status) => <option key={status} value={status}>{status}</option>)}</select>
+          <select value={archiveFilter} onChange={(event) => setArchiveFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm"><option value="نشطة">السجلات النشطة</option><option value="مؤرشفة">المؤرشفة</option><option value="الكل">الكل</option></select>
         </div>
       </div>
 
@@ -243,7 +250,8 @@ export default function CompaniesPage() {
                     <CompanyActions
                       companyId={company.id}
                       onEdit={() => handleEdit(company)}
-                      onDelete={() => handleDelete(company.id)}
+                      archived={Boolean(company.archivedAt)}
+                      onArchive={() => void handleArchive(company)}
                     />
                   </td>
                 </tr>
