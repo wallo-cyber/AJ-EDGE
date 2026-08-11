@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { getSiteUrl } from "../lib/site-url";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "ALGAEU Business Development Platform",
     template: "%s | ALGAEU",
