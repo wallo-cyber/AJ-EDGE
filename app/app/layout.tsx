@@ -3,8 +3,11 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ALGAEU",
-  description: "Business Development Platform",
+  title: {
+    default: "ALGAEU Business Development Platform",
+    template: "%s | ALGAEU",
+  },
+  description: "منصة ALGAEU العربية لتطوير الأعمال وإدارة علاقات العملاء والوكلاء الداخليين.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

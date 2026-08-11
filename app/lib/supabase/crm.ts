@@ -15,8 +15,11 @@ function jsonArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? value as T[] : [];
 }
 
-function throwIfError(error: { message: string } | null) {
-  if (error) throw new Error(error.message);
+function throwIfError(error: { message: string; code?: string } | null) {
+  if (error) {
+    console.error('[Supabase:crm]', error.code || 'request_failed');
+    throw new Error('تعذر إتمام العملية في قاعدة البيانات. أعد المحاولة، وإن استمرت المشكلة راجع حالة النظام.');
+  }
 }
 
 function companyFromRow(row: DbRow): Company {
@@ -65,13 +68,13 @@ function contactFromRow(row: DbRow): Contact {
 }
 
 function contactToRow(contact: Partial<Contact>) {
-  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + (contact.mobile ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'غير محدد' ? 15 : 0));
+  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + (contact.mobile ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'Unknown' ? 15 : 0));
   return {
     company_id: nullable(contact.companyId ?? ''), company_name: contact.companyName ?? '', name: nullable(contact.fullName ?? ''),
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
     phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
-    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel === 'صاحب قرار' ? 'Decision Maker' : contact.decisionLevel === 'مؤثر' ? 'Influencer' : contact.decisionLevel === 'منسق' ? 'Gatekeeper' : 'General Contact', verification_status: contact.verificationStatus ?? 'Needs Verification', contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
+    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel === 'Primary' ? 'Decision Maker' : contact.decisionLevel === 'Influencer' ? 'Influencer' : ['Procurement', 'Projects', 'Engineering', 'Management'].includes(contact.decisionLevel ?? '') ? 'Decision Maker' : 'General Contact', verification_status: contact.verificationStatus ?? 'Needs Verification', contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
 }
 

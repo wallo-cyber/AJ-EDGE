@@ -114,10 +114,13 @@ export default function ContactsPage() {
           </select>
           <select value={decisionFilter} onChange={(event) => setDecisionFilter(event.target.value as ContactDecisionLevel | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">مستوى القرار: الكل</option>
-            <option value="صاحب قرار">صاحب قرار</option>
-            <option value="مؤثر">مؤثر</option>
-            <option value="منسق">منسق</option>
-            <option value="غير محدد">غير محدد</option>
+            <option value="Primary">Primary</option>
+            <option value="Influencer">Influencer</option>
+            <option value="Procurement">Procurement</option>
+            <option value="Projects">Projects</option>
+            <option value="Engineering">Engineering</option>
+            <option value="Management">Management</option>
+            <option value="Unknown">Unknown</option>
           </select>
           <select value={verificationFilter} onChange={(event) => setVerificationFilter(event.target.value)} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">التحقق: الكل</option>

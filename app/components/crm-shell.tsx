@@ -21,6 +21,7 @@ const navItems = [
   { href: '/contracts', label: 'العقود', icon: '◒' },
   { href: '/agents', label: 'الوكلاء والمعرّفون', icon: '◖' },
   { href: '/agent-center', label: 'مركز الوكلاء', icon: '⚙' },
+  { href: '/manual-research', label: 'البحث اليدوي', icon: '⌕' },
   { href: '/search', label: 'البحث الشامل', icon: '⌕' },
   { href: '/reports', label: 'التقارير', icon: '◓' },
   { href: '/exports', label: 'تصدير البيانات', icon: '↓' },
@@ -41,6 +42,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [navOpen, setNavOpen] = useState(false);
+  const [navCollapsed, setNavCollapsed] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseClient();
@@ -73,13 +75,14 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
       </div>
       <div className="mx-auto flex max-w-[1600px] gap-5 px-3 py-4 sm:px-5 lg:px-6 lg:py-6">
         {navOpen && <button aria-label="إغلاق القائمة" onClick={() => setNavOpen(false)} className="fixed inset-0 z-40 bg-[#24190d]/35 lg:hidden" />}
-        <aside className={`${navOpen ? 'translate-x-0' : 'translate-x-full'} fixed inset-y-0 right-0 z-50 w-[286px] overflow-y-auto border-l border-[#e8d9b7] bg-[#fffdf9] p-4 shadow-2xl transition-transform lg:sticky lg:top-6 lg:z-auto lg:h-[calc(100vh-3rem)] lg:w-64 lg:translate-x-0 lg:rounded-[26px] lg:border lg:shadow-[0_18px_50px_rgba(70,48,18,.08)]`}>
-          <div className="mb-5 rounded-[20px] bg-gradient-to-br from-[#332619] to-[#4a3620] p-4 text-[#fff8e8] shadow-lg">
+        <aside className={`${navOpen ? 'translate-x-0' : 'translate-x-full'} ${navCollapsed ? 'lg:w-[84px]' : 'lg:w-64'} fixed inset-y-0 right-0 z-50 w-[286px] overflow-y-auto border-l border-[#e8d9b7] bg-[#fffdf9] p-4 shadow-2xl transition-[width,transform] lg:sticky lg:top-6 lg:z-auto lg:h-[calc(100vh-3rem)] lg:translate-x-0 lg:rounded-[26px] lg:border lg:shadow-[0_18px_50px_rgba(70,48,18,.08)]`}>
+          <button type="button" onClick={() => setNavCollapsed((value) => !value)} className="mb-3 hidden w-full rounded-xl border border-[#e6d6b4] bg-white px-3 py-2 text-xs font-semibold text-[#6f6044] lg:block" aria-label={navCollapsed ? 'توسيع القائمة' : 'طي القائمة'}>{navCollapsed ? '☰' : 'طي القائمة'}</button>
+          <div className={`mb-5 rounded-[20px] bg-gradient-to-br from-[#332619] to-[#4a3620] p-4 text-[#fff8e8] shadow-lg ${navCollapsed ? 'lg:px-2 lg:text-center' : ''}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#8a6f35]">
               ALGAEU
             </p>
-            <h1 className="mt-2 text-lg font-bold">Business Development Platform</h1>
-            <p className="mt-1 flex items-center gap-2 text-xs text-[#d9c8a2]"><span className="h-2 w-2 rounded-full bg-emerald-400" /> متصل بـ Supabase</p>
+            <h1 className={`mt-2 text-lg font-bold ${navCollapsed ? 'lg:hidden' : ''}`}>Business Development Platform</h1>
+            <p className={`mt-1 flex items-center gap-2 text-xs text-[#d9c8a2] ${navCollapsed ? 'lg:justify-center' : ''}`}><span className="h-2 w-2 rounded-full bg-emerald-400" /><span className={navCollapsed ? 'lg:hidden' : ''}>متصل بـ Supabase</span></p>
           </div>
 
           <nav className="space-y-1">
@@ -91,6 +94,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
                 <Link
                   key={item.href}
                   href={item.href}
+                  title={navCollapsed ? item.label : undefined}
                   onClick={() => setNavOpen(false)}
                   className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm transition ${
                     isActive
@@ -98,15 +102,15 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
                       : 'text-[#59482f] hover:bg-[#f5ecdb] hover:text-[#2f2417]'
                   }`}
                 >
-                  <span>{item.label}</span>
+                  <span className={navCollapsed ? 'lg:hidden' : ''}>{item.label}</span>
                   <span className="text-base">{item.icon}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="mt-5 rounded-[18px] border border-[#ead9b3] bg-[#fdf9f1] p-3 text-xs text-[#6f6044]"><strong className="text-[#2f2417]">النطاق التشغيلي</strong><p className="mt-1">المنطقة الشرقية · تطوير أعمال المقاولات</p></div>
-          <button onClick={signOut} className="mt-3 w-full rounded-xl border border-[#d8c08d] bg-white px-3 py-2.5 text-sm font-semibold text-[#6f6044] hover:bg-red-50 hover:text-red-700">تسجيل الخروج</button>
+          <div className={`mt-5 rounded-[18px] border border-[#ead9b3] bg-[#fdf9f1] p-3 text-xs text-[#6f6044] ${navCollapsed ? 'lg:hidden' : ''}`}><strong className="text-[#2f2417]">النطاق التشغيلي</strong><p className="mt-1">المنطقة الشرقية · تطوير أعمال المقاولات</p></div>
+          <button onClick={signOut} title="تسجيل الخروج" className="mt-3 w-full rounded-xl border border-[#d8c08d] bg-white px-3 py-2.5 text-sm font-semibold text-[#6f6044] hover:bg-red-50 hover:text-red-700">{navCollapsed ? <span className="hidden lg:inline">↪</span> : null}<span className={navCollapsed ? 'lg:hidden' : ''}>تسجيل الخروج</span></button>
         </aside>
 
         <main className="min-w-0 flex-1 rounded-[26px] border border-[#e8d9b7] bg-[#fffdf9]/90 p-4 shadow-[0_18px_55px_rgba(70,48,18,.07)] backdrop-blur sm:p-6 lg:p-7">

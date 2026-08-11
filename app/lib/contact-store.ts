@@ -8,7 +8,7 @@ export type ContactDepartment =
   | 'الهندسة'
   | 'المالية';
 
-export type ContactDecisionLevel = 'صاحب قرار' | 'مؤثر' | 'منسق' | 'غير محدد';
+export type ContactDecisionLevel = 'Primary' | 'Influencer' | 'Procurement' | 'Projects' | 'Engineering' | 'Management' | 'Unknown';
 export type ContactMethod = 'واتساب' | 'بريد' | 'هاتف' | 'LinkedIn' | 'زيارة';
 
 export type Contact = {
@@ -43,7 +43,7 @@ export const contactDepartments: ContactDepartment[] = [
   'المالية',
 ];
 
-export const decisionLevels: ContactDecisionLevel[] = ['صاحب قرار', 'مؤثر', 'منسق', 'غير محدد'];
+export const decisionLevels: ContactDecisionLevel[] = ['Primary', 'Influencer', 'Procurement', 'Projects', 'Engineering', 'Management', 'Unknown'];
 export const preferredMethods: ContactMethod[] = ['واتساب', 'بريد', 'هاتف', 'LinkedIn', 'زيارة'];
 
 export function createEmptyContact(companyId?: string, companyName = ''): Omit<Contact, 'id' | 'createdAt' | 'updatedAt'> {
@@ -56,7 +56,7 @@ export function createEmptyContact(companyId?: string, companyName = ''): Omit<C
     mobile: '',
     email: '',
     linkedIn: '',
-    decisionLevel: 'غير محدد',
+    decisionLevel: 'Unknown',
     preferredContactMethod: 'واتساب',
     source: '',
     sourceUrl: '',

@@ -51,7 +51,7 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
   }
 
   const companyRow = operational.company?.[0];
-  const decisionMakers = contacts.filter((contact) => contact.decisionLevel === 'صاحب قرار' || /owner|ceo|director|manager|procurement|purchasing|projects|engineering|facility/i.test(contact.position));
+  const decisionMakers = contacts.filter((contact) => ['Primary', 'Procurement', 'Projects', 'Engineering', 'Management'].includes(contact.decisionLevel) || /owner|ceo|director|manager|procurement|purchasing|projects|engineering|facility/i.test(contact.position));
   const activityItems = useMemo(() => [
     ...(operational.audit_events ?? []).map((item) => ({ id: `audit-${item.id}`, at: String(item.created_at ?? ''), source: 'Audit', title: `${String(item.entity_type ?? '')} · ${String(item.action ?? '')}` })),
     ...(operational.agent_logs ?? []).map((item) => ({ id: `agent-${item.id}`, at: String(item.created_at ?? ''), source: String(item.agent_name ?? 'Agent'), title: String(item.message ?? '') })),
