@@ -1,5 +1,11 @@
 # ALGAEU Project Status
 
+## Intelligence Expansion Phase 1 (2026-08-11)
+
+- Additive Phase 1 schema is applied: multi-dimensional company classification, business-directory contact fields, Sales Kit metadata, review-only campaign audiences, and evidence-required Opportunity Radar signals.
+- New records are ownership-RLS protected in Supabase. No existing business data, queues, signals, drafts, or agent results were deleted or rewritten.
+- External search remains paused and external sending remains disabled. Campaigns persist audience selection and manual approval sequence only.
+
 Status: **ALGAEU OPERATIONAL — V6 DATABASE + INTERNAL AGENTS READY**
 
 Status date: 2026-08-11 (Asia/Riyadh)

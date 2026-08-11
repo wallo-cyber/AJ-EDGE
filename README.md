@@ -1,5 +1,9 @@
 # ALGAEU
 
+## Intelligence Expansion Phase 1
+
+Phase 1 adds safe, Supabase-persisted segmentation fields, Business Directory contact intelligence, Sales Kit metadata, Campaign Center review audiences, and source-required Opportunity Radar records. The migration is additive and does not seed or alter production companies. Campaigns are manual-review only; default limits are 10 new companies and 15 follow-ups per day with a 14-day company interval. External search stays paused and external sending stays disabled.
+
 ALGAEU is an Arabic RTL Business Development Platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
 
 ## Production status
