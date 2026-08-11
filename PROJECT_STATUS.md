@@ -20,6 +20,12 @@
 - **Branch:** `codex/aj-edge-mvp`
 - **Status:** All systems operational. Ready for production deployment.
 
+## Company edit flow repair (2026-08-12)
+
+- Fixed the canonical company edit flow in the Companies workspace so a direct edit query param now opens the existing form, preserves the current view/filter state, and clears the edit parameter cleanly after save without redirecting to a generic empty page.
+- Removed relational arrays from company persistence payloads so `communication_history`, `follow_ups`, and `opportunities` remain relational-table data rather than being written as columns on `companies`.
+- Verification evidence: TypeScript, ESLint, automated tests, npm audit, and the production build all completed successfully on the local branch after the repair.
+
 ## Business Development Intelligence Core (2026-08-11)
 
 - Added a deterministic, evidence-first BD core for the unified company lifecycle (`DISCOVER` through `WIN_LOSS`), explainable qualification, segment-specific decision-maker targeting, and source-gated project intelligence.

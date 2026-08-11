@@ -53,9 +53,9 @@ function companyToRow(company: Partial<Company>) {
     qualification_reason: company.qualificationReason ?? '', contracting_angle: company.contractingAngle ?? '',
     next_action: company.nextAction ?? '', vendor_registration_url: company.vendorRegistrationUrl ?? '',
     vendor_registration_status: company.vendorRegistrationStatus ?? 'Not Checked', vendor_registration_requirements: company.vendorRegistrationRequirements ?? '', vendor_registration_account_status: company.vendorRegistrationAccountStatus ?? '', vendor_registration_last_checked: nullable(company.vendorRegistrationLastChecked ?? ''), vendor_registration_next_action: company.vendorRegistrationNextAction ?? '', vendor_registration_notes: company.vendorRegistrationNotes ?? '', archived_at: nullable(company.archivedAt ?? ''), outreach_status: company.outreachStatus ?? 'Not Contacted',
-    verification_status: company.verificationStatus ?? 'Needs Verification', communication_history: company.communicationHistory ?? [],
+    verification_status: company.verificationStatus ?? 'Needs Verification',
     target_segment: company.targetSegment ?? '', subsector: company.subsector ?? '', business_angle: company.businessAngle ?? company.contractingAngle ?? '', recommended_role: company.recommendedRole ?? '', recommended_language: company.recommendedLanguage ?? 'ARABIC', recommended_channel: company.recommendedChannel ?? 'EMAIL', recommended_message_style: company.recommendedMessageStyle ?? 'DIRECT', relationship_stage: company.relationshipStage ?? 'TARGET', opportunity_signal_score: company.opportunitySignalScore ?? 0, opportunity_signal_reason: company.opportunitySignalReason ?? '', next_best_action_code: company.nextBestActionCode ?? '', next_best_action_reason: company.nextBestActionReason ?? '', next_best_action_confidence: company.nextBestActionConfidence ?? 0, next_best_action_due_at: nullable(company.nextBestActionDueAt ?? ''), do_not_contact: Boolean(company.doNotContact), outreach_cooldown_until: nullable(company.outreachCooldownUntil ?? ''), human_override: Boolean(company.humanOverride),
-    follow_ups: company.followUps ?? [], opportunities: company.opportunities ?? [], updated_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 }
 
