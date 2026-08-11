@@ -52,12 +52,25 @@ create table if not exists public.user_feedback (
   created_at timestamptz not null default now()
 );
 
+-- Reconcile safely if a protected placeholder table already exists.
+alter table public.user_feedback
+  add column if not exists owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  add column if not exists company_id uuid references public.companies(id) on delete cascade,
+  add column if not exists message_id uuid references public.messages(id) on delete cascade,
+  add column if not exists target_type text not null default '',
+  add column if not exists target_id uuid,
+  add column if not exists rating text not null default 'USEFUL' check (rating in ('USEFUL','NOT_USEFUL')),
+  add column if not exists reason text not null default '',
+  add column if not exists created_at timestamptz not null default now();
+
 alter table public.user_feedback enable row level security;
 revoke all on public.user_feedback from anon;
 grant select, insert, update on public.user_feedback to authenticated;
-create policy "Users read own feedback" on public.user_feedback for select to authenticated using ((select auth.uid()) = owner_id);
-create policy "Users insert own feedback" on public.user_feedback for insert to authenticated with check ((select auth.uid()) = owner_id);
-create policy "Users update own feedback" on public.user_feedback for update to authenticated using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id);
+grant all on public.user_feedback to service_role;
+do $$ begin if not exists (select 1 from pg_policies where schemaname='public' and tablename='user_feedback' and policyname='Users read own feedback') then create policy "Users read own feedback" on public.user_feedback for select to authenticated using ((select auth.uid()) = owner_id); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where schemaname='public' and tablename='user_feedback' and policyname='Users insert own feedback') then create policy "Users insert own feedback" on public.user_feedback for insert to authenticated with check ((select auth.uid()) = owner_id); end if; end $$;
+do $$ begin if not exists (select 1 from pg_policies where schemaname='public' and tablename='user_feedback' and policyname='Users update own feedback') then create policy "Users update own feedback" on public.user_feedback for update to authenticated using ((select auth.uid()) = owner_id) with check ((select auth.uid()) = owner_id); end if; end $$;
+create unique index if not exists user_feedback_owner_target_idx on public.user_feedback(owner_id, target_type, target_id);
 create index if not exists user_feedback_owner_company_idx on public.user_feedback(owner_id, company_id, created_at desc);
 create index if not exists companies_owner_segment_priority_idx on public.companies(owner_id, target_segment, priority, lead_score desc) where archived_at is null;
 create index if not exists messages_owner_quality_idx on public.messages(owner_id, quality_status, quality_score desc) where archived_at is null;

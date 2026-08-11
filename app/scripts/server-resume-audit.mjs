@@ -15,12 +15,17 @@ if (!url || !secret || !publishable) throw new Error('Missing local Supabase ser
 
 const admin = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
 const anonymous = createClient(url, publishable, { auth: { persistSession: false, autoRefreshToken: false } });
+const openApiResponse = await fetch(`${url}/rest/v1/`, { headers: { apikey: secret, authorization: `Bearer ${secret}`, accept: 'application/openapi+json' } });
+if (!openApiResponse.ok) throw new Error(`Data API schema verification failed (${openApiResponse.status}).`);
+const openApi = await openApiResponse.json();
 const applicationTables = [
   'companies', 'contacts', 'follow_ups', 'opportunities', 'messages', 'meetings',
   'quotations', 'contracts', 'documents', 'news', 'company_intelligence', 'timeline',
   'company_discovery', 'user_settings', 'agents', 'agent_settings', 'agent_jobs',
-  'agent_runs', 'agent_logs', 'agent_errors', 'audit_events',
+  'agent_runs', 'agent_logs', 'agent_errors', 'audit_events', 'communication_events',
 ];
+const intelligenceTables = ['user_feedback', 'relationship_memories', 'business_signals', 'conversation_strategies', 'learning_events', 'automation_rules'];
+const apiColumns = Object.fromEntries(intelligenceTables.map((table) => [table, Object.keys(openApi.definitions?.[table]?.properties ?? openApi.components?.schemas?.[table]?.properties ?? {})]));
 
 async function count(table, apply = (query) => query) {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
@@ -78,6 +83,39 @@ if (resume.requested) {
 
 const tableCounts = {};
 for (const table of applicationTables) tableCounts[table] = await count(table);
+const intelligenceTableCounts = {};
+for (const table of intelligenceTables) {
+  const { count: tableCount, error: tableError } = await admin.from(table).select('id', { count: 'exact', head: true });
+  intelligenceTableCounts[table] = tableError ? { available: false, count: null, errorCode: tableError.code || 'SCHEMA_PENDING' } : { available: true, count: tableCount ?? 0, errorCode: null };
+}
+async function columnAvailability(table, columns) {
+  const result = {};
+  for (const column of columns) {
+    const { error } = await admin.from(table).select(column).limit(1);
+    result[column] = !error;
+  }
+  return result;
+}
+const v6CompanyColumns = await columnAvailability('companies', ['target_segment','business_angle','relationship_stage','opportunity_signal_score','next_best_action_code','do_not_contact']);
+const v6MessageColumns = await columnAvailability('messages', ['quality_score','strategy_id','personalization_level','quality_breakdown','duplicate_warning']);
+const intelligenceShapeRequirements = {
+  user_feedback: ['owner_id','company_id','message_id','target_type','target_id','rating','reason'],
+  relationship_memories: ['owner_id','company_id','relationship_summary','relationship_status','last_meaningful_event','next_relationship_action','important_commitments','structured_events'],
+  business_signals: ['owner_id','company_id','type','strength','confidence','evidence','source','detected_at','recommended_action','fingerprint'],
+  conversation_strategies: ['owner_id','company_id','contact_id','objective','target_segment','target_role','relationship_stage','business_angle','message_type','message_style','language','channel','cta','risk','context_summary','status'],
+  learning_events: ['owner_id','company_id','message_id','segment','message_style','cta','channel','reply_intent','outcome','source_event_id'],
+  automation_rules: ['owner_id','name','enabled','minimum_quality_score','daily_limit','minimum_contact_interval_days','require_verified_recipient','require_no_unresolved_reply','allowed_relationship_stages'],
+};
+const intelligenceTableShape = {};
+for (const [table, columns] of Object.entries(intelligenceShapeRequirements)) {
+  const { error } = await admin.from(table).select(columns.join(',')).limit(1);
+  intelligenceTableShape[table] = !error;
+}
+const anonymousIntelligenceProtected = {};
+for (const table of intelligenceTables) {
+  const { error } = await anonymous.from(table).select('id').limit(1);
+  anonymousIntelligenceProtected[table] = Boolean(error);
+}
 const companies = await all('companies', 'id,owner_id,company_name,website,general_phone,priority,archived_at,last_contact,last_outcome,vendor_registration_url,missing_fields');
 const contacts = await all('contacts', 'id,owner_id,company_id,full_name,email,mobile,contact_classification');
 const messages = await all('messages', 'id,owner_id,company_id,status,template_name');
@@ -107,6 +145,15 @@ console.log(JSON.stringify({
   authAdminAccess: Array.isArray(users?.users),
   anonymousProtected: Boolean(anonymousError),
   tableCounts,
+  intelligenceTableCounts,
+  apiColumns,
+  intelligenceSchema: {
+    companyColumns: v6CompanyColumns,
+    messageColumns: v6MessageColumns,
+    tableShape: intelligenceTableShape,
+    anonymousProtected: anonymousIntelligenceProtected,
+    ready: Object.values(v6CompanyColumns).every(Boolean) && Object.values(v6MessageColumns).every(Boolean) && Object.values(intelligenceTableCounts).every((item) => item.available) && Object.values(intelligenceTableShape).every(Boolean) && Object.values(anonymousIntelligenceProtected).every(Boolean),
+  },
   activeCompanies: companies.filter((row) => !row.archived_at).length,
   drafts: messages.filter((row) => ['Draft', 'Approved'].includes(String(row.status ?? ''))).length,
   tasks: taskCount,

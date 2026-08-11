@@ -1,6 +1,6 @@
 # ALGAEU Project Status
 
-Status: **PRODUCTION READY**
+Status: **V4 PRODUCTION READY / V6 CODE READY — DATABASE MIGRATION BLOCKED**
 
 Status date: 2026-08-11 (Asia/Riyadh)
 
@@ -177,3 +177,15 @@ These deferred dependencies are not production blockers for the current draft-an
 - Added an additive migration for V5 company/contact/message/agent output metadata and protected user feedback. It contains no DROP, TRUNCATE, DELETE, reset, or production backfill.
 - Migration application is blocked: the local `SUPABASE_ACCESS_TOKEN` is present but rejected by both Supabase CLI and Management API (HTTP 401). Its value was never printed or logged. The UI prevents V5 draft persistence while the columns are unavailable.
 - Production remains unchanged: 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, zero duplicate company/contact/job groups. External research is PAUSED and external sending is DISABLED.
+
+## V6 intelligence core — 2026-08-11
+
+- Implemented a provider-free V6 domain layer for explainable company intelligence, structured relationship memory, evidence-gated business signals, an Opportunity Signal independent from the canonical stored Lead Score, one Next Best Action, relationship stages, conversation strategy, bilingual/channel-aware messages, quality dimensions, duplicate detection, contextual follow-ups, reply intent, Deal Coach, opportunity health, agent-team routing, auditable human overrides, user feedback, and a locked Manual email provider.
+- Today now exposes high-value signals and one primary action per company. Company 360 uses eight business tabs and shows Lead Score, Opportunity Signal, Relationship Stage, memory, signals, outreach strategy, and Deal Coach. Outreach remains copy/manual-event only; Agent Center groups the existing internal agents into teams; Reports adds only evidence-backed V6 analytics.
+- Automation is hard-locked to Level 0. External research remains PAUSED and external sending remains DISABLED. No Gmail, Resend, Tavily, WhatsApp, LinkedIn, or other external provider was called or connected.
+- Added additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql`. They contain no destructive DDL/DML or production backfill, revoke anonymous access to new tables, enable ownership RLS, grant only authenticated/service roles, and tolerate pre-existing policies.
+- Production migration application is **blocked**. The local `SUPABASE_ACCESS_TOKEN` exists but is not a valid `sbp_` Personal Access Token, and no cached Supabase CLI login or database password exists. The value was never displayed, logged, or committed. No unsafe workaround was used.
+- Read-only server verification passes with server access, Auth Admin access, anonymous denial, and unchanged production counts: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 0 communication events, 1 follow-up, 0 opportunities, 1,939 jobs, 2,730 runs, 692 manual-research jobs, and zero duplicate company/contact/job groups.
+- The Data API confirms the V5/V6 company/message columns and required intelligence-table shapes are not yet available. The migrations now reconcile any protected placeholder tables additively. Until both migrations are recorded remotely, V6 persistence is intentionally blocked while existing V4 workflows remain usable.
+- Local QA passes: TypeScript, ESLint, 57/57 tests, npm audit (0 vulnerabilities), and the 29-route Next.js production build. Supabase/Auth/current RLS continuity passes; V6 schema/RLS application verification remains pending the valid Personal Access Token.
+- Cross-device handoff is safe after the V6 commit is pushed to `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. The only required external action is replacing local `SUPABASE_ACCESS_TOKEN` with a valid Personal Access Token from Supabase Dashboard → Account → Access Tokens.

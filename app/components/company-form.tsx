@@ -13,12 +13,15 @@ type CompanyFormProps = {
 const fields: Array<{
   key: keyof Company;
   label: string;
-  type: 'text' | 'select' | 'email' | 'date' | 'textarea';
+  type: 'text' | 'select' | 'email' | 'date' | 'textarea' | 'checkbox';
   options?: readonly string[];
 }> = [
   { key: 'companyName', label: 'اسم الشركة', type: 'text' },
   { key: 'companyType', label: 'نوع الشركة', type: 'select', options: companyTypes },
   { key: 'sector', label: 'القطاع', type: 'text' },
+  { key: 'subsector', label: 'القطاع الفرعي', type: 'text' },
+  { key: 'priority', label: 'الأولوية', type: 'select', options: ['A','B','C'] },
+  { key: 'targetSegment', label: 'الفئة المستهدفة', type: 'select', options: ['INDUSTRIAL_FACTORY','REAL_ESTATE_DEVELOPER','MAIN_CONTRACTOR','INDUSTRIAL_CONTRACTOR','ENGINEERING_CONSULTANT','MANUFACTURER','SUPPLIER','FACILITY_OPERATOR','OTHER'] },
   { key: 'city', label: 'المدينة', type: 'select', options: companyCities },
   { key: 'website', label: 'الموقع الإلكتروني', type: 'text' },
   { key: 'generalEmail', label: 'البريد الإلكتروني العام', type: 'email' },
@@ -28,6 +31,14 @@ const fields: Array<{
   { key: 'mobile', label: 'الجوال', type: 'text' },
   { key: 'linkedIn', label: 'LinkedIn', type: 'text' },
   { key: 'serviceOpportunity', label: 'فرصة الخدمة', type: 'text' },
+  { key: 'businessAngle', label: 'زاوية الأعمال', type: 'textarea' },
+  { key: 'recommendedRole', label: 'الدور المستهدف', type: 'text' },
+  { key: 'recommendedLanguage', label: 'اللغة الموصى بها', type: 'select', options: ['ARABIC','ENGLISH'] },
+  { key: 'recommendedChannel', label: 'القناة الموصى بها', type: 'select', options: ['EMAIL','WHATSAPP','LINKEDIN','CALL_SCRIPT'] },
+  { key: 'recommendedMessageStyle', label: 'أسلوب الرسالة', type: 'select', options: ['DIRECT','RELATIONSHIP','OPPORTUNITY_LED'] },
+  { key: 'relationshipStage', label: 'مرحلة العلاقة', type: 'select', options: ['UNKNOWN','TARGET','RESEARCHING','CONTACT_READY','OUTREACH_PREPARED','CONTACTED','ENGAGED','MEETING','OPPORTUNITY','NURTURE','WON','LOST','DO_NOT_CONTACT'] },
+  { key: 'nextAction', label: 'الإجراء التالي', type: 'text' },
+  { key: 'doNotContact', label: 'عدم التواصل', type: 'checkbox' },
   { key: 'status', label: 'الحالة', type: 'select', options: companyStatuses },
   { key: 'lastContact', label: 'آخر تواصل', type: 'date' },
   { key: 'nextFollowUp', label: 'المتابعة القادمة', type: 'date' },
@@ -57,7 +68,7 @@ export function CompanyForm({ initialCompany, onSubmit, onCancel, submitLabel }:
     }
   }, [initialCompany]);
 
-  function updateField(key: keyof Company, value: string) {
+  function updateField(key: keyof Company, value: string | boolean) {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
@@ -80,7 +91,8 @@ export function CompanyForm({ initialCompany, onSubmit, onCancel, submitLabel }:
     <form onSubmit={handleSubmit} className="space-y-4 rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-5">
       <div className="grid gap-4 md:grid-cols-2">
         {fields.map((field) => {
-          const value = form[field.key as keyof Company] as string;
+          const rawValue = form[field.key as keyof Company];
+          const value = String(rawValue ?? '');
           const baseClass = 'w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm text-[#2f2417] outline-none focus:border-[#9a7b2f]';
 
           if (field.type === 'textarea') {
@@ -95,6 +107,10 @@ export function CompanyForm({ initialCompany, onSubmit, onCancel, submitLabel }:
                 />
               </div>
             );
+          }
+
+          if (field.type === 'checkbox') {
+            return <label key={field.key} className="flex items-center gap-2 rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm font-semibold"><input type="checkbox" checked={Boolean(rawValue)} onChange={(event) => updateField(field.key, event.target.checked)} />{field.label}</label>;
           }
 
           if (field.type === 'select') {

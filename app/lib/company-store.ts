@@ -64,6 +64,23 @@ export type Company = {
   vendorRegistrationLastChecked?: string;
   vendorRegistrationNextAction?: string;
   vendorRegistrationNotes?: string;
+  targetSegment?: string;
+  subsector?: string;
+  businessAngle?: string;
+  recommendedRole?: string;
+  recommendedLanguage?: string;
+  recommendedChannel?: string;
+  recommendedMessageStyle?: string;
+  relationshipStage?: string;
+  opportunitySignalScore?: number;
+  opportunitySignalReason?: string;
+  nextBestActionCode?: string;
+  nextBestActionReason?: string;
+  nextBestActionConfidence?: number;
+  nextBestActionDueAt?: string;
+  doNotContact?: boolean;
+  outreachCooldownUntil?: string;
+  humanOverride?: boolean;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];
@@ -93,5 +110,23 @@ export function createEmptyCompany(): Omit<Company, 'id' | 'communicationHistory
     lastContact: '',
     nextFollowUp: '',
     notes: '',
+    priority: 'C',
+    targetSegment: '',
+    subsector: '',
+    businessAngle: '',
+    recommendedRole: '',
+    recommendedLanguage: 'ARABIC',
+    recommendedChannel: 'EMAIL',
+    recommendedMessageStyle: 'DIRECT',
+    relationshipStage: 'TARGET',
+    opportunitySignalScore: 0,
+    opportunitySignalReason: '',
+    nextBestActionCode: '',
+    nextBestActionReason: '',
+    nextBestActionConfidence: 0,
+    nextBestActionDueAt: '',
+    doNotContact: false,
+    outreachCooldownUntil: '',
+    humanOverride: false,
   };
 }

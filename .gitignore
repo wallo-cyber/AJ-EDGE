@@ -2,3 +2,4 @@
 /.runtime/
 /.node-v*-win-x64.zip
 /project.zip
+/.pnpm-store/
