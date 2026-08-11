@@ -22,6 +22,16 @@ export default function CompaniesPage(){
  const load=async()=>{setLoading(true);setError('');try{const [rows,contacts,messages,events,followups,opps]=await Promise.all([supabaseCrm.companies.list(),simpleCrud.page('contacts',1,1000),simpleCrud.page('messages',1,1500),simpleCrud.page('communication_events',1,1500),simpleCrud.page('follow_ups',1,1000),simpleCrud.page('opportunities',1,1000)]);setCompanies(rows as Company[]);setRelated({contacts:contacts.rows,messages:messages.rows,events:events.rows,followups:followups.rows,opps:opps.rows})}catch(e){setError(e instanceof Error?e.message:'تعذر تحميل الشركات.')}finally{setLoading(false)}};
  useEffect(()=>{void load()},[]); useEffect(()=>setPage(1),[query,view]);
  useEffect(()=>{const params=new URLSearchParams(window.location.search);const requested=params.get('view') as View|null;if(requested&&['all','a','missing-dm','ready','followup','opportunity'].includes(requested))setView(requested);setSegment(params.get('segment')??'')},[]);
+ useEffect(()=>{
+   if(!companies.length)return;
+   const editId=new URLSearchParams(window.location.search).get('edit');
+   if(!editId)return;
+   const target=companies.find(c=>c.id===editId);
+   if(target){
+     setEditing(target);
+     setFormOpen(true);
+   }
+ },[companies]);
  const states=useMemo(()=>new Map(companies.map(c=>[c.id,companyOutreachState({id:c.id,general_email:c.generalEmail,general_phone:c.generalPhone},related.contacts??[],related.messages??[],related.events??[])])),[companies,related]);
  const filtered=useMemo(()=>companies.filter(c=>!c.archivedAt).filter(c=>`${c.companyName} ${c.sector} ${c.city}`.toLowerCase().includes(query.toLowerCase())).filter(c=>{const meta=c as unknown as Record<string,unknown>;const text=`${meta.companyType??''} ${meta.businessType??''} ${meta.targetSegment??''} ${c.sector??''}`.toLowerCase();return !segment||text.includes(segment)}).filter(c=>{const dm=(related.contacts??[]).some(x=>x.company_id===c.id&&isVerifiedDecisionMaker(x)),state=states.get(c.id);if(view==='a')return c.priority==='A';if(view==='missing-dm')return !dm;if(view==='ready')return ['DECISION_MAKER_VERIFIED','DRAFT_READY','APPROVED'].includes(state??'');if(view==='followup')return (related.followups??[]).some(x=>x.company_id===c.id&&!['Completed','Cancelled'].includes(safe(x.status)));if(view==='opportunity')return (related.opps??[]).some(x=>x.company_id===c.id&&!['WON','LOST'].includes(safe(x.stage)));return true}).sort((a,b)=>(a.priority??'C').localeCompare(b.priority??'C')-(0)||(b.leadScore??0)-(a.leadScore??0)),[companies,query,related,states,view,segment]);
  const visible=filtered.slice((page-1)*25,page*25),pages=Math.max(1,Math.ceil(filtered.length/25));
