@@ -82,3 +82,16 @@ Final handoff: the latest commit containing this document on the branch above.
 - An outbound channel, credentials, and explicit business approval are required before any real external sending can be enabled.
 
 These deferred dependencies are not production blockers for the current draft-and-manual-approval workflow.
+
+## NEXT DEVICE RESUME
+
+1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
+2. Confirm the latest commit subject is `ALGAEU cross-device checkpoint`; do not reset, re-seed, or re-import production data.
+3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
+4. Add only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. Never put the Tavily key or a Supabase service-role key in Git or frontend variables.
+5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
+6. Do not apply destructive migrations. The committed migration directory contains the complete production migration history, including the already-applied `enable_pg_net_for_tavily_worker` migration.
+7. Resume checks with `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run test:supabase`, and `npm run build` before changing code.
+8. Start stable mode with `npm start` after a successful build and open `http://localhost:3000`.
+9. External Tavily research remains paused and external sending remains disabled. Internal agents and Cron continue server-side without an open browser; pending external research stays persisted for later resume.
+10. Before new work, read this file and verify `git status`, the current Supabase project, queue counts, and the latest migration. Continue on `codex/aj-edge-mvp`; do not merge to `main` unless explicitly requested.

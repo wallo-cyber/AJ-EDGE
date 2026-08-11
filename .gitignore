@@ -1,0 +1,4 @@
+# Local runtimes and transfer archives are not project source.
+/.runtime/
+/.node-v*-win-x64.zip
+/project.zip
