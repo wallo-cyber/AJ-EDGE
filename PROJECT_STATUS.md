@@ -1,5 +1,11 @@
 # ALGAEU Project Status
 
+## Final UI controls (2026-08-11)
+
+- Sales Kit metadata now supports add, edit, active state and local list filtering.
+- Campaign Center persists selected audience and campaign metadata as manual-review work; external sending remains disabled.
+- Opportunity Radar provides a safe source-only list with status review actions and a paused-search empty state.
+
 ## Intelligence Expansion Phase 1 (2026-08-11)
 
 - Additive Phase 1 schema is applied: multi-dimensional company classification, business-directory contact fields, Sales Kit metadata, review-only campaign audiences, and evidence-required Opportunity Radar signals.
