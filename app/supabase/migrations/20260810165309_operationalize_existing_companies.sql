@@ -58,7 +58,7 @@ update public.companies set priority=case when lead_score>=80 then 'A' when lead
 insert into public.messages(owner_id,company_id,company_name,direction,channel,subject,body,status,template_name)
 select c.owner_id,c.id,c.company_name,'outgoing',t.channel,t.subject,
 case when t.template_name='Initial Email' then 'السادة '||c.company_name||'، تحية طيبة. نرغب في التعارف وبحث فرص التعاون في أعمال المقاولات والتنفيذ المناسبة لاحتياجاتكم، ويسعدنا التواصل مع مسؤول المشاريع أو المشتريات للتعريف المختصر وطلب التسجيل كمقاول/مورد عند ملاءمة ذلك.'
-when t.template_name='Short WhatsApp' then 'السلام عليكم، نتواصل من AJ-EDGE للتعارف مع '||c.company_name||' وبحث فرص تعاون مناسبة في أعمال المقاولات والتنفيذ. نأمل توجيهنا لمسؤول المشاريع أو المشتريات.'
+when t.template_name='Short WhatsApp' then 'السلام عليكم، نتواصل من ALGAEU للتعارف مع '||c.company_name||' وبحث فرص تعاون مناسبة في أعمال المقاولات والتنفيذ. نأمل توجيهنا لمسؤول المشاريع أو المشتريات.'
 when t.template_name='LinkedIn Intro' then 'مرحباً، يسعدنا التعارف وبحث فرص التعاون المستقبلية مع '||c.company_name||' في الأعمال المناسبة، ونأمل التواصل مع المسؤول المختص.'
 when t.template_name='Follow-up 1' then 'تحية طيبة، نتابع بلطف تواصلنا السابق مع '||c.company_name||'، ويسعدنا معرفة الشخص المناسب لبحث فرص التعاون أو التسجيل.'
 else 'تحية طيبة، هذه متابعة أخيرة للتعارف وبحث أي فرصة مستقبلية مناسبة. سنسعد بالتواصل عند وجود احتياج دون إزعاج.' end,'Draft',t.template_name

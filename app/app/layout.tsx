@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AJ-EDGE CRM",
-  description: "نظام إدارة علاقات الأعمال لأعمال المقاولات العامة في المنطقة الشرقية",
+  title: "ALGAEU",
+  description: "Business Development Intelligence",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

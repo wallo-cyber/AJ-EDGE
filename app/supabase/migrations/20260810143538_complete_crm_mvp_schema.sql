@@ -1,4 +1,4 @@
--- AJ-EDGE CRM MVP: complete the existing schema without dropping business data.
+-- ALGAEU CRM MVP: complete the existing schema without dropping business data.
 
 alter table public.companies add column if not exists owner_id uuid references auth.users(id) on delete cascade default auth.uid();
 alter table public.contacts add column if not exists owner_id uuid references auth.users(id) on delete cascade default auth.uid();

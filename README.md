@@ -1,6 +1,6 @@
-# AJ-EDGE
+# ALGAEU
 
-AJ-EDGE is an Arabic RTL business-development CRM for a contracting company. The application uses Next.js for the UI and the existing hosted Supabase project for authentication, operational data, queues, scheduled agents, logs, and enrichment state.
+ALGAEU is an Arabic RTL Business Development Intelligence platform for a contracting company. The application uses Next.js for the UI and the existing hosted Supabase project for authentication, operational data, queues, scheduled agents, logs, and enrichment state.
 
 ## Continue from a new computer
 
@@ -33,7 +33,7 @@ AJ-EDGE is an Arabic RTL business-development CRM for a contracting company. The
 
 5. Open `http://localhost:3000`, then sign in with the same Supabase account. The companies, CRM records, agent state, progress, results, and logs will load from Supabase.
 
-The hosted Cron and Edge Worker continue processing even when the browser and development computer are off. A new computer must not recreate, import, or seed the existing production data.
+The hosted internal Cron workers continue processing even when the browser and development computer are off. External research remains paused while Tavily quota is unavailable. A new computer must not recreate, import, or seed the existing production data.
 
 ## Verification
 

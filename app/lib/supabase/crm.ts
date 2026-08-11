@@ -63,7 +63,7 @@ function contactToRow(contact: Partial<Contact>) {
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
     phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
-    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel || 'General Contact', verification_status: contact.email || contact.mobile ? 'Verified' : 'Needs Verification', contact_score: contactScore, source: 'AJ-EDGE', notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
+    preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', contact_classification: contact.decisionLevel || 'General Contact', verification_status: contact.email || contact.mobile ? 'Verified' : 'Needs Verification', contact_score: contactScore, source: 'ALGAEU', notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
 }
 

@@ -67,7 +67,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
   return (
     <div className="min-h-screen text-[#2f2417]">
       <div className="sticky top-0 z-40 flex items-center justify-between border-b border-[#e7d8b8] bg-[#fffdf9]/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div><strong>AJ-EDGE</strong><span className="mr-2 text-xs text-[#8a6f35]">CRM</span></div>
+        <div><strong>ALGAEU</strong><span className="mr-2 text-xs text-[#8a6f35]">BDI</span></div>
         <button aria-label="فتح القائمة" onClick={() => setNavOpen((value) => !value)} className="rounded-xl border border-[#dac79f] bg-white px-3 py-2 text-lg">{navOpen ? '×' : '☰'}</button>
       </div>
       <div className="mx-auto flex max-w-[1600px] gap-5 px-3 py-4 sm:px-5 lg:px-6 lg:py-6">
@@ -75,9 +75,9 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
         <aside className={`${navOpen ? 'translate-x-0' : 'translate-x-full'} fixed inset-y-0 right-0 z-50 w-[286px] overflow-y-auto border-l border-[#e8d9b7] bg-[#fffdf9] p-4 shadow-2xl transition-transform lg:sticky lg:top-6 lg:z-auto lg:h-[calc(100vh-3rem)] lg:w-64 lg:translate-x-0 lg:rounded-[26px] lg:border lg:shadow-[0_18px_50px_rgba(70,48,18,.08)]`}>
           <div className="mb-5 rounded-[20px] bg-gradient-to-br from-[#332619] to-[#4a3620] p-4 text-[#fff8e8] shadow-lg">
             <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#8a6f35]">
-              AJ-EDGE CRM
+              ALGAEU
             </p>
-            <h1 className="mt-2 text-lg font-bold">منصة تطوير الأعمال</h1>
+            <h1 className="mt-2 text-lg font-bold">Business Development Intelligence</h1>
             <p className="mt-1 flex items-center gap-2 text-xs text-[#d9c8a2]"><span className="h-2 w-2 rounded-full bg-emerald-400" /> متصل بـ Supabase</p>
           </div>
 
@@ -111,7 +111,7 @@ export function CRMPage({ title, description, action, children }: CRMPageProps) 
         <main className="min-w-0 flex-1 rounded-[26px] border border-[#e8d9b7] bg-[#fffdf9]/90 p-4 shadow-[0_18px_55px_rgba(70,48,18,.07)] backdrop-blur sm:p-6 lg:p-7">
           <div className="mb-6 flex flex-col gap-4 border-b border-[#eadfc9] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-bold tracking-wide text-[#9a7b2f]">AJ-EDGE · إدارة علاقات الأعمال</p>
+              <p className="text-xs font-bold tracking-wide text-[#9a7b2f]">ALGAEU · Business Development Intelligence</p>
               <h2 className="mt-1 text-2xl font-bold tracking-tight text-[#2f2417] sm:text-3xl">{title}</h2>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-[#75664d]">{description}</p>
             </div>

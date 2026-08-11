@@ -16,7 +16,7 @@ if (!url || !key) throw new Error('Supabase URL and publishable key are required
 
 const supabase = createClient(url, key, { auth: { persistSession: false } });
 const ids = {};
-const marker = `AJ-EDGE-SMOKE-${crypto.randomUUID()}`;
+const marker = `ALGAEU-SMOKE-${crypto.randomUUID()}`;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);

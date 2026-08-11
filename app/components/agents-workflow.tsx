@@ -188,7 +188,7 @@ export function AgentsWorkflow() {
       estimatedValue: '0',
       stage: 'Prospecting',
       priority: candidate.priority,
-      owner: 'AJ-EDGE',
+      owner: 'ALGAEU',
       notes: candidate.reasonForTargeting,
       createdAt: now,
       updatedAt: now,
@@ -315,7 +315,7 @@ export function AgentsWorkflow() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'aj-edge-company-import-template.csv';
+    link.download = 'algaeu-company-import-template.csv';
     link.click();
     URL.revokeObjectURL(url);
   };
