@@ -1,0 +1,14 @@
+create index if not exists audit_events_company_id_idx on public.audit_events(company_id);
+create index if not exists communication_events_company_id_idx on public.communication_events(company_id);
+create index if not exists buying_committee_members_owner_id_idx on public.buying_committee_members(owner_id);
+create index if not exists buying_committee_members_contact_id_idx on public.buying_committee_members(contact_id);
+create index if not exists external_signals_owner_id_idx on public.external_signals(owner_id);
+create index if not exists vendor_registration_pursuits_company_id_idx on public.vendor_registration_pursuits(company_id);
+create index if not exists vendor_registration_pursuits_owner_id_idx on public.vendor_registration_pursuits(owner_id);
+create index if not exists message_performance_company_id_idx on public.message_performance(company_id);
+create index if not exists message_performance_message_id_idx on public.message_performance(message_id);
+create index if not exists referrals_partner_id_idx on public.referrals(partner_id);
+create index if not exists referrals_company_id_idx on public.referrals(company_id);
+create index if not exists referral_partners_company_id_idx on public.referral_partners(company_id);
+create index if not exists research_evidence_job_id_idx on public.research_evidence(job_id);
+create index if not exists research_evidence_owner_id_idx on public.research_evidence(owner_id);

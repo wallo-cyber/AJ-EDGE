@@ -1,5 +1,5 @@
 import type { Company, Contact, FollowUp, Meeting, Opportunity } from '../crm/types';
-import { getAuthenticatedSupabaseClient, isSupabaseConfigured } from './client';
+import { getSupabaseClient, isSupabaseConfigured } from './client';
 
 type DbRow = Record<string, unknown>;
 
@@ -53,9 +53,9 @@ function companyToRow(company: Partial<Company>) {
     qualification_reason: company.qualificationReason ?? '', contracting_angle: company.contractingAngle ?? '',
     next_action: company.nextAction ?? '', vendor_registration_url: company.vendorRegistrationUrl ?? '',
     vendor_registration_status: company.vendorRegistrationStatus ?? 'Not Checked', vendor_registration_requirements: company.vendorRegistrationRequirements ?? '', vendor_registration_account_status: company.vendorRegistrationAccountStatus ?? '', vendor_registration_last_checked: nullable(company.vendorRegistrationLastChecked ?? ''), vendor_registration_next_action: company.vendorRegistrationNextAction ?? '', vendor_registration_notes: company.vendorRegistrationNotes ?? '', archived_at: nullable(company.archivedAt ?? ''), outreach_status: company.outreachStatus ?? 'Not Contacted',
-    verification_status: company.verificationStatus ?? 'Needs Verification',
+    verification_status: company.verificationStatus ?? 'Needs Verification', communication_history: company.communicationHistory ?? [],
     target_segment: company.targetSegment ?? '', subsector: company.subsector ?? '', business_angle: company.businessAngle ?? company.contractingAngle ?? '', recommended_role: company.recommendedRole ?? '', recommended_language: company.recommendedLanguage ?? 'ARABIC', recommended_channel: company.recommendedChannel ?? 'EMAIL', recommended_message_style: company.recommendedMessageStyle ?? 'DIRECT', relationship_stage: company.relationshipStage ?? 'TARGET', opportunity_signal_score: company.opportunitySignalScore ?? 0, opportunity_signal_reason: company.opportunitySignalReason ?? '', next_best_action_code: company.nextBestActionCode ?? '', next_best_action_reason: company.nextBestActionReason ?? '', next_best_action_confidence: company.nextBestActionConfidence ?? 0, next_best_action_due_at: nullable(company.nextBestActionDueAt ?? ''), do_not_contact: Boolean(company.doNotContact), outreach_cooldown_until: nullable(company.outreachCooldownUntil ?? ''), human_override: Boolean(company.humanOverride),
-    updated_at: new Date().toISOString(),
+    follow_ups: company.followUps ?? [], opportunities: company.opportunities ?? [], updated_at: new Date().toISOString(),
   };
 }
 
@@ -63,7 +63,6 @@ function contactFromRow(row: DbRow): Contact {
   return {
     id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
     fullName: text(row.full_name) || text(row.name), position: text(row.position), department: text(row.department),
-    phone: text(row.phone),
     mobile: text(row.mobile) || text(row.phone), email: text(row.email), linkedIn: text(row.linked_in) || text(row.linkedin),
     decisionLevel: text(row.decision_level), preferredContactMethod: text(row.preferred_contact_method), source: text(row.source), sourceUrl: text(row.source_url), confidence: Number(row.confidence || 0), verificationStatus: text(row.verification_status), decisionMaker: Boolean(row.decision_maker), verifiedAt: text(row.verified_at), archivedAt: text(row.archived_at), notes: text(row.notes),
     createdAt: text(row.created_at), updatedAt: text(row.updated_at),
@@ -71,11 +70,11 @@ function contactFromRow(row: DbRow): Contact {
 }
 
 function contactToRow(contact: Partial<Contact>) {
-  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + ((contact.mobile || contact.phone) ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'Unknown' ? 15 : 0));
+  const contactScore = Math.min(100, (contact.fullName ? 20 : 0) + (contact.position ? 15 : 0) + (contact.department ? 10 : 0) + (contact.mobile ? 15 : 0) + (contact.email ? 15 : 0) + (contact.linkedIn ? 10 : 0) + (contact.decisionLevel && contact.decisionLevel !== 'Unknown' ? 15 : 0));
   return {
     company_id: nullable(contact.companyId ?? ''), company_name: contact.companyName ?? '', name: nullable(contact.fullName ?? ''),
     full_name: contact.fullName ?? '', position: nullable(contact.position ?? ''), department: contact.department ?? '',
-    phone: nullable(contact.phone ?? contact.mobile ?? ''), mobile: contact.mobile ?? contact.phone ?? '', email: nullable(contact.email ?? ''),
+    phone: nullable(contact.mobile ?? ''), mobile: contact.mobile ?? '', email: nullable(contact.email ?? ''),
     linkedin: nullable(contact.linkedIn ?? ''), linked_in: contact.linkedIn ?? '', decision_level: contact.decisionLevel ?? '',
     preferred_contact_method: contact.preferredContactMethod ?? '', decision_role: contact.position ?? 'Other', decision_maker: Boolean(contact.decisionMaker), contact_classification: contact.decisionMaker ? 'Decision Maker' : contact.decisionLevel === 'Influencer' ? 'Influencer' : 'General Contact', verification_status: contact.verificationStatus ?? 'UNVERIFIED', verified_at: contact.verificationStatus === 'VERIFIED' ? (contact.verifiedAt || new Date().toISOString()) : null, archived_at: nullable(contact.archivedAt ?? ''), contact_score: contactScore, source: contact.source ?? '', source_url: contact.sourceUrl ?? '', confidence: Math.max(0, Math.min(100, Number(contact.confidence || 0))), notes: nullable(contact.notes ?? ''), updated_at: new Date().toISOString(),
   };
@@ -102,33 +101,25 @@ function followUpToRow(item: Partial<FollowUp>) {
 }
 
 async function list(table: string, mapper: (row: DbRow) => unknown) {
-  const client = await getAuthenticatedSupabaseClient();
-  if (!client) return [];
-  const { data, error } = await client.from(table).select('*').order('created_at', { ascending: false });
+  const { data, error } = await getSupabaseClient().from(table).select('*').order('created_at', { ascending: false });
   throwIfError(error);
   return (data ?? []).map((row) => mapper(row as DbRow));
 }
 
 async function insert<T>(table: string, row: DbRow, mapper: (row: DbRow) => T) {
-  const client = await getAuthenticatedSupabaseClient();
-  if (!client) throw new Error('يجب تسجيل الدخول قبل حفظ البيانات.');
-  const { data, error } = await client.from(table).insert(row).select('*').single();
+  const { data, error } = await getSupabaseClient().from(table).insert(row).select('*').single();
   throwIfError(error);
   return mapper(data as DbRow);
 }
 
 async function update<T>(table: string, id: string, row: DbRow, mapper: (row: DbRow) => T) {
-  const client = await getAuthenticatedSupabaseClient();
-  if (!client) throw new Error('يجب تسجيل الدخول قبل تعديل البيانات.');
-  const { data, error } = await client.from(table).update(row).eq('id', id).select('*').single();
+  const { data, error } = await getSupabaseClient().from(table).update(row).eq('id', id).select('*').single();
   throwIfError(error);
   return mapper(data as DbRow);
 }
 
 async function remove(table: string, id: string) {
-  const client = await getAuthenticatedSupabaseClient();
-  if (!client) throw new Error('يجب تسجيل الدخول قبل حذف البيانات.');
-  const { error } = await client.from(table).delete().eq('id', id);
+  const { error } = await getSupabaseClient().from(table).delete().eq('id', id);
   throwIfError(error);
 }
 
@@ -136,7 +127,7 @@ export const supabaseCrm = {
   configured: isSupabaseConfigured,
   companies: {
     list: () => list('companies', companyFromRow) as Promise<Company[]>,
-    get: async (id: string) => { const client=await getAuthenticatedSupabaseClient(); if(!client)throw new Error('يجب تسجيل الدخول لعرض الشركة.'); const { data, error } = await client.from('companies').select('*').eq('id', id).single(); throwIfError(error); return companyFromRow(data as DbRow); },
+    get: async (id: string) => { const { data, error } = await getSupabaseClient().from('companies').select('*').eq('id', id).single(); throwIfError(error); return companyFromRow(data as DbRow); },
     create: (item: Partial<Company>) => insert('companies', companyToRow(item), companyFromRow),
     update: (id: string, item: Partial<Company>) => update('companies', id, companyToRow(item), companyFromRow),
     remove: (id: string) => remove('companies', id),
@@ -144,10 +135,8 @@ export const supabaseCrm = {
   contacts: {
     list: () => list('contacts', contactFromRow) as Promise<Contact[]>,
     page: async (page = 1, pageSize = 25, filters?: { search?: string; companyId?: string; department?: string; decisionLevel?: string; verificationStatus?: string }) => {
-      const client = await getAuthenticatedSupabaseClient();
-      if (!client) return { rows: [] as Contact[], count: 0 };
       const from = Math.max(0, page - 1) * pageSize;
-      let query = client.from('contacts').select('*', { count: 'exact' }).is('archived_at', null);
+      let query = getSupabaseClient().from('contacts').select('*', { count: 'exact' }).is('archived_at', null);
       const search = filters?.search?.trim().replaceAll(',', ' ');
       if (search) query = query.or(`full_name.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%,position.ilike.%${search}%`);
       if (filters?.companyId) query = query.eq('company_id', filters.companyId);

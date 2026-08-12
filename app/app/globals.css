@@ -6,7 +6,7 @@
   --surface: #fffdf9;
   --surface-soft: #faf5eb;
   --border: #e7d8b8;
-  --gold: #a57c2a;
+  --gold: #7a5e1c;
   --brown: #2f2417;
   --muted: #76684f;
 }
@@ -14,7 +14,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
+  --font-sans: "Segoe UI", Tahoma, Arial, sans-serif;
   --font-mono: "Courier New", monospace;
 }
 
@@ -31,7 +31,7 @@ body {
     radial-gradient(circle at 8% 0%, rgba(207, 173, 101, .16), transparent 30rem),
     linear-gradient(180deg, #fbf7ef 0%, var(--background) 100%);
   color: var(--foreground);
-  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  font-family: "Segoe UI", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
   line-height: 1.5;
   max-width: 100%;
   overflow-x: clip;
@@ -106,3 +106,285 @@ tbody tr:hover { background: #fcf8f0; }
   .desktop-table { display:none; }
 }
 @media (min-width: 768px) { .mobile-cards { display:none; } }
+
+/* ALGAEU alternate visual theme — presentation only; layout and workflows stay unchanged. */
+.theme-toggle {
+  display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:.4rem;
+  border:1px solid #cdb77f; background:#fffdf9; color:#5f4b29; border-radius:12px;
+  padding:.5rem .8rem; font-size:.75rem; font-weight:800;
+}
+.theme-toggle:hover { box-shadow:0 0 0 3px rgba(154,123,47,.10); }
+
+html[data-theme="neon"] {
+  --background:#050713; --foreground:#f4f1ff; --surface:#0b0d1d; --surface-soft:#11142a;
+  --border:#303565; --gold:#ff8a35; --brown:#f4f1ff; --muted:#a8afd2;
+  color-scheme:dark;
+}
+html[data-theme="neon"] body {
+  color:#f4f1ff;
+  background:
+    radial-gradient(circle at 82% 4%, rgba(111,44,255,.28), transparent 28rem),
+    radial-gradient(circle at 10% 24%, rgba(18,105,255,.18), transparent 25rem),
+    radial-gradient(circle at 50% 100%, rgba(255,72,128,.10), transparent 30rem),
+    linear-gradient(180deg,#03040b 0%,#080a18 46%,#050713 100%);
+  background-attachment:fixed;
+}
+html[data-theme="neon"] ::selection { background:#6d36ff; color:white; }
+html[data-theme="neon"] .algaeu-sidebar,
+html[data-theme="neon"] .algaeu-main,
+html[data-theme="neon"] .algaeu-mobile-header {
+  background:rgba(8,10,25,.88) !important;
+  border-color:#292f62 !important;
+  color:#f4f1ff !important;
+  box-shadow:0 18px 55px rgba(0,0,0,.38), 0 0 28px rgba(91,51,255,.08) !important;
+  backdrop-filter:blur(18px);
+}
+html[data-theme="neon"] .algaeu-brand {
+  color:#fff !important;
+  border:1px solid rgba(124,82,255,.55);
+  background:linear-gradient(135deg,#121431 0%,#261357 55%,#3b1744 100%) !important;
+  box-shadow:inset 0 0 28px rgba(87,54,255,.14),0 0 22px rgba(99,57,255,.14);
+}
+html[data-theme="neon"] .theme-toggle {
+  color:#f8f3ff; border-color:#6844dd;
+  background:linear-gradient(135deg,rgba(44,35,105,.9),rgba(80,25,102,.88));
+  box-shadow:0 0 18px rgba(99,60,255,.18);
+}
+html[data-theme="neon"] .theme-toggle:hover { border-color:#ff8a35; box-shadow:0 0 20px rgba(255,100,70,.18); }
+html[data-theme="neon"] .crm-card,
+html[data-theme="neon"] .crm-kpi {
+  color:#f4f1ff !important; border-color:#303565 !important;
+  background:linear-gradient(145deg,rgba(17,20,43,.96),rgba(8,10,26,.96)) !important;
+  box-shadow:0 12px 35px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.025) !important;
+}
+html[data-theme="neon"] .crm-kpi::after { background:rgba(117,72,255,.16); box-shadow:0 0 28px rgba(117,72,255,.16); }
+html[data-theme="neon"] .crm-progress { background:#222744; }
+html[data-theme="neon"] .crm-progress > span { background:linear-gradient(90deg,#5c5cff,#a448ff,#ff7b3d); box-shadow:0 0 12px rgba(125,74,255,.55); }
+html[data-theme="neon"] .crm-empty { color:#a8afd2; border-color:#3d4477; background:rgba(13,16,36,.75); }
+html[data-theme="neon"] .btn-primary { color:white; background:linear-gradient(100deg,#4d54e8,#8c39e9,#f06a43); box-shadow:0 0 18px rgba(102,62,235,.20); }
+html[data-theme="neon"] .btn-primary:hover { filter:brightness(1.12); }
+html[data-theme="neon"] .btn-secondary { color:#f5efff; border-color:#6146b8; background:#171633; }
+html[data-theme="neon"] .btn-ghost { color:#cdd3f2; border-color:#343a68; background:#0e1126; }
+html[data-theme="neon"] .section-title { color:#f5f2ff; }
+html[data-theme="neon"] tbody tr:hover { background:#11152d; }
+html[data-theme="neon"] input,
+html[data-theme="neon"] select,
+html[data-theme="neon"] textarea { color:#f3f1ff !important; border-color:#353b6a !important; background:#0b0e21 !important; }
+html[data-theme="neon"] input::placeholder,
+html[data-theme="neon"] textarea::placeholder { color:#777fa7; }
+html[data-theme="neon"] thead { background:#10132b !important; }
+
+/* Map the existing beige/gold utility palette into the neon palette without changing component structure. */
+html[data-theme="neon"] [class*="bg-[#fffdf9]"], html[data-theme="neon"] [class*="bg-[#fdf8ee]"],
+html[data-theme="neon"] [class*="bg-[#fdf9f1]"], html[data-theme="neon"] [class*="bg-[#fef8ec]"],
+html[data-theme="neon"] [class*="bg-[#faf5eb]"], html[data-theme="neon"] [class*="bg-[#f8f1e4]"],
+html[data-theme="neon"] [class*="bg-[#f7efdf]"], html[data-theme="neon"] [class*="bg-[#f8efe0]"] { background-color:#0d1024 !important; }
+html[data-theme="neon"] [class*="bg-[#2f2417]"] { background:linear-gradient(100deg,#3d42ca,#7535d8,#c84a6e) !important; }
+html[data-theme="neon"] [class*="bg-[#f0e3ca]"] { background-color:#211944 !important; }
+html[data-theme="neon"] [class*="border-[#e8d9b7]"], html[data-theme="neon"] [class*="border-[#e7d8b8]"],
+html[data-theme="neon"] [class*="border-[#eadfc9]"], html[data-theme="neon"] [class*="border-[#ead9b3]"],
+html[data-theme="neon"] [class*="border-[#d8c08d]"] { border-color:#303565 !important; }
+html[data-theme="neon"] [class*="text-[#2f2417]"] { color:#f4f1ff !important; }
+html[data-theme="neon"] [class*="text-[#75664d]"], html[data-theme="neon"] [class*="text-[#6f6044]"],
+html[data-theme="neon"] [class*="text-[#59482f]"] { color:#aab1d2 !important; }
+html[data-theme="neon"] [class*="text-[#7a5e1c]"], html[data-theme="neon"] [class*="text-[#9a7b2f]"],
+html[data-theme="neon"] [class*="text-[#8a6f35]"] { color:#ff9b4a !important; text-shadow:0 0 12px rgba(255,119,64,.18); }
+html[data-theme="neon"] .status-neutral { background:#1b203c; color:#c4cae8; }
+html[data-theme="neon"] .status-success { background:#10372f; color:#6ee7c2; }
+html[data-theme="neon"] .status-warning { background:#3b2b16; color:#ffc76a; }
+html[data-theme="neon"] .status-danger { background:#3d1825; color:#ff91aa; }
+
+/* Phase 1.13.1 — Neon graphite correction.
+   Presentation only: original theme remains untouched. */
+html[data-theme="neon"] {
+  --background:#17191f;
+  --foreground:#f4f5f8;
+  --surface:#22252d;
+  --surface-soft:#1c1f26;
+  --border:#3a3f4d;
+  --muted:#aeb4c2;
+}
+
+html[data-theme="neon"] body {
+  background:
+    radial-gradient(circle at 82% 3%, rgba(109,72,255,.16), transparent 30rem),
+    radial-gradient(circle at 12% 18%, rgba(38,110,255,.11), transparent 27rem),
+    linear-gradient(180deg,#1b1d23 0%,#15171c 48%,#111318 100%) !important;
+}
+
+/* Main shells become graphite rather than near-black/white. */
+html[data-theme="neon"] .algaeu-sidebar,
+html[data-theme="neon"] .algaeu-main,
+html[data-theme="neon"] .algaeu-mobile-header {
+  background:rgba(28,31,39,.94) !important;
+  border-color:#3b4050 !important;
+}
+
+html[data-theme="neon"] .algaeu-brand {
+  background:linear-gradient(135deg,#252936 0%,#302654 55%,#39243d 100%) !important;
+}
+
+/* Cards/KPIs: medium graphite, no white panels. */
+html[data-theme="neon"] .crm-card,
+html[data-theme="neon"] .crm-kpi {
+  background:linear-gradient(145deg,#252831 0%,#1f222a 100%) !important;
+  border-color:#3c4252 !important;
+  color:#f5f6fa !important;
+  box-shadow:0 12px 32px rgba(0,0,0,.22), inset 0 1px rgba(255,255,255,.025) !important;
+}
+html[data-theme="neon"] .crm-empty {
+  background:#20232b !important;
+  border-color:#444a59 !important;
+}
+
+/* Explicitly eliminate Tailwind white/light surfaces in Neon only. */
+html[data-theme="neon"] .bg-white,
+html[data-theme="neon"] .bg-white\/95,
+html[data-theme="neon"] .bg-white\/90,
+html[data-theme="neon"] .bg-white\/80,
+html[data-theme="neon"] .bg-white\/70,
+html[data-theme="neon"] [class*="bg-white"],
+html[data-theme="neon"] [class*="bg-[#fff"],
+html[data-theme="neon"] [class*="bg-[#fdf"],
+html[data-theme="neon"] [class*="bg-[#fef"],
+html[data-theme="neon"] [class*="bg-[#faf"],
+html[data-theme="neon"] [class*="bg-[#f9f"],
+html[data-theme="neon"] [class*="bg-[#f8f"],
+html[data-theme="neon"] [class*="bg-[#f7f"],
+html[data-theme="neon"] [class*="bg-[#f6f"] {
+  background-color:#24272f !important;
+  background-image:none !important;
+}
+
+/* Common gray/slate light utilities used by nested panels. */
+html[data-theme="neon"] .bg-gray-50,
+html[data-theme="neon"] .bg-gray-100,
+html[data-theme="neon"] .bg-slate-50,
+html[data-theme="neon"] .bg-slate-100,
+html[data-theme="neon"] .bg-zinc-50,
+html[data-theme="neon"] .bg-neutral-50 {
+  background-color:#20232a !important;
+}
+
+/* Forms and tables use an even darker graphite for hierarchy. */
+html[data-theme="neon"] input,
+html[data-theme="neon"] select,
+html[data-theme="neon"] textarea {
+  background:#181b22 !important;
+  border-color:#414756 !important;
+  color:#f3f5fb !important;
+}
+html[data-theme="neon"] table,
+html[data-theme="neon"] tbody,
+html[data-theme="neon"] tr,
+html[data-theme="neon"] td,
+html[data-theme="neon"] th {
+  border-color:#383e4c !important;
+}
+html[data-theme="neon"] thead,
+html[data-theme="neon"] thead tr,
+html[data-theme="neon"] thead th {
+  background:#1b1e25 !important;
+  color:#e9ecf5 !important;
+}
+html[data-theme="neon"] tbody tr { background:#23262e !important; }
+html[data-theme="neon"] tbody tr:nth-child(even) { background:#20232a !important; }
+html[data-theme="neon"] tbody tr:hover { background:#2b2f3a !important; }
+
+/* Nested rounded bordered panels that were white by default. */
+html[data-theme="neon"] [class*="rounded-"][class*="border"]:not(.status-success):not(.status-warning):not(.status-danger):not(.status-neutral) {
+  border-color:#3c4250;
+}
+
+/* Keep readable secondary text across hard-coded palettes. */
+html[data-theme="neon"] [class*="text-gray-"],
+html[data-theme="neon"] [class*="text-slate-"],
+html[data-theme="neon"] [class*="text-zinc-"] { color:#b2b8c7 !important; }
+
+/* Buttons maintain neon accents but neutral buttons stay graphite. */
+html[data-theme="neon"] .btn-ghost,
+html[data-theme="neon"] .btn-secondary,
+html[data-theme="neon"] .theme-toggle {
+  background:#292d37 !important;
+  border-color:#464d60 !important;
+  color:#edf0fa !important;
+}
+
+
+/* Phase 1.13.2 — neutral graphite surfaces throughout Neon mode.
+   Layout and Original theme remain unchanged. */
+html[data-theme="neon"] .bg-emerald-50,
+html[data-theme="neon"] .bg-emerald-100,
+html[data-theme="neon"] .bg-green-50,
+html[data-theme="neon"] .bg-green-100,
+html[data-theme="neon"] .bg-red-50,
+html[data-theme="neon"] .bg-red-100,
+html[data-theme="neon"] .bg-rose-50,
+html[data-theme="neon"] .bg-rose-100,
+html[data-theme="neon"] .bg-yellow-50,
+html[data-theme="neon"] .bg-yellow-100,
+html[data-theme="neon"] .bg-amber-50,
+html[data-theme="neon"] .bg-amber-100,
+html[data-theme="neon"] .bg-orange-50,
+html[data-theme="neon"] .bg-orange-100,
+html[data-theme="neon"] .bg-blue-50,
+html[data-theme="neon"] .bg-blue-100,
+html[data-theme="neon"] .bg-sky-50,
+html[data-theme="neon"] .bg-sky-100,
+html[data-theme="neon"] .bg-indigo-50,
+html[data-theme="neon"] .bg-indigo-100,
+html[data-theme="neon"] .bg-violet-50,
+html[data-theme="neon"] .bg-violet-100,
+html[data-theme="neon"] .bg-purple-50,
+html[data-theme="neon"] .bg-purple-100,
+html[data-theme="neon"] .bg-pink-50,
+html[data-theme="neon"] .bg-pink-100,
+html[data-theme="neon"] [class*="bg-emerald-50"],
+html[data-theme="neon"] [class*="bg-green-50"],
+html[data-theme="neon"] [class*="bg-red-50"],
+html[data-theme="neon"] [class*="bg-rose-50"],
+html[data-theme="neon"] [class*="bg-yellow-50"],
+html[data-theme="neon"] [class*="bg-amber-50"],
+html[data-theme="neon"] [class*="bg-orange-50"],
+html[data-theme="neon"] [class*="bg-blue-50"],
+html[data-theme="neon"] [class*="bg-sky-50"],
+html[data-theme="neon"] [class*="bg-indigo-50"],
+html[data-theme="neon"] [class*="bg-violet-50"],
+html[data-theme="neon"] [class*="bg-purple-50"],
+html[data-theme="neon"] [class*="bg-pink-50"] {
+  background:#292c34 !important;
+  background-image:none !important;
+}
+
+/* One gray fill for all semantic status chips; semantic meaning stays in text. */
+html[data-theme="neon"] .status-success,
+html[data-theme="neon"] .status-warning,
+html[data-theme="neon"] .status-danger,
+html[data-theme="neon"] .status-neutral {
+  background:#30333c !important;
+  border:1px solid #454a57 !important;
+}
+html[data-theme="neon"] .status-success { color:#79e7c5 !important; }
+html[data-theme="neon"] .status-warning { color:#ffd07a !important; }
+html[data-theme="neon"] .status-danger  { color:#ff9caf !important; }
+html[data-theme="neon"] .status-neutral { color:#c9cfdb !important; }
+
+/* Alert/action panels such as "next action" and "missing data" use graphite too. */
+html[data-theme="neon"] [class*="rounded"][class*="text-emerald-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-green-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-red-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-rose-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-amber-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-yellow-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-blue-"],
+html[data-theme="neon"] [class*="rounded"][class*="text-sky-"] {
+  background-color:#292c34 !important;
+  background-image:none !important;
+  border-color:#444955 !important;
+}
+
+/* Phase 2.1.2 — server-first theme lock: Neon/Graphite is rendered before hydration. */
+html[data-theme="neon"] .min-h-screen.bg-\[\#f6f0e4\] {
+  background:#17191f !important;
+  color:#f4f5f8 !important;
+}
