@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { businessAngle, generateMessage } from '../lib/intelligence/core';
 import { buildCompanyIntelligence, evaluateMessageQuality } from '../lib/intelligence/v6';
@@ -191,7 +191,7 @@ export function CampaignWorkspace() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const [companiesRows, contactRows, signalRows, kitRows, campaignRows, memberRows, draftRows] = await Promise.all([
       simpleCrud.list('companies'),
       simpleCrud.list('contacts'),
@@ -209,11 +209,11 @@ export function CampaignWorkspace() {
     setMembers(memberRows);
     setDrafts(draftRows);
     if (!current && campaignRows[0]) setCurrent(campaignRows[0].id);
-  };
+  }, [current]);
 
   useEffect(() => {
-    void load().catch((error) => setNotice(error instanceof Error ? error.message : 'تعذر تحميل الحملات.'));
-  }, []);
+    void load().catch((error: unknown) => setNotice(error instanceof Error ? error.message : 'تعذر تحميل الحملات.'));
+  }, [load]);
 
   const visible = useMemo(
     () => companies.filter((row) => `${text(row.company_name)} ${text(row.sector)} ${text(row.city)} ${text(row.target_segment)}`.toLowerCase().includes(query.toLowerCase())),
@@ -231,7 +231,7 @@ export function CampaignWorkspace() {
       })
       .sort((a, b) => b.score - a.score)
       .slice(0, 20);
-  }, [companies, contacts, drafts, signals]);
+  }, [companies, contacts, drafts]);
 
   function build(company: SimpleRow, existing: string[] = []): DraftBuild {
     const target = contacts.find((row) => text(row.company_id) === company.id && (row.decision_maker === true || text(row.verification_status) === 'VERIFIED')) ?? contacts.find((row) => text(row.company_id) === company.id);

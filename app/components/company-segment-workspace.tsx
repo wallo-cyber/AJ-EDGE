@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { companyLifecycle, decisionMakerTarget, qualificationGate } from '../lib/intelligence/bd-core';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
@@ -44,7 +44,7 @@ export function CompanySegmentWorkspace({ segment }: { segment: string }) {
   const [busyId, setBusyId] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const [companies, contacts, signals, opportunities, messages, events, followups, campaigns, campaignCompanies] = await Promise.all([
@@ -65,11 +65,11 @@ export function CompanySegmentWorkspace({ segment }: { segment: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [campaignId]);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
   const rows = useMemo<SegmentRow[]>(() => {
     const companies = data.companies ?? [];

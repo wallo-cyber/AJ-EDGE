@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { conversationStrategy, evaluateMessageQuality, generateProfessionalMessage } from '../lib/intelligence/v6';
 import { exclusionReason, nurtureDecision } from '../lib/intelligence/smart-nurture';
@@ -10,20 +10,37 @@ import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 
 const text = (value: unknown) => String(value ?? '').trim();
 
-type Tab = 'composer' | 'campaigns' | 'review' | 'nurture' | 'history' | 'attachments';
+const objectiveOptions = [
+  'INTRODUCTION',
+  'VENDOR_REGISTRATION',
+  'SUBCONTRACTING',
+  'PROJECT_DISCUSSION',
+  'MEETING_REQUEST',
+  'FOLLOW_UP',
+  'RECONNECT',
+] as const;
+
+const replyOptions = ['ALL', 'REPLIED', 'NO_REPLY', 'POSITIVE', 'NEUTRAL', 'NOT_NOW'];
+const languageOptions = ['ARABIC', 'ENGLISH'];
+const relationshipStages = ['COLD', 'WARM', 'ACTIVE', 'STRATEGIC', 'DORMANT'];
+
+type Tab = 'inbox' | 'drafts' | 'review' | 'approved' | 'followups' | 'nurture' | 'campaigns' | 'history' | 'composer';
 
 const tabs: Array<{ id: Tab; label: string }> = [
-  { id: 'composer', label: 'Single Composer' },
-  { id: 'campaigns', label: 'Campaign Drafts' },
-  { id: 'review', label: 'Review/Approve' },
-  { id: 'nurture', label: 'Smart Nurture' },
-  { id: 'history', label: 'Communication History' },
-  { id: 'attachments', label: 'Sales Kit' },
+  { id: 'inbox', label: 'INBOX / RESPONSES' },
+  { id: 'drafts', label: 'DRAFTS' },
+  { id: 'review', label: 'READY FOR REVIEW' },
+  { id: 'approved', label: 'APPROVED' },
+  { id: 'followups', label: 'FOLLOW-UPS' },
+  { id: 'nurture', label: 'NURTURE' },
+  { id: 'campaigns', label: 'CAMPAIGNS' },
+  { id: 'history', label: 'HISTORY' },
+  { id: 'composer', label: 'COMPOSER' },
 ];
 
 export function EmailCenterWorkspace() {
   const [data, setData] = useState<Record<string, SimpleRow[]>>({});
-  const [tab, setTab] = useState<Tab>('composer');
+  const [tab, setTab] = useState<Tab>('inbox');
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -35,8 +52,21 @@ export function EmailCenterWorkspace() {
   const [selectedCampaign, setSelectedCampaign] = useState('');
   const [campaignSelection, setCampaignSelection] = useState<string[]>([]);
   const [campaignName, setCampaignName] = useState('');
+  const [objective, setObjective] = useState<(typeof objectiveOptions)[number]>('INTRODUCTION');
+  const [serviceAngle, setServiceAngle] = useState('');
+  const [language, setLanguage] = useState<'ARABIC' | 'ENGLISH'>('ARABIC');
+  const [companyFilter, setCompanyFilter] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState('');
+  const [recipientFilter, setRecipientFilter] = useState('');
+  const [campaignFilter, setCampaignFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [languageFilter, setLanguageFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [relationshipFilter, setRelationshipFilter] = useState('');
+  const [opportunityFilter, setOpportunityFilter] = useState('');
+  const [replyFilter, setReplyFilter] = useState('ALL');
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const names = [
@@ -60,24 +90,67 @@ export function EmailCenterWorkspace() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId, selectedCampaign]);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
 
-  const companies = data.companies ?? [];
-  const contacts = data.contacts ?? [];
-  const messages = data.messages ?? [];
-  const events = data.communication_events ?? [];
-  const opportunities = data.opportunities ?? [];
-  const campaigns = data.outreach_campaigns ?? [];
-  const campaignCompanies = data.campaign_companies ?? [];
-  const assets = (data.sales_kit_assets ?? []).filter((item) => item.active !== false);
+  const companies = useMemo(() => data.companies ?? [], [data.companies]);
+  const contacts = useMemo(() => data.contacts ?? [], [data.contacts]);
+  const messages = useMemo(() => data.messages ?? [], [data.messages]);
+  const events = useMemo(() => data.communication_events ?? [], [data.communication_events]);
+  const opportunities = useMemo(() => data.opportunities ?? [], [data.opportunities]);
+  const campaigns = useMemo(() => data.outreach_campaigns ?? [], [data.outreach_campaigns]);
+  const campaignCompanies = useMemo(() => data.campaign_companies ?? [], [data.campaign_companies]);
+  const assets = useMemo(() => (data.sales_kit_assets ?? []).filter((item) => item.active !== false), [data.sales_kit_assets]);
 
   const selectedCompany = companies.find((item) => item.id === companyId);
   const companyContacts = contacts.filter((item) => item.company_id === companyId && !item.archived_at);
   const selectedContact = companyContacts.find((item) => item.id === contactId) ?? companyContacts[0];
+
+  const statusCounts = useMemo(() => {
+    const byStatus = {
+      inbox: events.filter((item) => !item.archived_at && text(item.direction).toUpperCase() === 'INBOUND').length,
+      drafts: messages.filter((item) => !item.archived_at && text(item.status) === 'Draft').length,
+      review: messages.filter((item) => !item.archived_at && ['Draft', 'Approved'].includes(text(item.status))).length,
+      approved: messages.filter((item) => !item.archived_at && text(item.status) === 'Approved').length,
+      followups: events.filter((item) => !item.archived_at && text(item.direction).toUpperCase() === 'OUTBOUND').length,
+      nurture: messages.filter((item) => !item.archived_at && text(item.status) === 'Nurture').length,
+      campaigns: campaigns.length,
+      history: events.filter((item) => !item.archived_at).length,
+    };
+    return byStatus;
+  }, [campaigns, events, messages]);
+
+  const filteredMessages = useMemo(() => {
+    return messages.filter((item) => !item.archived_at).filter((item) => {
+      const companyMatch = !companyFilter || text(item.company_id) === companyFilter || text(item.company_name).toLowerCase().includes(companyFilter.toLowerCase());
+      const recipientMatch = !recipientFilter || text(item.recipient).toLowerCase().includes(recipientFilter.toLowerCase());
+      const statusMatch = !statusFilter || text(item.status).toLowerCase() === statusFilter.toLowerCase();
+      const languageMatch = !languageFilter || text(item.language || 'ARABIC').toUpperCase() === languageFilter.toUpperCase();
+      const dateMatch = !dateFilter || text(item.created_at || item.updated_at).slice(0, 10) === dateFilter;
+      const campaignMatch = !campaignFilter || text(item.campaign_id) === campaignFilter;
+      const segmentMatch = !segmentFilter || text(companies.find((company) => company.id === item.company_id)?.sector || '').toLowerCase().includes(segmentFilter.toLowerCase()) || text(companies.find((company) => company.id === item.company_id)?.target_segment || '').toLowerCase().includes(segmentFilter.toLowerCase());
+      const replyMatch = replyFilter === 'ALL' || (
+        replyFilter === 'REPLIED' ? text(item.status).toUpperCase() === 'APPROVED' || text(item.status).toUpperCase() === 'REPLIED' :
+        replyFilter === 'NO_REPLY' ? text(item.status).toUpperCase() !== 'APPROVED' && text(item.status).toUpperCase() !== 'REPLIED' :
+        true
+      );
+      return companyMatch && recipientMatch && statusMatch && languageMatch && dateMatch && campaignMatch && segmentMatch && replyMatch;
+    });
+  }, [campaignFilter, companies, companyFilter, dateFilter, languageFilter, messages, recipientFilter, replyFilter, segmentFilter, statusFilter]);
+
+  const filteredEvents = useMemo(() => {
+    return events.filter((item) => !item.archived_at).filter((item) => {
+      const companyMatch = !companyFilter || text(item.company_id) === companyFilter;
+      const recipientMatch = !recipientFilter || text(item.recipient).toLowerCase().includes(recipientFilter.toLowerCase());
+      const relationshipMatch = !relationshipFilter || text(item.relationship_stage || '').toUpperCase() === relationshipFilter.toUpperCase();
+      const opportunityMatch = !opportunityFilter || text(item.opportunity_id || '').toLowerCase() === opportunityFilter.toLowerCase();
+      const replyMatch = replyFilter === 'ALL' || (replyFilter === 'REPLIED' ? text(item.direction).toUpperCase() === 'INBOUND' : replyFilter === 'NO_REPLY' ? text(item.direction).toUpperCase() !== 'INBOUND' : true);
+      return companyMatch && recipientMatch && relationshipMatch && opportunityMatch && replyMatch;
+    });
+  }, [companyFilter, events, opportunityFilter, recipientFilter, relationshipFilter, replyFilter]);
 
   const recommendedAttachment = selectedCompany
     ? recommendAttachment(assets, selectedCompany, text(selectedContact?.position || selectedCompany.recommended_role || ''))
@@ -87,7 +160,7 @@ export function EmailCenterWorkspace() {
     ? evaluateMessageQuality({
         body,
         companyName: text(selectedCompany.company_name),
-        businessAngle: text(selectedCompany.business_angle || selectedCompany.contracting_angle || ''),
+        businessAngle: text(selectedCompany.business_angle || selectedCompany.contracting_angle || serviceAngle || ''),
         channel: 'EMAIL',
         personalizationLevel: selectedContact ? 3 : 2,
         relationshipAware: true,
@@ -110,10 +183,11 @@ export function EmailCenterWorkspace() {
       events,
       opportunities,
       channel: 'EMAIL',
-      language: text(company.recommended_language).toUpperCase() === 'ENGLISH' ? 'ENGLISH' : 'ARABIC',
+      language: language === 'ENGLISH' ? 'ENGLISH' : 'ARABIC',
+      objective,
     });
 
-    return generateProfessionalMessage({
+    const payload = generateProfessionalMessage({
       strategy,
       companyName: text(company.company_name),
       recipientName: text(contact?.full_name || contact?.name),
@@ -122,6 +196,14 @@ export function EmailCenterWorkspace() {
         ? [{ label: 'Contact source', value: text(contact.full_name || contact.name), source: text(contact.source_url || contact.source) }]
         : [],
     });
+
+    const subjectOptions = [
+      `${objective.replace(/_/g, ' ')} — ${text(company.company_name)}`,
+      `${serviceAngle || 'Capability'} — ALGAEU`,
+      `${text(company.company_name)} — ${objective === 'FOLLOW_UP' ? 'Follow-up' : 'Business Inquiry'}`,
+    ].map((item) => item.replace(/\s+/g, ' ').trim());
+
+    return { ...payload, subjectOptions };
   };
 
   const regenerateComposer = () => {
@@ -130,7 +212,7 @@ export function EmailCenterWorkspace() {
       return;
     }
     const generated = generateForCompany(selectedCompany, selectedContact);
-    setSubject(`تواصل مهني مع ${text(selectedCompany.company_name)}`);
+    setSubject(generated.subjectOptions[0]);
     setBody(generated.body);
   };
 
@@ -148,7 +230,9 @@ export function EmailCenterWorkspace() {
       subject: subject.trim(),
       body: body.trim(),
       channel: 'Email',
+      language,
       status: 'Draft',
+      objective,
       recommended_attachment_id: recommendedAttachment?.id ?? null,
       draft_classification: selectedContact ? 'PERSONALIZED' : 'PREPARATION',
       quality_score: draftQuality?.score ?? 0,
@@ -172,8 +256,8 @@ export function EmailCenterWorkspace() {
     }
   };
 
-  const reviewRows = messages.filter((item) => !item.archived_at).filter((item) => ['Draft', 'Approved', 'Ready for Manual Send'].includes(text(item.status)));
-  const historyRows = events.filter((item) => !item.archived_at);
+  const reviewRows = filteredMessages.filter((item) => ['Draft', 'Approved', 'Ready for Manual Send'].includes(text(item.status)));
+  const historyRows = filteredEvents;
 
   const approveDraft = async (row: SimpleRow) => {
     const company = companies.find((item) => item.id === row.company_id);
@@ -269,6 +353,7 @@ export function EmailCenterWorkspace() {
           subject: `تعريف تعاون مع ${text(company.company_name)}`,
           body: generated.body,
           channel: 'Email',
+          language,
           status: 'Draft',
           draft_classification: dm ? 'PERSONALIZED' : 'PREPARATION',
           recommended_attachment_id: attachment?.id ?? null,
@@ -334,13 +419,31 @@ export function EmailCenterWorkspace() {
   };
 
   return (
-    <CRMPage title="Email / Communication Center" description="تأليف فردي + حملات مخصصة + Nurture ذكي + مراجعة/اعتماد + سجل تواصل. EXTERNAL SENDING: DISABLED.">
+    <CRMPage title="Email / Communication Center" description="مركز التواصل المهني: رسائل مخصصة، حملات، follow-up، nurture، سجل تواصل، وكلها مع مراجعة بشرية. EXTERNAL SENDING: DISABLED.">
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
         <b>External sending is disabled</b>
-        <span>يمكن التحضير، المراجعة، الاعتماد، وحفظ الأحداث فقط. لا يوجد إرسال من النظام.</span>
+        <span>العمل الحالي هو التحضير والمراجعة والتوثيق فقط، مع الاحتفاظ بدفتر تواصل مؤسسي ومراجعة بشرية.</span>
       </div>
 
       {notice ? <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p> : null}
+
+      <div className="grid gap-3 md:grid-cols-4">
+        {[
+          ['inbox', statusCounts.inbox],
+          ['drafts', statusCounts.drafts],
+          ['review', statusCounts.review],
+          ['approved', statusCounts.approved],
+          ['followups', statusCounts.followups],
+          ['nurture', statusCounts.nurture],
+          ['campaigns', statusCounts.campaigns],
+          ['history', statusCounts.history],
+        ].map(([id, value]) => (
+          <button key={id} type="button" onClick={() => setTab((id as Tab) || 'inbox')} className="crm-kpi text-right p-3">
+            <p className="text-xs text-[#75664d]">{id}</p>
+            <strong className="mt-1 block text-2xl">{value}</strong>
+          </button>
+        ))}
+      </div>
 
       <div className="crm-card flex flex-wrap gap-2 p-3">
         {tabs.map((item) => (
@@ -351,11 +454,57 @@ export function EmailCenterWorkspace() {
         <Link href="/campaigns" className="btn-secondary">فتح مركز الحملات</Link>
       </div>
 
+      <div className="crm-card mt-3 p-3">
+        <div className="grid gap-2 md:grid-cols-5">
+          <select value={companyFilter} onChange={(event) => setCompanyFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل الشركات</option>
+            {companies.map((company) => (
+              <option key={company.id} value={company.id}>{text(company.company_name)}</option>
+            ))}
+          </select>
+          <select value={segmentFilter} onChange={(event) => setSegmentFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل القطاعات</option>
+            {Array.from(new Set(companies.map((company) => text(company.segment || company.target_segment || company.sector)).filter(Boolean))).map((segment) => (
+              <option key={segment} value={segment}>{segment}</option>
+            ))}
+          </select>
+          <input value={recipientFilter} onChange={(event) => setRecipientFilter(event.target.value)} placeholder="المستلم" className="rounded-xl border p-2" />
+          <select value={campaignFilter} onChange={(event) => setCampaignFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل الحملات</option>
+            {campaigns.map((campaign) => (
+              <option key={campaign.id} value={campaign.id}>{text(campaign.name)}</option>
+            ))}
+          </select>
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل الحالات</option>
+            {Array.from(new Set(messages.map((item) => text(item.status)).filter(Boolean))).map((status) => (
+              <option key={status} value={status}>{status}</option>
+            ))}
+          </select>
+          <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل اللغات</option>
+            {languageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+          <input type="date" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} className="rounded-xl border p-2" />
+          <select value={relationshipFilter} onChange={(event) => setRelationshipFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل مراحل العلاقة</option>
+            {relationshipStages.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+          <select value={opportunityFilter} onChange={(event) => setOpportunityFilter(event.target.value)} className="rounded-xl border p-2">
+            <option value="">كل الفرص</option>
+            {opportunities.map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{text(opportunity.title)}</option>)}
+          </select>
+          <select value={replyFilter} onChange={(event) => setReplyFilter(event.target.value)} className="rounded-xl border p-2">
+            {replyOptions.map((option) => <option key={option} value={option}>{option === 'ALL' ? 'كل الرسائل' : option}</option>)}
+          </select>
+        </div>
+      </div>
+
       {loading ? <div className="crm-empty animate-pulse">جارٍ تحميل مركز التواصل...</div> : null}
 
       {!loading && tab === 'composer' ? (
         <section className="crm-card space-y-3 p-4">
-          <div className="grid gap-2 md:grid-cols-3">
+          <div className="grid gap-2 md:grid-cols-4">
             <select value={companyId} onChange={(event) => { setCompanyId(event.target.value); setContactId(''); resetComposer(); }} className="rounded-xl border p-2">
               <option value="">اختر الشركة</option>
               {companies.map((company) => (
@@ -370,7 +519,26 @@ export function EmailCenterWorkspace() {
                 </option>
               ))}
             </select>
-            <button onClick={regenerateComposer} className="btn-secondary">توليد مخصص</button>
+            <select value={objective} onChange={(event) => setObjective(event.target.value as (typeof objectiveOptions)[number])} className="rounded-xl border p-2">
+              {objectiveOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+            <select value={language} onChange={(event) => setLanguage(event.target.value as 'ARABIC' | 'ENGLISH')} className="rounded-xl border p-2">
+              {languageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </div>
+
+          <div className="grid gap-2 md:grid-cols-2">
+            <input value={serviceAngle} onChange={(event) => setServiceAngle(event.target.value)} placeholder="زاوية الخدمة / المصلحة التجارية" className="rounded-xl border p-2" />
+            <input value={text(recommendedAttachment?.name || recommendedAttachment?.asset_type || '')} readOnly className="rounded-xl border bg-gray-50 p-2" />
+          </div>
+
+          <div className="rounded-xl border bg-[#fffaf0] p-3">
+            <p className="mb-2 text-sm font-bold">3 subject options</p>
+            <div className="flex flex-wrap gap-2">
+              {selectedCompany ? generateForCompany(selectedCompany, selectedContact).subjectOptions.map((option) => (
+                <button key={option} type="button" onClick={() => setSubject(option)} className={subject === option ? 'btn-primary' : 'btn-ghost'}>{option}</button>
+              )) : <span className="text-sm text-[#75664d]">اختر شركة أولاً.</span>}
+            </div>
           </div>
 
           <input value={subject} onChange={(event) => setSubject(event.target.value)} placeholder="موضوع الرسالة" className="w-full rounded-xl border p-2" />
@@ -379,10 +547,11 @@ export function EmailCenterWorkspace() {
           <div className="grid gap-2 text-sm md:grid-cols-3">
             <p><b>Attachment:</b> {text(recommendedAttachment?.name || recommendedAttachment?.asset_type) || 'لا يوجد أصل مناسب'}</p>
             <p><b>Quality:</b> {draftQuality ? `${draftQuality.score}/100 (${draftQuality.status})` : '—'}</p>
-            <p><b>Workflow:</b> {'Draft -> Review -> Approve -> Manual send only'}</p>
+            <p><b>Workflow:</b> Draft → Review → Approve → Manual send only</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
+            <button onClick={regenerateComposer} className="btn-secondary">توليد رسالة مخصصة</button>
             <button onClick={() => void saveComposerDraft()} className="btn-primary">حفظ Draft</button>
             <button onClick={resetComposer} className="btn-ghost">مسودة جديدة</button>
           </div>
@@ -460,6 +629,32 @@ export function EmailCenterWorkspace() {
         </section>
       ) : null}
 
+      {!loading && tab === 'approved' ? (
+        <section className="grid gap-3">
+          {filteredMessages.filter((item) => text(item.status).toUpperCase() === 'APPROVED').map((row) => (
+            <article key={row.id} className="crm-card p-4">
+              <div className="flex justify-between"><b>{text(row.subject)}</b><span className="crm-chip status-success">Approved</span></div>
+              <p className="mt-1 text-xs text-[#75664d]">{text(row.company_name)}</p>
+              <p className="mt-2 text-sm">{text(row.body)}</p>
+            </article>
+          ))}
+          {!filteredMessages.some((item) => text(item.status).toUpperCase() === 'APPROVED') ? <div className="crm-empty">لا توجد مسودات معتمدة.</div> : null}
+        </section>
+      ) : null}
+
+      {!loading && tab === 'followups' ? (
+        <section className="grid gap-3">
+          {filteredEvents.map((event) => (
+            <article key={event.id} className="crm-card p-4">
+              <div className="flex justify-between"><b>{text(event.subject || event.outcome || 'Follow-up')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase()}</span></div>
+              <p className="mt-1 text-xs text-[#75664d]">{text(companies.find((company) => company.id === event.company_id)?.company_name)} · {text(event.channel)} · {text(event.occurred_at || event.created_at)}</p>
+              <p className="mt-2 text-sm">{text(event.notes || event.outcome || '—')}</p>
+            </article>
+          ))}
+          {!filteredEvents.length ? <div className="crm-empty">لا توجد متابعة أو ردات مخصصة في الفلتر الحالي.</div> : null}
+        </section>
+      ) : null}
+
       {!loading && tab === 'nurture' ? (
         <section className="grid gap-3">
           {nurtureRows.map((item) => (
@@ -500,21 +695,19 @@ export function EmailCenterWorkspace() {
         </section>
       ) : null}
 
-      {!loading && tab === 'attachments' ? (
-        <section className="grid gap-3 md:grid-cols-2">
-          {assets.map((asset) => (
-            <article key={asset.id} className="crm-card p-4">
-              <div className="flex items-start justify-between gap-2">
-                <b>{text(asset.name) || text(asset.asset_type)}</b>
-                <span className={`crm-chip ${asset.active === false ? 'status-neutral' : 'status-success'}`}>{asset.active === false ? 'Inactive' : 'Active'}</span>
-              </div>
-              <p className="mt-2 text-sm">{text(asset.asset_type)} · {text(asset.language || 'ARABIC')}</p>
-              <p className="mt-1 text-xs text-[#75664d]">{text(asset.notes) || '—'}</p>
+      {!loading && tab === 'inbox' ? (
+        <section className="grid gap-3">
+          {filteredEvents.map((event) => (
+            <article key={event.id} className="crm-card p-4">
+              <div className="flex justify-between"><b>{text(event.subject || event.recipient || 'Response')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase()}</span></div>
+              <p className="mt-1 text-xs text-[#75664d]">{text(companies.find((company) => company.id === event.company_id)?.company_name)} · {text(event.channel)} · {text(event.occurred_at || event.created_at)}</p>
+              <p className="mt-2 text-sm">{text(event.outcome || event.notes || '—')}</p>
             </article>
           ))}
-          {!assets.length ? <div className="crm-empty md:col-span-2">لا توجد أصول Sales Kit نشطة.</div> : null}
+          {!filteredEvents.length ? <div className="crm-empty">لا توجد ردود أو رسائل واردة في الفلتر الحالي.</div> : null}
         </section>
       ) : null}
+
     </CRMPage>
   );
 }
