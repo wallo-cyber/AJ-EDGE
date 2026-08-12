@@ -26,3 +26,9 @@ test('contacted and replied derive only from direction-specific communication ev
   assert.equal(companyOutreachState(company, [verified], [], [{ company_id: 'company-1', direction: 'OUTBOUND' }]), 'CONTACTED');
   assert.equal(companyOutreachState(company, [verified], [], [{ company_id: 'company-1', direction: 'INBOUND' }]), 'REPLIED');
 });
+
+
+test('PARTIALLY_VERIFIED never crosses the decision-maker gate', () => {
+  assert.equal(isVerifiedDecisionMaker({ decision_maker:true, contact_classification:'Decision Maker', verification_status:'PARTIALLY_VERIFIED' }), false);
+  assert.equal(isVerifiedDecisionMaker({ decision_maker:true, contact_classification:'Decision Maker', verification_status:'Public Source Verified' }), false);
+});

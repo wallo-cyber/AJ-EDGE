@@ -13,17 +13,32 @@ export default function SystemStatusPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   useEffect(() => {
-    void Promise.all([
-      getSupabaseClient().auth.getUser(),
-      simpleCrud.page('agent_settings', 1, 50),
-      simpleCrud.page('agent_jobs', 1, 2500, { order: 'created_at' }),
-      simpleCrud.page('agent_runs', 1, 100, { order: 'created_at' }),
-      simpleCrud.page('agent_errors', 1, 250, { order: 'created_at' }),
-      simpleCrud.page('companies', 1, 500, { order: 'created_at' }),
-    ]).then(([user, settings, jobs, runs, errors, companies]) => {
-      setAuth(Boolean(user.data.user));
-      setData({ settings: settings.rows, jobs: jobs.rows, runs: runs.rows, errors: errors.rows, companies: companies.rows });
-    }).catch((reason: Error) => setError(reason.message)).finally(() => setLoading(false));
+    let active = true;
+    async function check() {
+      setLoading(true);
+      setError('');
+      const supabase = getSupabaseClient();
+      const authResult = await supabase.auth.getSession().catch(() => null);
+      if (active) setAuth(Boolean(authResult?.data.session?.user));
+
+      const results = await Promise.allSettled([
+        simpleCrud.page('agent_settings', 1, 50),
+        simpleCrud.page('agent_jobs', 1, 2500, { order: 'created_at' }),
+        simpleCrud.page('agent_runs', 1, 100, { order: 'created_at' }),
+        simpleCrud.page('agent_errors', 1, 250, { order: 'created_at' }),
+        simpleCrud.page('companies', 1, 500, { order: 'created_at' }),
+      ]);
+      const failedResult = results.find((item) => item.status === 'rejected');
+      if (failedResult?.status === 'rejected') {
+        if (active) setError(failedResult.reason instanceof Error ? failedResult.reason.message : String(failedResult.reason));
+      } else {
+        const [settings, jobs, runs, errors, companies] = results.map((item) => item.status === 'fulfilled' ? item.value : { rows: [] });
+        if (active) setData({ settings: settings.rows, jobs: jobs.rows, runs: runs.rows, errors: errors.rows, companies: companies.rows });
+      }
+      if (active) setLoading(false);
+    }
+    void check();
+    return () => { active = false; };
   }, []);
   const jobs = useMemo(() => data.jobs ?? [], [data.jobs]);
   const settings = data.settings ?? [];
@@ -34,7 +49,7 @@ export default function SystemStatusPage() {
   const cards = [
     ['Application', 'RUNNING', true], ['Database', error ? 'DISCONNECTED' : 'CONNECTED', !error], ['Auth', auth ? 'PASS' : 'FAIL', auth],
     ['Background Jobs', queued ? `${queued} IN PROGRESS` : 'IDLE / SCHEDULED', true], ['Agents', global?.enabled && !global?.paused ? 'ACTIVE' : 'PAUSED', Boolean(global?.enabled && !global?.paused)],
-    ['External Research', 'PAUSED — QUOTA UNAVAILABLE', true], ['External Sending', 'DISABLED', true], ['Failed Jobs', String(failed), failed === 0],
+    ['External Research', 'BRAVE ACTIVE · HUMAN GATED', true], ['External Sending', 'DISABLED', true], ['Failed Jobs', String(failed), failed === 0],
   ] as const;
   return <CRMPage title="حالة النظام" description="التفاصيل التقنية للتطبيق وقاعدة البيانات والمعالجة الخلفية.">
     {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}

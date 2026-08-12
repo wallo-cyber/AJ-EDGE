@@ -89,6 +89,11 @@ export function messageQuality(message:string,input:Pick<MessageInput,'companyNa
  score=Math.max(0,score);return {score,status:score>=80?'STRONG':score>=65?'ACCEPTABLE':'WEAK',issues,maxSimilarity:Math.round(maxSimilarity*100)} as const;
 }
 
+export function triggerQuality(trigger:unknown){
+ const value=String(trigger??'').trim();
+ return {hasTrigger:Boolean(value),penalty:value?0:25,issue:value?'':'لا يوجد سبب موثق للتواصل الآن'} as const;
+}
+
 export function followUpDraft(context:{language:'ARABIC'|'ENGLISH';companyName:string;recipientName?:string;kind:'NO_RESPONSE'|'REPLY'|'VENDOR'|'MEETING'|'RFQ'}){
  const name=context.recipientName||context.companyName;if(context.language==='ENGLISH'){if(context.kind==='NO_RESPONSE')return `Hello ${name}, following up briefly on the note below. Could you direct us to the appropriate team?`;if(context.kind==='VENDOR')return `Hello ${name}, thank you for sharing the qualification route. Could you confirm the next required document or step?`;return `Hello ${name}, following up on our recent ${context.kind.toLowerCase()} discussion. What would be the most useful next step?`;}
  if(context.kind==='NO_RESPONSE')return `مرحباً ${name}، متابعة مختصرة للرسالة أدناه. هل يمكن توجيهنا إلى القسم المسؤول؟`;if(context.kind==='VENDOR')return `مرحباً ${name}، شكراً لمشاركة مسار التأهيل. ما المستند أو الخطوة التالية المطلوبة؟`;return `مرحباً ${name}، نتابع معكم بخصوص التواصل الأخير. ما الإجراء الأنسب للانتقال إلى الخطوة التالية؟`;

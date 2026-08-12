@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     template: "%s | ALGAEU",
   },
   description: "منصة ALGAEU العربية لتطوير الأعمال وإدارة علاقات العملاء والوكلاء الداخليين.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

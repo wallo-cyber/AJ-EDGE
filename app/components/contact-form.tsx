@@ -83,10 +83,6 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
           <input value={form.mobile} onChange={(event) => updateField('mobile', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">الهاتف</label>
-          <input value={form.phone} onChange={(event) => updateField('phone', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
-        </div>
-        <div>
           <label className="mb-2 block text-sm font-semibold text-[#2f2417]">البريد الإلكتروني</label>
           <input type="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
         </div>
@@ -125,10 +121,6 @@ export function ContactForm({ initialContact, companyId, companyName, onSubmit, 
             <option value="PARTIALLY_VERIFIED">PARTIALLY_VERIFIED</option>
             <option value="VERIFIED">VERIFIED</option>
           </select>
-        </div>
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-[#2f2417]">تاريخ التحقق</label>
-          <input type="date" value={form.verifiedAt ? form.verifiedAt.slice(0, 10) : ''} onChange={(event) => updateField('verifiedAt', event.target.value ? `${event.target.value}T00:00:00.000Z` : '')} className="w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm" />
         </div>
         <label className="flex items-center gap-2 rounded-xl border bg-white p-3 text-sm font-semibold"><input type="checkbox" checked={form.decisionMaker} onChange={(event) => updateField('decisionMaker', event.target.checked)} /> صانع قرار</label>
         <div className="md:col-span-2">

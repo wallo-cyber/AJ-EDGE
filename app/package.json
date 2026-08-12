@@ -13,8 +13,13 @@
     "test:operational": "node --experimental-strip-types --test lib/operational/core.test.ts",
     "test:agents": "node --experimental-strip-types --test lib/agents/orchestrator.test.ts",
     "test:domain": "node --experimental-strip-types --test lib/domain/business.test.ts",
-    "test:intelligence": "node --experimental-strip-types --test lib/intelligence/core.test.ts lib/intelligence/v6.test.ts lib/intelligence/bd-core.test.ts lib/intelligence/smart-nurture.test.ts",
-    "test": "npm run test:discovery && npm run test:operational && npm run test:agents && npm run test:domain && npm run test:intelligence"
+    "test:intelligence": "node --experimental-strip-types --test lib/intelligence/core.test.ts lib/intelligence/v6.test.ts lib/intelligence/revenue-phase1.test.ts",
+    "test": "npm run test:discovery && npm run test:operational && npm run test:agents && npm run test:domain && npm run test:intelligence && npm run test:readiness && npm run test:acquisition-os && npm run test:acquisition-v3 && npm run test:market-intelligence",
+    "test:readiness": "node --experimental-strip-types --test lib/readiness/core.test.ts",
+    "vercel-build": "next build",
+    "test:acquisition-os": "node --experimental-strip-types --test lib/acquisition-os/core.test.ts",
+    "test:acquisition-v3": "node --experimental-strip-types --test lib/acquisition-v3/core.test.ts",
+    "test:market-intelligence": "node --experimental-strip-types --test lib/market-intelligence/core.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",

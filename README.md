@@ -1,13 +1,5 @@
 # ALGAEU
 
-## Business Development Intelligence Core
-
-The evidence-first intelligence core derives a company lifecycle, explainable qualification gate, segment-specific target role, project/signal recommendation, and one next action from persisted Supabase facts. It never fabricates contacts, projects, values, or scope. Company segments remain views over one Companies table, external search can stay paused, and all outreach remains draft plus manual approval.
-
-## Intelligence Expansion Phase 1
-
-Phase 1 adds safe, Supabase-persisted segmentation fields, Business Directory contact intelligence, Sales Kit metadata, Campaign Center review audiences, and source-required Opportunity Radar records. The migration is additive and does not seed or alter production companies. Campaigns are manual-review only; default limits are 10 new companies and 15 follow-ups per day with a 14-day company interval. External search stays paused and external sending stays disabled.
-
 ALGAEU is an Arabic RTL Business Development Platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
 
 ## Production status
@@ -17,7 +9,6 @@ ALGAEU is an Arabic RTL Business Development Platform for a contracting company.
 - All 11 agents run server-side in deterministic internal mode and continue when the browser or local computer is closed.
 - Tavily-backed external research is paused safely while the external search quota is unavailable. Persisted research tasks are retained for later resume.
 - External sending is disabled. Outreach remains draft and manual-approval only.
-- V5/V6 intelligence migrations are applied. The current queue contains 537 unique pending-external-research tasks; 155 superseded task records are preserved as cancelled audit history.
 - The Arabic RTL workspace includes a collapsible responsive navigation, a Daily Command Center with live quick actions, Company 360, operational vendor registration, and a dedicated paginated queue for manual research.
 
 ## Run from a new computer
@@ -97,25 +88,15 @@ V4 focuses ALGAEU on daily decisions rather than product noise. Today prioritize
 
 ## V5 intelligence checkpoint
 
-The repository contains a provider-free business intelligence and outreach engine with segment classification, business angles, role targeting, bilingual/channel-aware drafts, contextual follow-ups, quality scoring, duplicate detection, weighted completeness, and Next Best Action. Migration `20260811153000_algaeu_v5_intelligence.sql` is applied to the production Supabase project. External research and sending remain disabled.
+The repository contains a provider-free business intelligence and outreach engine with segment classification, business angles, role targeting, bilingual/channel-aware drafts, contextual follow-ups, quality scoring, duplicate detection, weighted completeness, and Next Best Action. Apply `20260811153000_algaeu_v5_intelligence.sql` before enabling V5 persistence. The migration is additive and must be applied only after the Supabase project is verified with a valid local personal access token. External research and sending remain disabled.
 
 ## V6 autonomous BD foundation
 
 V6 adds a deterministic intelligence core over the existing Supabase source of truth: explainable scores, structured relationship memory, evidence-only signals, Opportunity Signal, one Next Best Action, conversation strategy, Arabic/English draft generation, message-quality dimensions, duplicate warnings, reply/follow-up intelligence, Deal Coach, opportunity health, agent teams, feedback analytics, and a future email-provider interface. The current provider is `ManualProvider`; automation is locked to Level 0 and cannot send.
 
-The additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are applied to project `vbdgfrkthvurbqeofeyj`; do not recreate or reapply them. Never deploy a Personal Access Token or `SUPABASE_SECRET_KEY` to the client. External research remains paused and external sending remains disabled.
+Apply the additive migrations in timestamp order only after verifying project ref `vbdgfrkthvurbqeofeyj` with a valid local `SUPABASE_ACCESS_TOKEN`: first `20260811153000_algaeu_v5_intelligence.sql`, then `20260811170000_algaeu_v6_intelligence_core.sql`. Never deploy the Personal Access Token or `SUPABASE_SECRET_KEY` to the client. The application deliberately blocks V6 persistence until the required columns are available. External research remains paused and external sending remains disabled.
 
 Run `npm run audit:resume` for a read-only server check of production counts, Auth, anonymous denial, V5/V6 schema availability, and duplicate protection. The command never prints secrets and performs no writes without the explicit `--resume` flag.
-
-## Campaign Center and Network Intelligence
-
-Campaign Center creates a separate persisted outreach draft for every selected company. Draft generation uses only saved company data, a saved target contact/role, stored opportunity signals, and existing Sales Kit assets. Drafts can be reviewed, edited, saved, regenerated, approved, rejected, or reset. Approval only makes a draft **Ready for Manual Send**; external sending remains disabled.
-
-Company 360 includes **Network Intelligence**. Relationship rows are evidence-backed Supabase records with source/target company, relationship type, optional project/opportunity reference, evidence, source URL, confidence, verification timestamp, and status. A row without sufficient evidence is visibly **AI SUGGESTION — NOT VERIFIED** and is never treated as a fact. Migration `20260811183344_campaign_network_blocker_closure.sql` is already applied; do not re-seed or recreate existing data.
-
-## Smart Nurture
-
-`/email-center` is a manual-only operational inbox for campaigns, drafts, approvals, history, attachments, and evidence-safe nurture suggestions. Suggestions are saved to Supabase only when a real reason to contact exists. Open opportunities route to direct follow-up, recently-contacted companies wait, and companies without a verified email channel are excluded. External sending remains disabled.
 
 ## Real-world Pilot Phase 1
 

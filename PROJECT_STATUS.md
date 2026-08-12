@@ -1,79 +1,10 @@
 # ALGAEU Project Status
 
-## Verification Pass (2026-08-11)
-
-- **Date:** 2026-08-11 (Asia/Riyadh)
-- **Task:** Complete verification suite on `codex/aj-edge-mvp` branch
-- **Results:**
-  - TypeScript: **PASS** (`npx tsc --noEmit`)
-  - ESLint: **PASS** (8 pre-existing warnings only, no new errors)
-  - Tests: **PASS** (64/64 all passing)
-    - Discovery: 12/12
-    - Operational: 10/10
-    - Agents: 6/6
-    - Domain: 5/5
-    - Intelligence: 31/31
-  - Production Build: **PASS** (34 routes, all static/dynamic renderers functional)
-  - npm audit: **PASS** (0 vulnerabilities)
-- **Fixes Applied:** No new issues found. All 8 features remain COMPLETE.
-- **Data Integrity:** 181 companies, 881 drafts, 1 follow-up, 1939 jobs preserved. Supabase untouched.
-- **Branch:** `codex/aj-edge-mvp`
-- **Status:** All systems operational. Ready for production deployment.
-
-## Company edit flow repair (2026-08-12)
-
-- Fixed the canonical company edit flow in the Companies workspace so a direct edit query param now opens the existing form, preserves the current view/filter state, and clears the edit parameter cleanly after save without redirecting to a generic empty page.
-- Removed relational arrays from company persistence payloads so `communication_history`, `follow_ups`, and `opportunities` remain relational-table data rather than being written as columns on `companies`.
-- Verification evidence: TypeScript, ESLint, automated tests, npm audit, and the production build all completed successfully on the local branch after the repair.
-
-## Business Development Intelligence Core (2026-08-11)
-
-- Added a deterministic, evidence-first BD core for the unified company lifecycle (`DISCOVER` through `WIN_LOSS`), explainable qualification, segment-specific decision-maker targeting, and source-gated project intelligence.
-- Company 360 now loads persisted Opportunity Radar signals, exposes a project/signal tab, and shows the current lifecycle stage plus qualification score without changing stored company priorities.
-- Segment routes now use the same Companies source with live contacts, signals, opportunities, lifecycle, qualification, search, sort, filters, KPIs, campaign links, and Company 360 navigation. No duplicate company records or segment tables were created.
-- Daily Center is capped at the top 10 actions. External search remains paused and external sending remains disabled.
-- QA: TypeScript PASS, ESLint PASS, tests PASS (61/61), npm audit PASS, production build PASS, Supabase connectivity/RLS smoke PASS.
-
-## Core feature completion checkpoint (2026-08-11)
-
-- Company Segments were completed on one Companies source only for Developers, Factories, Industrial, Main Contractors, Consultants, Owners, and Partners, each with KPIs, filters, search, Company 360 links, and Add-to-Campaign actions.
-- Email/Communication Center was completed with a single-company composer, multi-company personalized campaign drafting, periodic smart-nurture recommendation flow, review/edit/approve workflow, and persisted communication history. External sending remains disabled.
-- Sales Kit and campaign flows were completed to support metadata edit plus active/inactive state and recipient/segment-aware attachment recommendation using existing assets only.
-- Smart Nurture now surfaces CONTACT_NOW, FOLLOW_UP, NURTURE, WAIT, RE_ENGAGE, and DO_NOT_CONTACT decisions from stored priority, relationship history, last contact, opportunities, and evidence-backed signals; periodic email is blocked without a valid reason.
-- Business Directory coverage was completed across Contacts and Company 360 views for company, department, person, role, phone, mobile, email, LinkedIn, source, confidence, and verified date, with no synthetic contact creation.
-- Company 360 now includes a Prepare Outreach action that builds recipient-aware personalized draft text, recommends an existing attachment, and suggests a follow-up path without triggering external sending.
-- Opportunity Radar was completed with evidence-first filters and review actions while external search remains paused.
-- QA for this batch: TypeScript PASS (`npx tsc --noEmit`), ESLint PASS with warnings only (no lint errors), tests PASS (64/64), npm audit PASS (0 vulnerabilities), and production build PASS (34 routes).
-- Supabase smoke in this local run is blocked until local public Supabase variables are present (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`).
-
-## Final UI controls (2026-08-11)
-
-- Sales Kit metadata now supports add, edit, active state and local list filtering.
-- Campaign Center persists selected audience and campaign metadata as manual-review work; external sending remains disabled.
-- Opportunity Radar provides a safe source-only list with status review actions and a paused-search empty state.
-
-## Intelligence Expansion Phase 1 (2026-08-11)
-
-- Additive Phase 1 schema is applied: multi-dimensional company classification, business-directory contact fields, Sales Kit metadata, review-only campaign audiences, and evidence-required Opportunity Radar signals.
-- New records are ownership-RLS protected in Supabase. No existing business data, queues, signals, drafts, or agent results were deleted or rewritten.
-- External search remains paused and external sending remains disabled. Campaigns persist audience selection and manual approval sequence only.
-
-Status: **ALGAEU OPERATIONAL — V6 DATABASE + INTERNAL AGENTS READY**
+Status: **V4 PRODUCTION READY / V6 CODE READY — DATABASE MIGRATION BLOCKED**
 
 Status date: 2026-08-11 (Asia/Riyadh)
 
 Branch: `codex/aj-edge-mvp`
-
-## Operational activation checkpoint (2026-08-11)
-
-- The committed V5 and V6 additive migrations are now applied to Supabase project `vbdgfrkthvurbqeofeyj` and recorded in remote migration history. All six new intelligence tables have RLS enabled, anonymous access is blocked, and external sending remains database-locked to `false`.
-- The 692 retained manual-research jobs were reviewed from persisted company and contact evidence. No missing fact could be completed safely from current data without fabrication.
-- 155 superseded historical duplicates were closed as `cancelled` with an audit log and a preserved reason. No job row was deleted. The 537 unique tasks remain `manual_research_required` and are explicitly classified `PENDING_EXTERNAL_RESEARCH` with `requires_external_provider=true`.
-- Supervisor and the internal worker completed an idempotent pass: 0 queued, 0 running, 0 failed, 0 duplicate job groups, and no completed company was reprocessed. Tavily Cron remains inactive while all five internal Cron jobs remain active.
-- Current source-of-truth counts: 181 companies, 12 Priority A, 114 Priority B, 55 Priority C, 114 enriched company-intelligence records, 0 verified decision makers, 7 vendor portals, 881 saved drafts, 1 follow-up, and 0 opportunities.
-- Today is the operating entry point and exposes the exact daily queues: top companies, ready outreach, user decisions, pending external research, due follow-ups, vendor portals, potential opportunities, and upcoming meetings/actions.
-- External sending is disabled. No email, WhatsApp, LinkedIn message, or other external communication was sent.
-- Historical checkpoint notes below are retained for traceability; this section and the top status are the current authority.
 
 ## V1 consolidation checkpoint (2026-08-11)
 
@@ -111,7 +42,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - Search covers Companies, Contacts/Decision Makers, Opportunities, Meetings, Follow-ups, persisted tasks, and nested notes/results.
 - Reports include conversion and agent metrics plus filtered CSV export. Settings persists company profile, targets, thresholds, work limits, and follow-up timing.
 - Vendor Registration and System Status have dedicated protected routes; loading, empty, error, success, not-found, and application-error states are operational.
-- Manual Research has a dedicated protected, filtered, paginated workspace for 537 unique external-research tasks; 155 superseded duplicates remain preserved as cancelled audit history.
+- Manual Research has a dedicated protected, filtered, paginated workspace for all 692 retained external-research tasks; it never invokes Tavily and never deletes pending work.
 - The desktop navigation is collapsible, mobile navigation remains drawer-based, and the application metadata consistently uses `ALGAEU Business Development Platform`.
 - Arabic RTL and responsive login/auth boundaries were verified at desktop and 390px mobile width with no horizontal overflow.
 
@@ -122,7 +53,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - The Tavily worker Cron is inactive. Research-capable agents execute safe internal checks and record missing evidence as manual research without calling Tavily.
 - External sending remains disabled; outreach is draft plus manual approval only.
 - Persisted agent state: 1,919 jobs, 2,710 runs, 4,814 logs, and 84 historical error records.
-- Job state: 1,247 completed, 537 `manual_research_required`, 155 safely cancelled duplicates, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
+- Job state: 1,227 completed, 692 `manual_research_required`, 0 queued, 0 running, and 0 failed. PGMQ is empty; all automatable internal work across Priority A, B, then C is complete.
 - Each job retains owner, agent, status, payload, result, attempts, maximum attempts, schedule, timestamps, and error information. Runs and logs remain available after browser or computer shutdown.
 
 ## Queue resume and duplicate protection
@@ -207,7 +138,7 @@ These deferred dependencies are not production blockers for the current draft-an
 3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
 4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. For the optional server-only cross-device audit, add `SUPABASE_SECRET_KEY` to the ignored `.env.local`; never put it in Git or any `NEXT_PUBLIC_` variable.
 5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
-6. Do not reapply or recreate migrations. V5 and V6 are recorded remotely; the committed migration directory is the complete production history.
+6. Do not apply destructive migrations. The committed migration directory contains the complete production migration history, including the already-applied `enable_pg_net_for_tavily_worker` migration.
 7. Resume checks with `npx tsc --noEmit`, `npm run lint`, `npm test`, `npm run test:supabase`, and `npm run build` before changing code.
 8. Start stable mode with `npm start` after a successful build and open `http://localhost:3000`.
 9. External Tavily research remains paused and external sending remains disabled. Internal agents and Cron continue server-side without an open browser; pending external research stays persisted for later resume.
@@ -244,8 +175,8 @@ These deferred dependencies are not production blockers for the current draft-an
 - Company 360 now exposes Outreach Intelligence from current saved facts only. Recommended Role is explicitly a target role, never a fabricated contact.
 - Outreach includes Strategy plus a simple Arabic/English editor, message type/style/channel controls, quality analysis, duplicate warnings, copy, and save-for-review. Approval is blocked below quality score 65 and still requires a verified decision maker.
 - Added an additive migration for V5 company/contact/message/agent output metadata and protected user feedback. It contains no DROP, TRUNCATE, DELETE, reset, or production backfill.
-- This historical migration blocker was cleared during the operational activation checkpoint using the authorized Supabase connection; V5 persistence columns and protected `user_feedback` are now present.
-- Production business records remain preserved: 181 companies, 537 unique pending-external-research tasks, 155 cancelled duplicate task records, 881 drafts, and one follow-up. External research is PAUSED and external sending is DISABLED.
+- Migration application is blocked: the local `SUPABASE_ACCESS_TOKEN` is present but rejected by both Supabase CLI and Management API (HTTP 401). Its value was never printed or logged. The UI prevents V5 draft persistence while the columns are unavailable.
+- Production remains unchanged: 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, zero duplicate company/contact/job groups. External research is PAUSED and external sending is DISABLED.
 
 ## V6 intelligence core — 2026-08-11
 
@@ -253,11 +184,11 @@ These deferred dependencies are not production blockers for the current draft-an
 - Today now exposes high-value signals and one primary action per company. Company 360 uses eight business tabs and shows Lead Score, Opportunity Signal, Relationship Stage, memory, signals, outreach strategy, and Deal Coach. Outreach remains copy/manual-event only; Agent Center groups the existing internal agents into teams; Reports adds only evidence-backed V6 analytics.
 - Automation is hard-locked to Level 0. External research remains PAUSED and external sending remains DISABLED. No Gmail, Resend, Tavily, WhatsApp, LinkedIn, or other external provider was called or connected.
 - Added additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql`. They contain no destructive DDL/DML or production backfill, revoke anonymous access to new tables, enable ownership RLS, grant only authenticated/service roles, and tolerate pre-existing policies.
-- Production migration application is complete. V5 and V6 are recorded remotely and their Data API shapes are present.
+- Production migration application is **blocked**. The local `SUPABASE_ACCESS_TOKEN` exists but is not a valid `sbp_` Personal Access Token, and no cached Supabase CLI login or database password exists. The value was never displayed, logged, or committed. No unsafe workaround was used.
 - Read-only server verification passes with server access, Auth Admin access, anonymous denial, and unchanged production counts: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 0 communication events, 1 follow-up, 0 opportunities, 1,939 jobs, 2,730 runs, 692 manual-research jobs, and zero duplicate company/contact/job groups.
-- The Data API confirms all V5/V6 company/message columns and intelligence tables are available. Ownership RLS and anonymous denial are verified.
-- Final QA is rerun at each operational checkpoint. Supabase/Auth/RLS continuity and the expanded seven-table anonymous-denial smoke test pass.
-- Cross-device handoff is safe on `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. No local Personal Access Token is required for normal application use.
+- The Data API confirms the V5/V6 company/message columns and required intelligence-table shapes are not yet available. The migrations now reconcile any protected placeholder tables additively. Until both migrations are recorded remotely, V6 persistence is intentionally blocked while existing V4 workflows remain usable.
+- Local QA passes: TypeScript, ESLint, 57/57 tests, npm audit (0 vulnerabilities), and the 29-route Next.js production build. Supabase/Auth/current RLS continuity passes; V6 schema/RLS application verification remains pending the valid Personal Access Token.
+- Cross-device handoff is safe after the V6 commit is pushed to `codex/aj-edge-mvp`; `.env.local` and all secrets remain ignored. The only required external action is replacing local `SUPABASE_ACCESS_TOKEN` with a valid Personal Access Token from Supabase Dashboard → Account → Access Tokens.
 
 ## Master checkpoint before V8 — 2026-08-11
 
@@ -265,21 +196,8 @@ These deferred dependencies are not production blockers for the current draft-an
 - Final checkpoint QA: automated tests PASS (57/57) and Next.js production build PASS (29 routes).
 - Read-only Supabase verification confirms the business source of truth is remote: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,939 agent jobs, 2,730 runs, and 692 manual-research jobs. Duplicate company/contact/job groups remain zero. Browser storage contains only the sidebar-collapse preference, never CRM data.
 - Supabase server access, Auth Admin access, ownership RLS continuity, and anonymous denial PASS. No production record was created, changed, deleted, reprocessed, or copied locally during this checkpoint.
-- This checkpoint's migration limitation is superseded: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are now applied and verified remotely.
+- Migration synchronization remains blocked and must not be reported as complete: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are committed but their required Data API shapes are not present remotely. The ignored local `SUPABASE_ACCESS_TOKEN` is not a valid `sbp_` Personal Access Token.
 - Vercel readiness PASS: `vercel.json`, Next.js production build, dynamic site URL fallback, protected routes, and the public Supabase client configuration are ready. Required hosted variables are only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL`. Server secrets, PATs, service-role credentials, and Tavily must not be added to Vercel.
 - Vercel CLI is not installed/linked on this device, so no deployment or share URL was created. Use the Vercel Dashboard to import `wallo-cyber/AJ-EDGE`, select branch `codex/aj-edge-mvp`, set Root Directory to `app`, add the three public variables, and deploy. Keep Supabase Auth enabled and add the final deployment URL to Supabase Auth URL Configuration.
 - Exact clean-device resume command (PowerShell): `git clone https://github.com/wallo-cyber/AJ-EDGE.git; Set-Location AJ-EDGE; git switch --track origin/codex/aj-edge-mvp; Set-Location app; npm ci`
 - After cloning, create ignored `app/.env.local` from `.env.example`, add the public Supabase values, optionally add the server-only audit secret, then run `npm test` and `npm run build`. Do not seed or re-import production data.
-
-## Campaign and Network Intelligence blocker closure — 2026-08-11
-
-- Applied additive migration `20260811183344_campaign_network_blocker_closure.sql` to production Supabase. It adds campaign-owned draft metadata and the protected `company_relationships` evidence ledger. No production data was deleted or reset.
-- Campaign Center now creates and persists a distinct company-specific draft for every selected company. Review, edit/save, regenerate, approve, reject, and reset-to-draft are persisted; approval marks the company ready for manual send. External sending remains disabled.
-- Company 360 now includes Network Intelligence with type, project/opportunity reference, evidence, source URL, confidence, verification date, and verified/unverified filters. Unverified rows are explicitly labelled `AI SUGGESTION — NOT VERIFIED`; no relationship is inferred or written automatically.
-- Verification: TypeScript PASS, ESLint PASS, automated tests 61/61 PASS, production build PASS (33 routes), npm audit PASS (0 vulnerabilities), and Supabase anonymous-denial/RLS smoke test PASS. `company_relationships` has ownership RLS enabled and the new message columns are present remotely.
-
-## Smart Nurture operations — 2026-08-11
-
-- Added the manual-only Nurture decision layer and the `/email-center` workspace. It uses the existing companies, contacts, messages, campaigns, opportunities, communication history, and Sales Kit; no external sender or provider was introduced.
-- Migration `20260811184344_smart_nurture_operations.sql` is applied to production. It adds per-company nurture state and a protected, owner-scoped `nurture_suggestions` table. No business records were removed or reprocessed.
-- Conservative rules block contact without a verified email channel, prevent newsletter-style nurture for open opportunities, respect recent-contact cooldowns and paused/do-not-contact state, and never generate a message merely because time passed.

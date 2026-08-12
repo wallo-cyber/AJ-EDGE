@@ -18,7 +18,6 @@ export type Contact = {
   fullName: string;
   position: string;
   department: ContactDepartment;
-  phone: string;
   mobile: string;
   email: string;
   linkedIn: string;
@@ -57,7 +56,6 @@ export function createEmptyContact(companyId?: string, companyName = ''): Omit<C
     fullName: '',
     position: '',
     department: 'المشاريع',
-    phone: '',
     mobile: '',
     email: '',
     linkedIn: '',

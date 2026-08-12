@@ -1,0 +1,32 @@
+-- ALGAEU Revenue Intelligence Phase 1: evidence-first acquisition + external signals
+-- Applied to production Supabase first; kept here for source parity.
+create table if not exists public.research_evidence (id uuid primary key default gen_random_uuid(), owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade, company_id uuid not null references public.companies(id) on delete cascade, job_id uuid references public.agent_jobs(id) on delete set null, evidence_type text not null check (evidence_type in ('DECISION_MAKER','COMPANY_FACT','VENDOR_REGISTRATION','BUSINESS_SIGNAL')), source_provider text not null default '', source_url text not null, source_title text not null default '', extracted_fact text not null default '', verification_confidence integer not null default 0 check (verification_confidence between 0 and 100), date_found timestamptz not null default now(), raw_metadata jsonb not null default '{}'::jsonb, created_at timestamptz not null default now());
+create table if not exists public.buying_committee_members (id uuid primary key default gen_random_uuid(), owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade, company_id uuid not null references public.companies(id) on delete cascade, contact_id uuid references public.contacts(id) on delete set null, committee_role text not null check (committee_role in ('ECONOMIC_BUYER','TECHNICAL_BUYER','PROJECT_OWNER','PROCUREMENT_GATEKEEPER','CONTRACTS_COMMERCIAL','SITE_USER','INFLUENCER','CHAMPION')), name text not null default '', position text not null default '', department text not null default '', linkedin text not null default '', email text not null default '', phone text not null default '', source text not null default '', source_url text not null default '', verification_confidence integer not null default 0 check (verification_confidence between 0 and 100), influence integer not null default 1 check (influence between 1 and 5), relationship_strength integer not null default 0 check (relationship_strength between 0 and 100), attitude text not null default 'Unknown' check (attitude in ('Champion','Neutral','Blocker','Unknown')), verification_status text not null default 'needs_research' check (verification_status in ('needs_research','partially_verified','verified')), date_found timestamptz, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table if not exists public.external_signals (id uuid primary key default gen_random_uuid(), owner_id uuid not null default auth.uid() references auth.users(id) on delete cascade, company_id uuid not null references public.companies(id) on delete cascade, signal_type text not null, title text not null, summary text not null default '', source_provider text not null default '', source_url text not null, source_title text not null default '', verification_confidence integer not null default 0 check (verification_confidence between 0 and 100), verification_status text not null default 'needs_research' check (verification_status in ('needs_research','verified','rejected')), detected_at timestamptz not null default now(), event_date date, suggested_move text not null default '', project_name text not null default '', raw_metadata jsonb not null default '{}'::jsonb, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+alter table public.agent_jobs add column if not exists research_target_role text not null default '', add column if not exists research_target_department text not null default '', add column if not exists research_query text not null default '', add column if not exists research_kind text not null default '', add column if not exists research_provider_candidates text[] not null default '{}';
+
+-- Security is part of the table-creation contract: these public tables must
+-- never exist without owner-scoped RLS in a fresh deployment.
+alter table public.research_evidence enable row level security;
+alter table public.buying_committee_members enable row level security;
+alter table public.external_signals enable row level security;
+
+revoke all on public.research_evidence, public.buying_committee_members, public.external_signals from anon;
+revoke all on public.research_evidence, public.buying_committee_members, public.external_signals from authenticated;
+grant select, insert, update, delete on public.research_evidence, public.buying_committee_members, public.external_signals to authenticated;
+grant all on public.research_evidence, public.buying_committee_members, public.external_signals to service_role;
+
+create policy research_evidence_select_own on public.research_evidence for select to authenticated using (owner_id=(select auth.uid()));
+create policy research_evidence_insert_own on public.research_evidence for insert to authenticated with check (owner_id=(select auth.uid()));
+create policy research_evidence_update_own on public.research_evidence for update to authenticated using (owner_id=(select auth.uid())) with check (owner_id=(select auth.uid()));
+create policy research_evidence_delete_own on public.research_evidence for delete to authenticated using (owner_id=(select auth.uid()));
+
+create policy buying_committee_select_own on public.buying_committee_members for select to authenticated using (owner_id=(select auth.uid()));
+create policy buying_committee_insert_own on public.buying_committee_members for insert to authenticated with check (owner_id=(select auth.uid()));
+create policy buying_committee_update_own on public.buying_committee_members for update to authenticated using (owner_id=(select auth.uid())) with check (owner_id=(select auth.uid()));
+create policy buying_committee_delete_own on public.buying_committee_members for delete to authenticated using (owner_id=(select auth.uid()));
+
+create policy external_signals_select_own on public.external_signals for select to authenticated using (owner_id=(select auth.uid()));
+create policy external_signals_insert_own on public.external_signals for insert to authenticated with check (owner_id=(select auth.uid()));
+create policy external_signals_update_own on public.external_signals for update to authenticated using (owner_id=(select auth.uid())) with check (owner_id=(select auth.uid()));
+create policy external_signals_delete_own on public.external_signals for delete to authenticated using (owner_id=(select auth.uid()));

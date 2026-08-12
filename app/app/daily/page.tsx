@@ -1,1 +1,1 @@
-import { DailyWorkspace } from '../../components/daily-workspace'; export default function DailyPage(){return <DailyWorkspace/>}
+import {AcquisitionCommandCenter} from'../../components/acquisition-command-center';export default function DailyPage(){return <AcquisitionCommandCenter/>}
