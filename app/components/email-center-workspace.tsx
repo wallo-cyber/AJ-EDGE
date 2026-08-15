@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { TargetedEmailSender } from './targeted-email-sender';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { conversationStrategy, evaluateMessageQuality, generateProfessionalMessage } from '../lib/intelligence/v6';
@@ -419,10 +420,11 @@ export function EmailCenterWorkspace() {
   };
 
   return (
-    <CRMPage title="Email / Communication Center" description="مركز التواصل المهني: رسائل مخصصة، حملات، follow-up، nurture، سجل تواصل، وكلها مع مراجعة بشرية. EXTERNAL SENDING: DISABLED.">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-        <b>External sending is disabled</b>
-        <span>العمل الحالي هو التحضير والمراجعة والتوثيق فقط، مع الاحتفاظ بدفتر تواصل مؤسسي ومراجعة بشرية.</span>
+    <CRMPage title="Email / Communication Center" description="مركز التواصل المهني: رسائل مخصصة حسب الشركة والقطاع، معاينة وتعديل، ثم إرسال يدوي مع سجل كامل.">
+      <TargetedEmailSender />
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border p-3 text-sm">
+        <b>الإرسال تحت تحكمك</b>
+        <span>لن تُرسل أي رسالة قبل اختيار المستلمين وفتح المعاينة ثم الضغط على زر الإرسال.</span>
       </div>
 
       {notice ? <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p> : null}
