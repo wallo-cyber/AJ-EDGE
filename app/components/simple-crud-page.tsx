@@ -5,14 +5,14 @@ import { CRMPage } from './crm-shell';
 import { supabaseCrm } from '../lib/supabase/crm';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 
-export type CrudField = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'company' | 'contact' | 'opportunity' | 'select'; options?: string[]; required?: boolean };
+export type CrudField = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'company' | 'contact' | 'opportunity' | 'select'; options?: string[]; required?: boolean; defaultValue?: string | number };
 
 type Props = { table: string; title: string; description: string; fields: CrudField[]; summaryField?: string };
 const valueLabels: Record<string, string> = { Active: 'نشط', 'On Leave': 'في إجازة', Inactive: 'غير نشط', New: 'جديد', Contacted: 'تم التواصل' };
 const displayValue = (value: unknown) => valueLabels[String(value ?? '')] ?? String(value ?? '—');
 
 export function SimpleCrudPage({ table, title, description, fields, summaryField }: Props) {
-  const emptyForm = useMemo(() => Object.fromEntries(fields.map((field) => [field.key, ''])), [fields]);
+  const emptyForm = useMemo(() => Object.fromEntries(fields.map((field) => [field.key, String(field.defaultValue ?? '')])), [fields]);
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [companies, setCompanies] = useState<Array<{ id: string; companyName: string }>>([]);
   const [contacts, setContacts] = useState<SimpleRow[]>([]);
