@@ -14,6 +14,11 @@ import {
 import { FeedbackControls } from "./feedback-controls";
 import { readableText } from "../lib/presentation";
 import { GmailComposeModal } from "./gmail-compose-modal";
+import {
+  formatAttachmentSize,
+  openOutreachAttachment,
+  parseOutreachAttachments,
+} from "../lib/supabase/outreach-attachments";
 
 type Tab = "strategy" | "drafts" | "review" | "ready" | "history";
 const tabs: Array<[Tab, string]> = [
@@ -547,6 +552,29 @@ export function OutreachWorkspace() {
                   </div>
                 );
               })()}
+              {parseOutreachAttachments(item.draft.attachments).length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {parseOutreachAttachments(item.draft.attachments).map(
+                    (attachment) => (
+                      <button
+                        key={attachment.path}
+                        type="button"
+                        onClick={() =>
+                          void openOutreachAttachment(attachment.path)
+                        }
+                        className="flex items-center gap-2 rounded-xl border border-[#454b5c] px-3 py-2 text-sm hover:border-[#7d67ff]"
+                        title={`فتح ${attachment.name}`}
+                      >
+                        <span aria-hidden="true">📎</span>
+                        <b className="max-w-72 truncate">{attachment.name}</b>
+                        <span className="text-xs text-[#9da4b4]">
+                          {formatAttachmentSize(attachment.size)}
+                        </span>
+                      </button>
+                    ),
+                  )}
+                </div>
+              )}
               <textarea
                 defaultValue={display(item.draft.body)}
                 onBlur={(e) =>

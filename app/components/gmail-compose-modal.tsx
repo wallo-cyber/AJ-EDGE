@@ -2,6 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SimpleRow } from "../lib/supabase/simple-crud";
+import {
+  deleteOutreachAttachments,
+  formatAttachmentSize,
+  openOutreachAttachment,
+  parseOutreachAttachments,
+  uploadOutreachAttachments,
+  validateOutreachAttachment,
+  type OutreachAttachment,
+} from "../lib/supabase/outreach-attachments";
 
 const s = (value: unknown) => String(value ?? "").trim();
 
@@ -43,12 +52,20 @@ export function GmailComposeModal({
   onSave: (values: Record<string, unknown>) => Promise<void>;
 }) {
   const editor = useRef<HTMLDivElement>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [companyId, setCompanyId] = useState(s(initialDraft?.company_id));
   const [recipient, setRecipient] = useState(s(initialDraft?.recipient));
   const [subject, setSubject] = useState(s(initialDraft?.subject));
   const [attachmentId, setAttachmentId] = useState(
     s(initialDraft?.recommended_attachment_id),
   );
+  const [storedAttachments, setStoredAttachments] = useState<
+    OutreachAttachment[]
+  >(() => parseOutreachAttachments(initialDraft?.attachments));
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [removedPaths, setRemovedPaths] = useState<string[]>([]);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [busy, setBusy] = useState(false);
 
   const company = companies.find((row) => row.id === companyId);
@@ -84,7 +101,16 @@ export function GmailComposeModal({
     const body = editor.current?.innerText.trim() || "";
     if (!companyId || !subject.trim() || !body) return;
     setBusy(true);
+    setAttachmentError("");
+    setUploadProgress(0);
+    let newlyUploaded: OutreachAttachment[] = [];
     try {
+      newlyUploaded = await uploadOutreachAttachments(
+        pendingFiles,
+        (_file, uploaded, total) =>
+          setUploadProgress(Math.round((uploaded / total) * 100)),
+      );
+      const nextAttachments = [...storedAttachments, ...newlyUploaded];
       await onSave({
         company_id: companyId,
         company_name: s(company?.company_name),
@@ -98,10 +124,41 @@ export function GmailComposeModal({
         draft_classification: "PREPARATION",
         language: "ARABIC",
         recommended_attachment_id: attachmentId || null,
+        attachments: nextAttachments,
         id: initialDraft?.id,
       });
+      if (removedPaths.length) await deleteOutreachAttachments(removedPaths);
+      setStoredAttachments(nextAttachments);
+      setPendingFiles([]);
+      setRemovedPaths([]);
+      setUploadProgress(0);
+    } catch (reason) {
+      if (newlyUploaded.length) {
+        await deleteOutreachAttachments(
+          newlyUploaded.map((item) => item.path),
+        ).catch(() => undefined);
+      }
+      setAttachmentError(
+        reason instanceof Error ? reason.message : "تعذر حفظ المرفقات.",
+      );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const chooseFiles = (files: FileList | null) => {
+    if (!files?.length) return;
+    setAttachmentError("");
+    const selected = Array.from(files);
+    try {
+      selected.forEach(validateOutreachAttachment);
+      setPendingFiles((current) => [...current, ...selected]);
+    } catch (reason) {
+      setAttachmentError(
+        reason instanceof Error ? reason.message : "تعذر إضافة الملف.",
+      );
+    } finally {
+      if (fileInput.current) fileInput.current.value = "";
     }
   };
 
@@ -205,7 +262,113 @@ export function GmailComposeModal({
           >
             إدارة المرفقات
           </a>
+          <input
+            ref={fileInput}
+            type="file"
+            multiple
+            className="sr-only"
+            onChange={(event) => chooseFiles(event.target.files)}
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => fileInput.current?.click()}
+            className="btn-secondary"
+          >
+            تحميل من الجهاز
+          </button>
+          <span className="text-xs text-[#aab0bf]">
+            حتى 100 ميغابايت لكل ملف
+          </span>
         </div>
+
+        {(storedAttachments.length > 0 ||
+          pendingFiles.length > 0 ||
+          attachmentError) && (
+          <div className="border-b border-[#454b5c] bg-[#242832] px-4 py-3">
+            <div className="flex flex-wrap gap-2">
+              {storedAttachments.map((item) => (
+                <div
+                  key={item.path}
+                  className="flex items-center gap-2 rounded-xl border border-[#454b5c] bg-[#1d2027] px-3 py-2 text-xs"
+                >
+                  <button
+                    type="button"
+                    onClick={() => void openOutreachAttachment(item.path)}
+                    className="max-w-64 truncate font-semibold text-[#d8d2ff] underline"
+                    title={`فتح ${item.name}`}
+                  >
+                    {item.name}
+                  </button>
+                  <span className="text-[#9da4b4]">
+                    {formatAttachmentSize(item.size)}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`إزالة ${item.name}`}
+                    title="إزالة المرفق"
+                    onClick={() => {
+                      setStoredAttachments((current) =>
+                        current.filter(
+                          (attachment) => attachment.path !== item.path,
+                        ),
+                      );
+                      setRemovedPaths((current) => [...current, item.path]);
+                    }}
+                    className="rounded-full px-2 text-rose-300 hover:bg-rose-500/15"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {pendingFiles.map((file, index) => (
+                <div
+                  key={`${file.name}-${file.size}-${index}`}
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-[#7d67ff] bg-[#302b50] px-3 py-2 text-xs"
+                >
+                  <span className="max-w-64 truncate font-semibold">
+                    {file.name}
+                  </span>
+                  <span className="text-[#c2bbe9]">
+                    {formatAttachmentSize(file.size)} · بانتظار الحفظ
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`إزالة ${file.name}`}
+                    title="إزالة المرفق"
+                    onClick={() =>
+                      setPendingFiles((current) =>
+                        current.filter((_, fileIndex) => fileIndex !== index),
+                      )
+                    }
+                    className="rounded-full px-2 text-rose-300 hover:bg-rose-500/15"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            {attachmentError && (
+              <p role="alert" className="mt-2 text-sm text-rose-300">
+                {attachmentError}
+              </p>
+            )}
+            {busy && pendingFiles.length > 0 && (
+              <div className="mt-3" aria-live="polite">
+                <div className="mb-1 flex justify-between text-xs text-[#c2bbe9]">
+                  <span>جارٍ رفع المرفق…</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#151820]">
+                  <div
+                    className="h-full bg-gradient-to-l from-[#ff6b43] to-[#6c4cff] transition-all"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div
           className="flex flex-wrap items-center gap-2 border-b border-[#454b5c] bg-[#252932] px-3 py-2"

@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 let browserClient: SupabaseClient | null = null;
 
@@ -16,15 +16,28 @@ export function isSupabaseConfigured() {
   return Boolean(url && key);
 }
 
+export function getSupabaseProjectId() {
+  const { url } = config();
+  if (!url)
+    throw new Error(
+      "Supabase configuration missing: NEXT_PUBLIC_SUPABASE_URL.",
+    );
+  return new URL(url).hostname.split(".")[0];
+}
+
 export function getSupabaseClient() {
   const { url, key } = config();
   if (!url || !key) {
     throw new Error(
-      'Supabase configuration missing: NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).',
+      "Supabase configuration missing: NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).",
     );
   }
   browserClient ??= createClient(url, key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
   });
   return browserClient;
 }
