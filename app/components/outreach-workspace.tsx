@@ -37,7 +37,8 @@ export function OutreachWorkspace() {
   const [messages, setMessages] = useState<SimpleRow[]>([]),
     [companies, setCompanies] = useState<SimpleRow[]>([]),
     [contacts, setContacts] = useState<SimpleRow[]>([]),
-    [events, setEvents] = useState<SimpleRow[]>([]);
+    [events, setEvents] = useState<SimpleRow[]>([]),
+    [assets, setAssets] = useState<SimpleRow[]>([]);
   const [page, setPage] = useState(1),
     [query, setQuery] = useState(""),
     [priority, setPriority] = useState("الكل"),
@@ -66,16 +67,18 @@ export function OutreachWorkspace() {
     setLoading(true);
     setError("");
     try {
-      const [m, c, p, e] = await Promise.all([
+      const [m, c, p, e, a] = await Promise.all([
         simpleCrud.list("messages"),
         simpleCrud.list("companies"),
         simpleCrud.list("contacts"),
         simpleCrud.list("communication_events"),
+        simpleCrud.list("sales_kit_assets"),
       ]);
       setMessages(m);
       setCompanies(c);
       setContacts(p);
       setEvents(e);
+      setAssets(a);
     } catch (reason) {
       setError(
         reason instanceof Error ? reason.message : "تعذر تحميل مساحة التواصل.",
@@ -494,6 +497,38 @@ export function OutreachWorkspace() {
               <p className="mt-3 text-sm font-semibold">
                 {display(item.draft.subject) || "دون عنوان"}
               </p>
+              {(() => {
+                const attachment = assets.find(
+                  (asset) =>
+                    String(asset.id) ===
+                    String(item.draft.recommended_attachment_id || ""),
+                );
+                if (!attachment) return null;
+                const url = safe(attachment.asset_url);
+                return (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-[#454b5c] p-3 text-sm">
+                    <span aria-hidden="true">📎</span>
+                    <b>
+                      {display(attachment.name || attachment.asset_type) ||
+                        "مرفق"}
+                    </b>
+                    {url ? (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-ghost"
+                      >
+                        فتح المرفق ↗
+                      </a>
+                    ) : (
+                      <span className="text-xs text-amber-500">
+                        رابط المرفق غير مضاف في حزمة المبيعات.
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
               <textarea
                 defaultValue={display(item.draft.body)}
                 onBlur={(e) =>
@@ -706,6 +741,7 @@ export function OutreachWorkspace() {
         <GmailComposeModal
           companies={companies}
           contacts={contacts}
+          assets={assets}
           onClose={() => setComposeOpen(false)}
           onSave={saveComposedDraft}
         />

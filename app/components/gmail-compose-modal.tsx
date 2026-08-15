@@ -30,11 +30,13 @@ function ToolButton({ label, icon, onClick, className = "" }: ToolButtonProps) {
 export function GmailComposeModal({
   companies,
   contacts,
+  assets,
   onClose,
   onSave,
 }: {
   companies: SimpleRow[];
   contacts: SimpleRow[];
+  assets: SimpleRow[];
   onClose: () => void;
   onSave: (values: Record<string, unknown>) => Promise<void>;
 }) {
@@ -42,6 +44,7 @@ export function GmailComposeModal({
   const [companyId, setCompanyId] = useState("");
   const [recipient, setRecipient] = useState("");
   const [subject, setSubject] = useState("");
+  const [attachmentId, setAttachmentId] = useState("");
   const [busy, setBusy] = useState(false);
 
   const company = companies.find((row) => row.id === companyId);
@@ -49,6 +52,7 @@ export function GmailComposeModal({
     () => contacts.filter((row) => row.company_id === companyId),
     [companyId, contacts],
   );
+  const attachment = assets.find((row) => String(row.id) === attachmentId);
 
   const command = (name: string, value?: string) => {
     editor.current?.focus();
@@ -84,6 +88,7 @@ export function GmailComposeModal({
         status: "Draft",
         draft_classification: "PREPARATION",
         language: "ARABIC",
+        recommended_attachment_id: attachmentId || null,
       });
     } finally {
       setBusy(false);
@@ -149,6 +154,46 @@ export function GmailComposeModal({
             className="min-w-0 flex-1 bg-transparent outline-none"
           />
         </label>
+
+        <div className="flex flex-wrap items-center gap-3 border-b border-[#454b5c] px-4 py-3 text-sm">
+          <span className="shrink-0 text-[#aab0bf]">المرفق</span>
+          <select
+            value={attachmentId}
+            onChange={(event) => setAttachmentId(event.target.value)}
+            className="min-w-[240px] flex-1 rounded-xl border p-2.5 text-sm"
+          >
+            <option value="">بدون مرفق</option>
+            {assets
+              .filter((row) => row.active !== false)
+              .map((row) => (
+                <option key={row.id} value={String(row.id)}>
+                  {s(row.name || row.asset_type)}
+                </option>
+              ))}
+          </select>
+          {attachment && s(attachment.asset_url) ? (
+            <a
+              href={s(attachment.asset_url)}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-ghost"
+            >
+              فتح المرفق ↗
+            </a>
+          ) : attachment ? (
+            <span className="text-xs text-amber-400">
+              هذا المرفق لا يحتوي رابطًا صالحًا بعد.
+            </span>
+          ) : null}
+          <a
+            href="/sales-kit"
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-[#a99cff] underline"
+          >
+            إدارة المرفقات
+          </a>
+        </div>
 
         <div
           className="flex flex-wrap items-center gap-2 border-b border-[#454b5c] bg-[#252932] px-3 py-2"
