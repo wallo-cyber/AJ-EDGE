@@ -11,10 +11,11 @@ const primary = [
   ['/marketing', 'فريق التسويق', '▣'],
   ['/radar', 'رادار الفرص', '◆'],
   ['/daily', 'مركز الاستقطاب', '◎'],
+  ['/outreach', 'التواصل', '◈'],
+  ['/email-center', 'الإيميلات', '✉'],
 ] as const;
 const secondaryGroups = [
   { label: 'الاستقطاب والمشاريع', links: [['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
-  { label: 'العلاقات والتواصل', links: [['/relationships', 'العلاقات'], ['/pipeline', 'الفرص'], ['/partners', 'الشركاء والإحالات'], ['/contacts', 'جهات الاتصال'], ['/research', 'البحث والتحقق'], ['/outreach', 'التواصل'], ['/vendor-pursuits', 'تسجيل الموردين']] },
   { label: 'الإدارة والنتائج', links: [['/contracts', 'العقود'], ['/quotations', 'عروض الأسعار'], ['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
 ] as const;
 type Props = { title: string; description: string; action?: ReactNode; children: ReactNode };
