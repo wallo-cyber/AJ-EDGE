@@ -6,21 +6,13 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 
 const primary = [
-  ['/daily', 'Command Center', '◎'],
-  ['/market-intelligence', 'Saudi Market', '◈'],
-  ['/intelligence', 'Project Intelligence', '⌁'],
-  ['/projects', 'Pursuits', '◆'],
-  ['/relationships', 'Relationships', '↗'],
-  ['/bid-board', 'Bid Board', '▦'],
-  ['/reports', 'Results', '◫'],
+  ['/', 'واجهة الموقع', '⌂'], ['/daily', 'مركز الاستقطاب', '◎'], ['/companies', 'السوق والشركات', '◉'],
+  ['/marketing', 'فريق التسويق', '▣'], ['/relationships', 'العلاقات', '↗'], ['/pipeline', 'الفرص', '◆'],
 ] as const;
-const secondary = [
-  ['/radar', 'Legacy Signal Radar'], ['/watchlists', 'Project Watchlists'], ['/companies', 'الشركات'], ['/partners', 'الشركاء والإحالات'],
-  ['/readiness', 'Market Readiness'], ['/reports/revenue', 'Revenue Funnel'],
-  ['/vendor-pursuits', 'Vendor Registration'], ['/contacts', 'جهات الاتصال'],
-  ['/research', 'البحث والاستكمال'], ['/outreach', 'التواصل'], ['/pipeline', 'الفرص'],
-  ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'],
-  ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام'],
+const secondaryGroups = [
+  { label: 'الاستقطاب والمشاريع', links: [['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/radar', 'رادار الإشارات'], ['/watchlists', 'قوائم المراقبة']] },
+  { label: 'العلاقات والتواصل', links: [['/partners', 'الشركاء والإحالات'], ['/contacts', 'جهات الاتصال'], ['/research', 'البحث والتحقق'], ['/outreach', 'التواصل'], ['/vendor-pursuits', 'تسجيل الموردين']] },
+  { label: 'الإدارة والنتائج', links: [['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
 ] as const;
 
 type Props = { title: string; description: string; action?: ReactNode; children: ReactNode };
@@ -74,14 +66,14 @@ export function CRMPage({ title, description, action, children }: Props) {
       {open && <button aria-label="إغلاق القائمة" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-[#24190d]/35 lg:hidden" />}
       <aside className={`algaeu-sidebar ${open ? 'translate-x-0' : 'translate-x-full'} ${collapsed ? 'lg:w-[78px]' : 'lg:w-60'} fixed inset-y-0 right-0 z-50 w-[286px] overflow-y-auto border-l border-[#e8d9b7] bg-[#fffdf9] p-3 shadow-2xl transition-[width,transform] lg:sticky lg:top-5 lg:z-auto lg:h-[calc(100vh-2.5rem)] lg:translate-x-0 lg:rounded-3xl lg:border` }>
         <button onClick={toggleCollapsed} className="btn-ghost mb-3 hidden w-full lg:block" title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>{collapsed ? '←' : 'طي القائمة'}</button>
-        <div className="algaeu-brand mb-4 rounded-2xl bg-[#2f2417] p-4 text-[#fff8e8]">
+        <Link href="/" onClick={() => setOpen(false)} className="algaeu-brand mb-4 block rounded-2xl bg-[#2f2417] p-4 text-[#fff8e8]" aria-label="العودة إلى واجهة الموقع">
           <p className="text-[11px] font-bold tracking-[.3em] text-[#d5b66f]">ALGAEU</p>
           {!collapsed && <><h1 className="mt-1 font-bold">منصة تطوير الأعمال</h1><p className="mt-2 text-xs text-[#d9c8a2]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p></>}
-        </div>
+        </Link>
         <nav aria-label="التنقل الرئيسي" className="algaeu-primary-nav space-y-1">
           {primary.map(([href, label, icon]) => <Link key={href} href={href} title={collapsed ? label : undefined} onClick={() => setOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold ${active(href) ? 'bg-[#2f2417] text-white shadow' : 'text-[#59482f] hover:bg-[#f5ecdb]'}`}><span className={collapsed ? 'lg:hidden' : ''}>{label}</span><span aria-hidden>{icon}</span></Link>)}
         </nav>
-        {!collapsed && <div className="mt-4 border-t border-[#eadfc9] pt-3"><p className="mb-1 px-3 text-[10px] font-bold text-[#7a5e1c]">أدوات مساندة</p>{secondary.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className={`block rounded-xl px-3 py-2 text-xs ${active(href) ? 'bg-[#f0e3ca] font-bold' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}>{label}</Link>)}</div>}
+        {!collapsed && <div className="mt-4 space-y-2 border-t border-[#eadfc9] pt-3">{secondaryGroups.map((group, index) => <details key={group.label} open={index === 0} className="rounded-xl border border-[#eadfc9] px-2 py-1"><summary className="cursor-pointer px-1 py-2 text-[11px] font-bold text-[#7a5e1c]">{group.label}</summary>{group.links.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-2 text-xs ${active(href) ? 'bg-[#f0e3ca] font-bold' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}>{label}</Link>)}</details>)}</div>}
         <div className="mt-4 hidden lg:block"><button className="theme-toggle w-full" onClick={toggleTheme}>{theme === 'original' ? '✦ الواجهة Neon' : '☀ الواجهة الأصلية'}</button></div>
         <button onClick={async () => { await getSupabaseClient().auth.signOut(); router.replace('/login'); }} className="btn-ghost mt-4 w-full">{collapsed ? '↪' : 'تسجيل الخروج'}</button>
       </aside>

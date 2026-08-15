@@ -26,14 +26,14 @@ async function braveSearch(query:string):Promise<SearchResult[]>{
  const r=await fetch(url,{headers:{Accept:'application/json','X-Subscription-Token':key}});
  if(!r.ok) throw new Error(`Brave ${r.status}`);
  const body=await r.json();
- return (body?.web?.results??[]).map((x:any,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.description),score:Math.max(.55,.92-i*.03),provider:'brave',rank:i+1}));
+ return (body?.web?.results??[]).map((x:Record<string,unknown>,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.description),score:Math.max(.55,.92-i*.03),provider:'brave',rank:i+1}));
 }
 async function tavilySearch(query:string):Promise<SearchResult[]>{
  const key=Deno.env.get('TAVILY_API_KEY'); if(!key)return[];
  const r=await fetch('https://api.tavily.com/search',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({query,search_depth:'advanced',max_results:10,include_answer:false})});
  if(!r.ok) throw new Error(`Tavily ${r.status}`);
  const body=await r.json();
- return (body.results??[]).map((x:any,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.content),score:Number(x.score??.6),provider:'tavily',rank:i+1}));
+ return (body.results??[]).map((x:Record<string,unknown>,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.content),score:Number(x.score??.6),provider:'tavily',rank:i+1}));
 }
 async function search(query:string){
  const errors:string[]=[];

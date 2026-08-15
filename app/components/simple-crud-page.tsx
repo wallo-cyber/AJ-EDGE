@@ -8,6 +8,8 @@ import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 export type CrudField = { key: string; label: string; type?: 'text' | 'number' | 'date' | 'datetime-local' | 'textarea' | 'company' | 'contact' | 'opportunity' | 'select'; options?: string[]; required?: boolean };
 
 type Props = { table: string; title: string; description: string; fields: CrudField[]; summaryField?: string };
+const valueLabels: Record<string, string> = { Active: 'نشط', 'On Leave': 'في إجازة', Inactive: 'غير نشط', New: 'جديد', Contacted: 'تم التواصل' };
+const displayValue = (value: unknown) => valueLabels[String(value ?? '')] ?? String(value ?? '—');
 
 export function SimpleCrudPage({ table, title, description, fields, summaryField }: Props) {
   const emptyForm = useMemo(() => Object.fromEntries(fields.map((field) => [field.key, ''])), [fields]);
@@ -70,7 +72,7 @@ export function SimpleCrudPage({ table, title, description, fields, summaryField
 
   return (
     <CRMPage title={title} description={description}>
-      {summaryField ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{summary.map(([label, count]) => <div key={label} className="crm-kpi"><p className="text-xs text-[#75664d]">{label}</p><strong className="mt-2 block text-2xl">{count}</strong></div>)}{!summary.length && !loading ? <div className="crm-empty sm:col-span-2 xl:col-span-5">لا توجد بيانات في المسار بعد.</div> : null}</div> : null}
+      {summaryField ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{summary.map(([label, count]) => <div key={label} className="crm-kpi"><p className="text-xs text-[#75664d]">{displayValue(label)}</p><strong className="mt-2 block text-2xl">{count}</strong></div>)}{!summary.length && !loading ? <div className="crm-empty sm:col-span-2 xl:col-span-5">لا توجد بيانات في المسار بعد.</div> : null}</div> : null}
       <form onSubmit={submit} className="rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-4">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {fields.map((field) => <label key={field.key} className="text-sm text-[#6f6044]">{field.label}
@@ -78,7 +80,7 @@ export function SimpleCrudPage({ table, title, description, fields, summaryField
               : field.type === 'company' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">اختر الشركة</option>{companies.map((company) => <option key={company.id} value={company.id}>{company.companyName}</option>)}</select>
               : field.type === 'contact' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">بدون جهة اتصال</option>{contacts.filter((contact) => !form.company_id || contact.company_id === form.company_id).map((contact) => <option key={contact.id} value={contact.id}>{String(contact.full_name || contact.name || 'جهة اتصال')}</option>)}</select>
               : field.type === 'opportunity' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">بدون فرصة مرتبطة</option>{opportunities.filter((opportunity) => !form.company_id || opportunity.company_id === form.company_id).map((opportunity) => <option key={opportunity.id} value={opportunity.id}>{String(opportunity.title || 'فرصة')}</option>)}</select>
-              : field.type === 'select' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">اختر</option>{field.options?.map((option) => <option key={option} value={option}>{option}</option>)}</select>
+              : field.type === 'select' ? <select required={field.required} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5"><option value="">اختر</option>{field.options?.map((option) => <option key={option} value={option}>{displayValue(option)}</option>)}</select>
               : <input required={field.required} type={field.type ?? 'text'} value={form[field.key] ?? ''} onChange={(event) => setForm((value) => ({ ...value, [field.key]: event.target.value }))} className="mt-1 w-full rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5" />}
           </label>)}
         </div>

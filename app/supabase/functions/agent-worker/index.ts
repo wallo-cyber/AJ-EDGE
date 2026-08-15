@@ -76,7 +76,7 @@ async function braveSearch(query: string): Promise<SearchResult[]> {
   const response = await fetch(url, { headers: { Accept: 'application/json', 'X-Subscription-Token': key } });
   if (!response.ok) throw new Error(`Brave request failed (${response.status})`);
   const body = await response.json();
-  return (body?.web?.results ?? []).map((x: any, i: number) => ({ title:safe(x.title), url:safe(x.url), content:safe(x.description), score:Math.max(.58,.90-i*.035), provider:'brave', rank:i+1 }));
+  return (body?.web?.results ?? []).map((x: Record<string, unknown>, i: number) => ({ title:safe(x.title), url:safe(x.url), content:safe(x.description), score:Math.max(.58,.90-i*.035), provider:'brave', rank:i+1 }));
 }
 async function tavilySearch(query: string): Promise<SearchResult[]> {
   const key = Deno.env.get('TAVILY_API_KEY'); if (!key) return [];
@@ -102,10 +102,10 @@ async function authorize(request: Request, admin: ReturnType<typeof createClient
   const { data } = await userClient.auth.getUser();
   return data.user ? { kind:'user', ownerId:data.user.id } : null;
 }
-async function saveEvidence(admin: any, job: Row, company: Row, result: SearchResult, type: string, fact: string, confidence: number, query: string) {
+async function saveEvidence(admin: ReturnType<typeof createClient>, job: Row, company: Row, result: SearchResult, type: string, fact: string, confidence: number, query: string) {
   await admin.from('research_evidence').insert({ owner_id:job.owner_id, company_id:company.id, job_id:job.id, evidence_type:type, source_provider:result.provider ?? 'web_search', source_url:safe(result.url), source_title:safe(result.title), extracted_fact:fact, verification_confidence:confidence, date_found:new Date().toISOString(), raw_metadata:{ query, rank:result.rank ?? null } });
 }
-async function processDecision(admin: any, job: Row, company: Row) {
+async function processDecision(admin: ReturnType<typeof createClient>, job: Row, company: Row) {
   const [fallbackRole, fallbackDept] = committeeRole(company);
   const role = safe(job.research_target_role) || fallbackRole, dept = safe(job.research_target_department) || fallbackDept;
   const companyName = safe(company.company_name), brand = tokens(companyName)[0] || companyName.split(/\s+/)[0], primary = roleTerms[role]?.[0] ?? 'manager', site=domainOf(safe(company.website));
@@ -135,7 +135,7 @@ async function processDecision(admin: any, job: Row, company: Row) {
   return { candidates, signals:0 };
 }
 function signalType(text: string) { const t=text.toLowerCase(); if(t.includes('rfq'))return'RFQ'; if(t.includes('rfp'))return'RFP'; if(t.includes('tender')||t.includes('مناقصة'))return'TENDER'; if((t.includes('vendor')&&t.includes('registration'))||t.includes('تسجيل الموردين'))return'VENDOR_REGISTRATION'; if(t.includes('prequal'))return'PREQUALIFICATION'; if(t.includes('modon'))return'MODON_ANNOUNCEMENT'; if(t.includes('expansion')||t.includes('توسعة'))return'FACTORY_EXPANSION'; if(t.includes('warehouse')||t.includes('مستودع'))return'WAREHOUSE_CONSTRUCTION'; if(t.includes('new factory'))return'NEW_FACTORY'; return'PROJECT_SIGNAL'; }
-async function processSignal(admin: any, job: Row, company: Row) {
+async function processSignal(admin: ReturnType<typeof createClient>, job: Row, company: Row) {
   const brand = tokens(safe(company.company_name))[0] || safe(company.company_name).split(/\s+/)[0];
   const query = `${brand} ${safe(company.company_name)} Saudi Arabia vendor registration supplier registration expansion project warehouse RFQ RFP tender MODON`;
   const resultSet = await search(query); let inserted = 0; const site=domainOf(safe(company.website));

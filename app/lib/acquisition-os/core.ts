@@ -1,5 +1,5 @@
 import type {SimpleRow} from'../supabase/simple-crud';
-import {bestAccessPath,projectCommercialScore,projectCoverage,projectNextMove,type AccessPath,type ProjectEntity,type ProjectFact,type ProjectPackage}from'../project-capture/core';
+import {bestAccessPath,projectCommercialScore,projectCoverage,projectNextMove,type AccessPath,type ProjectEntity,type ProjectFact,type ProjectPackage}from'../project-capture/core.ts';
 
 const s=(v:unknown)=>String(v??'').trim();
 const n=(v:unknown)=>Number(v||0)||0;
