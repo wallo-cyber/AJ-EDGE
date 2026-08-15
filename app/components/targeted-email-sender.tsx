@@ -35,10 +35,10 @@ export function TargetedEmailSender() {
   const [sending, setSending] = useState(false);
   const [notice, setNotice] = useState('');
 
-  useEffect(() => { setCompanyId(new URLSearchParams(window.location.search).get('company_id') || ''); void Promise.all([
+  useEffect(() => { const params = new URLSearchParams(window.location.search); setCompanyId(params.get('company_id') || ''); void Promise.all([
     simpleCrud.page('companies', 1, 2000, { order: 'company_name', ascending: true }),
     simpleCrud.page('contacts', 1, 3000),
-  ]).then(([companyRows, contactRows]) => { setCompanies(companyRows.rows); setContacts(contactRows.rows); }); }, []);
+  ]).then(([companyRows, contactRows]) => { const ids = new Set((params.get('company_ids') || '').split(',').filter(Boolean)); setCompanies(ids.size ? companyRows.rows.filter((company) => ids.has(s(company.id))) : companyRows.rows); setContacts(contactRows.rows); }); }, []);
 
   const segments = useMemo(() => Array.from(new Set(companies.map(segmentOf))).sort(), [companies]);
   const prepare = () => {
