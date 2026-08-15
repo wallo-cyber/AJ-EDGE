@@ -265,12 +265,6 @@ export function SaudiMarketIntelligence() {
             {latestRun ? `${Number(latestRun.events_inserted || 0)} جديد` : 'لا يوجد'}
           </small>
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3">
-          <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-5 w-5" aria-label="تحديد كل الإشارات الظاهرة"/>تحديد الكل</label>
-          <span className="crm-chip status-neutral">{selected.size} محدد</span>
-          <button disabled={!selected.size || bulkReviewing} onClick={() => void bulkReview('verified')} className="btn-primary">اعتماد المحدد</button>
-          <button disabled={!selected.size || bulkReviewing} onClick={() => void bulkReview('rejected')} className="btn-danger">رفض المحدد</button>
-        </div>
       </section>
 
       <section className="crm-card p-4">
@@ -362,6 +356,17 @@ export function SaudiMarketIntelligence() {
             ))}
           </div>
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-white/10 pt-4">
+          <button type="button" onClick={toggleAllVisible} className={allVisibleSelected ? 'btn-primary' : 'btn-ghost'}>
+            <span className="me-2 inline-grid h-5 w-5 place-items-center rounded border border-current text-xs">{allVisibleSelected ? '✓' : ''}</span>
+            تحديد الكل
+          </button>
+          <span className="crm-chip status-neutral">المحدد: {selected.size}</span>
+          {selected.size > 0 && <>
+            <button disabled={bulkReviewing} onClick={() => void bulkReview('verified')} className="btn-secondary">اعتماد المحدد</button>
+            <button disabled={bulkReviewing} onClick={() => void bulkReview('rejected')} className="btn-ghost">رفض المحدد</button>
+          </>}
+        </div>
       </section>
 
       {loading ? (
@@ -375,7 +380,16 @@ export function SaudiMarketIntelligence() {
             return (
               <article key={event.id} className={`crm-card p-4 ${selected.has(s(event.id)) ? 'ring-2 ring-[#8058ff]' : ''}`}>
                 <div className="grid gap-4 lg:grid-cols-[auto_1.45fr_.55fr_.8fr_auto] lg:items-center">
-                  <input type="checkbox" checked={selected.has(s(event.id))} onChange={() => toggleSelected(s(event.id))} className="h-5 w-5" aria-label={`تحديد ${s(event.title)}`}/>
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={selected.has(s(event.id))}
+                    onClick={() => toggleSelected(s(event.id))}
+                    className={`grid h-7 w-7 place-items-center rounded-md border-2 text-sm font-black ${selected.has(s(event.id)) ? 'border-[#8058ff] bg-[#8058ff] text-white' : 'border-[#8f96a3] bg-transparent text-transparent'}`}
+                    aria-label={`تحديد ${s(event.title)}`}
+                  >
+                    ✓
+                  </button>
                   <div>
                     <div className="flex flex-wrap gap-2">
                       <span className="crm-chip status-neutral">{s(event.source_key)}</span>
@@ -435,37 +449,12 @@ export function SaudiMarketIntelligence() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 lg:flex-col">
-                    <a
-                      href={s(event.source_url)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-ghost"
-                    >
-                      المصدر
-                    </a>
-
                     {s(event.review_status) === 'CONVERTED' && linkedProject ? (
                       <Link href={`/projects/${linkedProject.id}`} className="btn-primary">
                         فتح المشروع
                       </Link>
                     ) : (
                       <>
-                        {s(event.verification_status) === 'needs_research' && (
-                          <button
-                            onClick={() => void review(event, 'verified')}
-                            className="btn-secondary"
-                          >
-                            اعتماد الإشارة
-                          </button>
-                        )}
-                        {s(event.verification_status) !== 'rejected' && (
-                          <button
-                            onClick={() => void review(event, 'rejected')}
-                            className="btn-ghost"
-                          >
-                            رفض
-                          </button>
-                        )}
                         {s(event.verification_status) === 'verified' && (
                           <button
                             onClick={() => void createProject(event)}
