@@ -24,11 +24,12 @@ export function CRMPage({ title, description, action, children }: Props) {
   const [checking, setChecking] = useState(true);
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'original' | 'neon'>('neon');
+  const [theme, setTheme] = useState<'original' | 'neon' | 'teal'>('neon');
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem('algaeu-nav-collapsed') === '1');
-    const savedTheme = window.localStorage.getItem('algaeu-theme-v3') === 'original' ? 'original' : 'neon';
+    const storedTheme = window.localStorage.getItem('algaeu-theme-v3');
+    const savedTheme = storedTheme === 'original' || storedTheme === 'teal' ? storedTheme : 'neon';
     setTheme(savedTheme);
     document.documentElement.dataset.theme = savedTheme;
     const supabase = getSupabaseClient();
@@ -48,7 +49,7 @@ export function CRMPage({ title, description, action, children }: Props) {
     return !value;
   });
   const toggleTheme = () => {
-    const next = theme === 'original' ? 'neon' : 'original';
+    const next = theme === 'neon' ? 'teal' : theme === 'teal' ? 'original' : 'neon';
     setTheme(next);
     window.localStorage.setItem('algaeu-theme-v3', next);
     document.documentElement.dataset.theme = next;
@@ -63,7 +64,7 @@ export function CRMPage({ title, description, action, children }: Props) {
   return <div className="min-h-screen text-[#2f2417]">
     <header className="algaeu-mobile-header sticky top-0 z-40 flex items-center justify-between border-b border-[#e7d8b8] bg-[#fffdf9]/95 px-4 py-3 backdrop-blur lg:hidden">
       <div><strong>ALGAEU</strong><span className="mr-2 text-xs text-[#8a6f35]">تطوير الأعمال</span></div>
-      <div className="flex items-center gap-2"><button className="theme-toggle" onClick={toggleTheme} aria-label="تغيير الواجهة">{theme === 'original' ? '✦ Neon' : '☀ الأصلية'}</button>
+      <div className="flex items-center gap-2"><button className="theme-toggle" onClick={toggleTheme} aria-label="تغيير الواجهة">{theme === 'neon' ? '✦ Teal' : theme === 'teal' ? '☀ الأصلية' : '✦ Neon'}</button>
       <button className="btn-ghost" aria-label="فتح القائمة" onClick={() => setOpen(!open)}>{open ? 'إغلاق' : 'القائمة'}</button></div>
     </header>
     <div className="mx-auto flex max-w-[1680px] gap-4 px-3 py-4 sm:px-5 lg:px-6 lg:py-5">
@@ -78,7 +79,7 @@ export function CRMPage({ title, description, action, children }: Props) {
           {primary.map(([href, label, icon]) => <Link key={href} href={href} title={collapsed ? label : undefined} aria-current={active(href) ? 'page' : undefined} onClick={() => setOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold ${active(href) ? 'nav-active' : 'text-[#59482f] hover:bg-[#f5ecdb]'}`}><span className={collapsed ? 'lg:hidden' : ''}>{label}</span><span aria-hidden>{icon}</span></Link>)}
         </nav>
         {!collapsed && <div className="mt-4 space-y-2 border-t border-[#eadfc9] pt-3">{secondaryGroups.map((group, index) => {const groupActive=group.links.some(([href])=>active(href));return <details key={group.label} open={groupActive || index === 0} className={`rounded-xl border px-2 py-1 ${groupActive ? 'nav-group-active' : 'border-[#eadfc9]'}`}><summary className={`cursor-pointer px-1 py-2 text-[11px] font-bold ${groupActive ? 'text-[#ff9b4a]' : 'text-[#7a5e1c]'}`}>{group.label}</summary>{group.links.map(([href, label]) => <Link key={href} href={href} aria-current={active(href) ? 'page' : undefined} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-2 text-xs ${active(href) ? 'nav-active' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}>{label}</Link>)}</details>})}</div>}
-        <div className="mt-4 hidden lg:block"><button className="theme-toggle w-full" onClick={toggleTheme}>{theme === 'original' ? '✦ الواجهة Neon' : '☀ الواجهة الأصلية'}</button></div>
+        <div className="mt-4 hidden lg:block"><button className="theme-toggle w-full" onClick={toggleTheme}>{theme === 'neon' ? '✦ الواجهة Teal' : theme === 'teal' ? '☀ الواجهة الأصلية' : '✦ الواجهة Neon'}</button></div>
         <button onClick={async () => { await getSupabaseClient().auth.signOut(); router.replace('/login'); }} className="btn-ghost mt-4 w-full">{collapsed ? '↪' : 'تسجيل الخروج'}</button>
       </aside>
       <main className="algaeu-main min-w-0 flex-1 rounded-3xl border border-[#e8d9b7] bg-[#fffdf9]/92 p-4 shadow-[0_16px_45px_rgba(70,48,18,.06)] sm:p-5 lg:p-6">

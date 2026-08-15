@@ -394,3 +394,9 @@ html[data-theme="neon"] .min-h-screen.bg-\[\#f6f0e4\] {
   background:#17191f !important;
   color:#f4f5f8 !important;
 }
+
+html[data-theme="teal"] {
+  --background:#0A0A0C; --foreground:#FFFFFF; --surface:#0A0A0C; --surface-soft:#0A0A0C;
+  --border:#1F2937; --gold:#14B8A6; --brown:#2DD4BF; --muted:#9CA3AF;
+  color-scheme:dark;
+}
