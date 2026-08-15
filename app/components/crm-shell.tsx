@@ -54,6 +54,10 @@ export function CRMPage({ title, description, action, children }: Props) {
     document.documentElement.dataset.theme = next;
   };
   const active = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const activeSecondaryGroup = secondaryGroups.find((group) => group.links.some(([href]) => active(href)));
+  const currentNavLabel = primary.find(([href]) => active(href))?.[1]
+    ?? activeSecondaryGroup?.links.find(([href]) => active(href))?.[1]
+    ?? title;
   if (checking || !authenticated) return <div className="grid min-h-screen place-items-center bg-[#f6f0e4] text-[#6f6044]">جارٍ التحقق من الجلسة…</div>;
 
   return <div className="min-h-screen text-[#2f2417]">
@@ -71,14 +75,14 @@ export function CRMPage({ title, description, action, children }: Props) {
           {!collapsed && <><h1 className="mt-1 font-bold">منصة تطوير الأعمال</h1><p className="mt-2 text-xs text-[#d9c8a2]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p></>}
         </Link>
         <nav aria-label="التنقل الرئيسي" className="algaeu-primary-nav space-y-1">
-          {primary.map(([href, label, icon]) => <Link key={href} href={href} title={collapsed ? label : undefined} onClick={() => setOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold ${active(href) ? 'bg-[#2f2417] text-white shadow' : 'text-[#59482f] hover:bg-[#f5ecdb]'}`}><span className={collapsed ? 'lg:hidden' : ''}>{label}</span><span aria-hidden>{icon}</span></Link>)}
+          {primary.map(([href, label, icon]) => <Link key={href} href={href} title={collapsed ? label : undefined} aria-current={active(href) ? 'page' : undefined} onClick={() => setOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold ${active(href) ? 'nav-active' : 'text-[#59482f] hover:bg-[#f5ecdb]'}`}><span className={collapsed ? 'lg:hidden' : ''}>{label}</span><span aria-hidden>{icon}</span></Link>)}
         </nav>
-        {!collapsed && <div className="mt-4 space-y-2 border-t border-[#eadfc9] pt-3">{secondaryGroups.map((group, index) => <details key={group.label} open={index === 0} className="rounded-xl border border-[#eadfc9] px-2 py-1"><summary className="cursor-pointer px-1 py-2 text-[11px] font-bold text-[#7a5e1c]">{group.label}</summary>{group.links.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-2 text-xs ${active(href) ? 'bg-[#f0e3ca] font-bold' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}>{label}</Link>)}</details>)}</div>}
+        {!collapsed && <div className="mt-4 space-y-2 border-t border-[#eadfc9] pt-3">{secondaryGroups.map((group, index) => {const groupActive=group.links.some(([href])=>active(href));return <details key={group.label} open={groupActive || index === 0} className={`rounded-xl border px-2 py-1 ${groupActive ? 'nav-group-active' : 'border-[#eadfc9]'}`}><summary className={`cursor-pointer px-1 py-2 text-[11px] font-bold ${groupActive ? 'text-[#ff9b4a]' : 'text-[#7a5e1c]'}`}>{group.label}</summary>{group.links.map(([href, label]) => <Link key={href} href={href} aria-current={active(href) ? 'page' : undefined} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-2 text-xs ${active(href) ? 'nav-active' : 'text-[#6f6044] hover:bg-[#f8f1e4]'}`}>{label}</Link>)}</details>})}</div>}
         <div className="mt-4 hidden lg:block"><button className="theme-toggle w-full" onClick={toggleTheme}>{theme === 'original' ? '✦ الواجهة Neon' : '☀ الواجهة الأصلية'}</button></div>
         <button onClick={async () => { await getSupabaseClient().auth.signOut(); router.replace('/login'); }} className="btn-ghost mt-4 w-full">{collapsed ? '↪' : 'تسجيل الخروج'}</button>
       </aside>
       <main className="algaeu-main min-w-0 flex-1 rounded-3xl border border-[#e8d9b7] bg-[#fffdf9]/92 p-4 shadow-[0_16px_45px_rgba(70,48,18,.06)] sm:p-5 lg:p-6">
-        <div className="mb-5 flex flex-col gap-3 border-b border-[#eadfc9] pb-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs font-bold text-[#7a5e1c]">ALGAEU · تطوير الأعمال</p><h2 className="mt-1 text-2xl font-bold sm:text-3xl">{title}</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[#75664d]">{description}</p></div>{action}</div>
+        <div className="mb-5 flex flex-col gap-3 border-b border-[#eadfc9] pb-4 sm:flex-row sm:items-start sm:justify-between"><div><div className="flex flex-wrap items-center gap-2"><p className="text-xs font-bold text-[#7a5e1c]">ALGAEU · تطوير الأعمال</p><span className="nav-current-chip">القسم الحالي: {currentNavLabel}</span></div><h2 className="mt-1 text-2xl font-bold sm:text-3xl">{title}</h2><p className="mt-1 max-w-3xl text-sm leading-6 text-[#75664d]">{description}</p></div>{action}</div>
         <div className="space-y-4">{children}</div>
       </main>
     </div>

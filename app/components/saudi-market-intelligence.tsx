@@ -21,6 +21,8 @@ export function SaudiMarketIntelligence() {
   const [notice, setNotice] = useState('');
   const [filter, setFilter] = useState<'NEW' | 'VERIFIED' | 'ALL'>('NEW');
   const [companyChoice, setCompanyChoice] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [bulkReviewing, setBulkReviewing] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -185,6 +187,35 @@ export function SaudiMarketIntelligence() {
         ),
     [events, filter],
   );
+  const visibleIds = visible.map((event) => s(event.id));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
+  const toggleSelected = (id: string) => setSelected((current) => {
+    const next = new Set(current);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+  const toggleAllVisible = () => setSelected((current) => {
+    const next = new Set(current);
+    if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+    else visibleIds.forEach((id) => next.add(id));
+    return next;
+  });
+  const bulkReview = async (status: 'verified' | 'rejected') => {
+    const targets = events.filter((event) => selected.has(s(event.id)));
+    if (!targets.length) return;
+    setBulkReviewing(true);
+    setError('');
+    try {
+      await Promise.all(targets.map((event) => simpleCrud.update('raw_market_events', s(event.id), { verification_status: status, review_status: 'REVIEWED', updated_at: new Date().toISOString() })));
+      setSelected(new Set());
+      setNotice(status === 'verified' ? `تم اعتماد ${targets.length} إشارة.` : `تم رفض ${targets.length} إشارة.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر تنفيذ القرار الجماعي.');
+    } finally {
+      setBulkReviewing(false);
+    }
+  };
 
   const latestRun = [...runs].sort((a, b) =>
     s(b.started_at).localeCompare(s(a.started_at)),
@@ -233,6 +264,12 @@ export function SaudiMarketIntelligence() {
           <small>
             {latestRun ? `${Number(latestRun.events_inserted || 0)} جديد` : 'لا يوجد'}
           </small>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-3">
+          <label className="flex items-center gap-2 text-sm font-bold"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-5 w-5" aria-label="تحديد كل الإشارات الظاهرة"/>تحديد الكل</label>
+          <span className="crm-chip status-neutral">{selected.size} محدد</span>
+          <button disabled={!selected.size || bulkReviewing} onClick={() => void bulkReview('verified')} className="btn-primary">اعتماد المحدد</button>
+          <button disabled={!selected.size || bulkReviewing} onClick={() => void bulkReview('rejected')} className="btn-danger">رفض المحدد</button>
         </div>
       </section>
 
@@ -336,8 +373,9 @@ export function SaudiMarketIntelligence() {
               (project) => s(project.id) === s(event.linked_project_id),
             );
             return (
-              <article key={event.id} className="crm-card p-4">
-                <div className="grid gap-4 lg:grid-cols-[1.45fr_.55fr_.8fr_auto] lg:items-center">
+              <article key={event.id} className={`crm-card p-4 ${selected.has(s(event.id)) ? 'ring-2 ring-[#8058ff]' : ''}`}>
+                <div className="grid gap-4 lg:grid-cols-[auto_1.45fr_.55fr_.8fr_auto] lg:items-center">
+                  <input type="checkbox" checked={selected.has(s(event.id))} onChange={() => toggleSelected(s(event.id))} className="h-5 w-5" aria-label={`تحديد ${s(event.title)}`}/>
                   <div>
                     <div className="flex flex-wrap gap-2">
                       <span className="crm-chip status-neutral">{s(event.source_key)}</span>

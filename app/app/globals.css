@@ -97,6 +97,9 @@ tbody tr:hover { background: #fcf8f0; }
 .status-warning { background:#fef3c7; color:#92400e; }
 .status-danger { background:#fee2e2; color:#991b1b; }
 .status-neutral { background:#f1ede5; color:#625542; }
+.nav-active { background:linear-gradient(100deg,#4d54e8,#8c39e9,#f06a43); color:white !important; box-shadow:0 0 0 1px rgba(139,92,246,.35),0 8px 22px rgba(88,55,190,.20); }
+.nav-group-active { border-color:#6f50d8 !important; background:rgba(97,70,184,.10); }
+.nav-current-chip { display:inline-flex; align-items:center; border-radius:999px; padding:.25rem .6rem; background:#f0e3ca; color:#6d501e; font-size:.7rem; font-weight:800; }
 
 @media (max-width: 767px) {
   body { font-size: 14px; }
@@ -309,6 +312,9 @@ html[data-theme="neon"] .theme-toggle {
   border-color:#464d60 !important;
   color:#edf0fa !important;
 }
+html[data-theme="neon"] .nav-active { background:linear-gradient(100deg,#4d54e8,#8c39e9,#f06a43) !important; color:#fff !important; border-color:#8b5cf6 !important; }
+html[data-theme="neon"] .nav-group-active { background:rgba(91,61,180,.14) !important; border-color:#6f50d8 !important; }
+html[data-theme="neon"] .nav-current-chip { background:#30284b !important; color:#ffc27a !important; border:1px solid #5d4b91; }
 
 
 /* Phase 1.13.2 — neutral graphite surfaces throughout Neon mode.
