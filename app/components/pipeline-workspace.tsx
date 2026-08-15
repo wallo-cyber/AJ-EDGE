@@ -11,7 +11,7 @@ import { dealCoach, opportunityHealth } from '../lib/intelligence/v6';
 const safe=(value:unknown)=>String(value??'').trim();
 const stageLabel:Record<string,string>={IDENTIFIED:'مستهدفة',QUALIFIED:'مؤهلة',RFQ_RECEIVED:'طلب عرض مستلم',PROPOSAL:'عرض مقدم',NEGOTIATION:'تفاوض',WON:'فوز',LOST:'خسارة'};
 type Tab='opportunities'|'rfqs'|'proposals'|'closed';
-const tabs:Array<[Tab,string]>=[['opportunities','الفرص'],['rfqs','RFQs'],['proposals','العروض'],['closed','فوز / خسارة']];
+const tabs:Array<[Tab,string]>=[['opportunities','الفرص'],['rfqs','طلبات العروض'],['proposals','العروض'],['closed','فوز / خسارة']];
 
 export function PipelineWorkspace(){
   const params=useSearchParams(), tab=(tabs.some(([id])=>id===params.get('tab'))?params.get('tab'):'opportunities') as Tab;

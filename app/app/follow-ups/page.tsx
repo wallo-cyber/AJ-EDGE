@@ -10,6 +10,9 @@ import { supabaseCrm } from '../../lib/supabase/crm';
 const viewOptions = ['today', 'upcoming', 'overdue', 'completed'] as const;
 const pendingStatuses = new Set(['Pending', 'Due Today', 'Overdue', 'مجدولة', 'متأخرة']);
 const completedStatuses = new Set(['Completed', 'مكتملة']);
+const statusLabels: Record<string, string> = { Pending: 'قيد الانتظار', 'Due Today': 'مستحقة اليوم', Overdue: 'متأخرة', Completed: 'مكتملة', Cancelled: 'ملغاة' };
+const typeLabels: Record<string, string> = { Call: 'اتصال', Email: 'بريد إلكتروني', WhatsApp: 'واتساب', Meeting: 'اجتماع', 'Proposal Follow-up': 'متابعة عرض', General: 'عامة', LinkedIn: 'لينكدإن' };
+const priorityLabels: Record<string, string> = { High: 'عالية', Medium: 'متوسطة', Low: 'منخفضة' };
 
 type ViewOption = (typeof viewOptions)[number];
 
@@ -137,27 +140,15 @@ export default function FollowUpsPage() {
           </select>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as FollowUpStatus | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">الحالة: الكل</option>
-            <option value="Pending">Pending</option>
-            <option value="Due Today">Due Today</option>
-            <option value="Overdue">Overdue</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            {Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
           <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as FollowUpType | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">النوع: الكل</option>
-            <option value="Call">Call</option>
-            <option value="Email">Email</option>
-            <option value="WhatsApp">WhatsApp</option>
-            <option value="Meeting">Meeting</option>
-            <option value="Proposal Follow-up">Proposal Follow-up</option>
-            <option value="General">General</option>
-            <option value="LinkedIn">LinkedIn</option>
+            {Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
           <select value={priorityFilter} onChange={(event) => setPriorityFilter(event.target.value as FollowUpPriority | 'الكل')} className="rounded-2xl border border-[#ead9b3] bg-white px-3 py-2.5 text-sm">
             <option value="الكل">الأولوية: الكل</option>
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
+            {Object.entries(priorityLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </div>
       </div>
@@ -184,9 +175,9 @@ export default function FollowUpsPage() {
                   <div className="mt-1 text-xs text-[#6f6044]">{item.subject}</div>
                 </td>
                 <td className="px-3 py-3">{item.contactPerson || '—'}</td>
-                <td className="px-3 py-3">{item.followUpType}</td>
+                <td className="px-3 py-3">{typeLabels[item.followUpType] ?? item.followUpType}</td>
                 <td className="px-3 py-3">{item.date} {item.time}</td>
-                <td className="px-3 py-3">{item.status}</td>
+                <td className="px-3 py-3">{statusLabels[item.status] ?? item.status}</td>
                 <td className="px-3 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => handleMarkCompleted(item.id)} className="rounded-full border border-[#d8c08d] bg-[#f8efe0] px-3 py-1.5 text-xs font-semibold text-[#2f2417]">إكمال</button>

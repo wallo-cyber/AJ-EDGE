@@ -106,3 +106,164 @@ tbody tr:hover { background: #fcf8f0; }
   .desktop-table { display:none; }
 }
 @media (min-width: 768px) { .mobile-cards { display:none; } }
+
+.theme-select {
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--foreground);
+  padding: .45rem .7rem;
+  font-size: .75rem;
+  font-weight: 800;
+}
+
+html[data-theme="modern"] {
+  --background: #11151b;
+  --foreground: #f4f7fb;
+  --surface: #1a2029;
+  --surface-soft: #222a35;
+  --border: #394453;
+  --gold: #75a7ff;
+  --brown: #0b0e12;
+  --muted: #b8c2d0;
+}
+
+html[data-theme="modern-2"] {
+  --background: #070b09;
+  --foreground: #f4f7f3;
+  --surface: #101712;
+  --surface-soft: #172119;
+  --border: #304638;
+  --gold: #ff9f1c;
+  --brown: #050806;
+  --muted: #b9c8bd;
+}
+
+html[data-theme="modern"] body,
+html[data-theme="modern-2"] body {
+  background: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--gold) 15%, transparent), transparent 32rem), var(--background);
+  color: var(--foreground);
+  color-scheme: dark;
+}
+
+html[data-theme="modern-2"] body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 159, 28, .14), transparent 28rem),
+    radial-gradient(circle at 92% 12%, rgba(21, 128, 61, .18), transparent 30rem),
+    #070b09;
+}
+
+html[data-theme="modern"] .algaeu-shell,
+html[data-theme="modern-2"] .algaeu-shell { color: var(--foreground) !important; }
+
+html[data-theme="modern"] .algaeu-mobile-header,
+html[data-theme="modern"] .algaeu-sidebar,
+html[data-theme="modern"] .algaeu-main,
+html[data-theme="modern-2"] .algaeu-mobile-header,
+html[data-theme="modern-2"] .algaeu-sidebar,
+html[data-theme="modern-2"] .algaeu-main {
+  border-color: var(--border) !important;
+  background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+  color: var(--foreground) !important;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .32) !important;
+}
+
+html[data-theme="modern"] .algaeu-brand,
+html[data-theme="modern-2"] .algaeu-brand {
+  background: linear-gradient(145deg, #07100b, #12271a) !important;
+  color: #f7fff9 !important;
+  border: 1px solid #2f6842;
+}
+
+html[data-theme="modern"] .crm-card,
+html[data-theme="modern"] .crm-kpi,
+html[data-theme="modern"] .crm-empty,
+html[data-theme="modern-2"] .crm-card,
+html[data-theme="modern-2"] .crm-kpi,
+html[data-theme="modern-2"] .crm-empty {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .24) !important;
+}
+
+html[data-theme="modern"] input,
+html[data-theme="modern"] select,
+html[data-theme="modern"] textarea,
+html[data-theme="modern-2"] input,
+html[data-theme="modern-2"] select,
+html[data-theme="modern-2"] textarea {
+  border-color: var(--border) !important;
+  background: #0b110d !important;
+  color: var(--foreground) !important;
+}
+
+html[data-theme="modern"] input::placeholder,
+html[data-theme="modern"] textarea::placeholder,
+html[data-theme="modern-2"] input::placeholder,
+html[data-theme="modern-2"] textarea::placeholder { color: var(--muted) !important; opacity: .9; }
+
+html[data-theme="modern"] table,
+html[data-theme="modern-2"] table { background: var(--surface) !important; color: var(--foreground) !important; }
+html[data-theme="modern"] tbody tr:hover,
+html[data-theme="modern-2"] tbody tr:hover { background: var(--surface-soft) !important; }
+
+html[data-theme="modern"] .btn-primary,
+html[data-theme="modern-2"] .btn-primary { background: #17733b; color: #fff !important; }
+html[data-theme="modern"] .btn-primary:hover,
+html[data-theme="modern-2"] .btn-primary:hover { background: #20894a; }
+html[data-theme="modern"] .btn-secondary,
+html[data-theme="modern-2"] .btn-secondary { border-color: var(--gold); background: #3a250b; color: #ffd69a !important; }
+html[data-theme="modern"] .btn-ghost,
+html[data-theme="modern-2"] .btn-ghost { border-color: var(--border); background: var(--surface-soft); color: var(--foreground) !important; }
+
+html[data-theme="modern"] [class*="bg-white"],
+html[data-theme="modern"] [class*="bg-[#fff"],
+html[data-theme="modern"] [class*="bg-[#fdf"],
+html[data-theme="modern"] [class*="bg-[#f8f"],
+html[data-theme="modern"] [class*="bg-[#f7e"],
+html[data-theme="modern"] [class*="bg-[#f6e"],
+html[data-theme="modern"] [class*="bg-[#f5e"],
+html[data-theme="modern"] [class*="bg-[#f4e"],
+html[data-theme="modern"] [class*="bg-[#f0e"],
+html[data-theme="modern-2"] [class*="bg-white"],
+html[data-theme="modern-2"] [class*="bg-[#fff"],
+html[data-theme="modern-2"] [class*="bg-[#fdf"],
+html[data-theme="modern-2"] [class*="bg-[#f8f"],
+html[data-theme="modern-2"] [class*="bg-[#f7e"],
+html[data-theme="modern-2"] [class*="bg-[#f6e"],
+html[data-theme="modern-2"] [class*="bg-[#f5e"],
+html[data-theme="modern-2"] [class*="bg-[#f4e"],
+html[data-theme="modern-2"] [class*="bg-[#f0e"] {
+  background-color: var(--surface-soft) !important;
+  color: var(--foreground) !important;
+}
+
+html[data-theme="modern"] [class*="text-[#2f2417]"],
+html[data-theme="modern"] [class*="text-[#59482f]"],
+html[data-theme="modern"] [class*="text-[#6f6044]"],
+html[data-theme="modern"] [class*="text-[#75664d]"],
+html[data-theme="modern-2"] [class*="text-[#2f2417]"],
+html[data-theme="modern-2"] [class*="text-[#59482f]"],
+html[data-theme="modern-2"] [class*="text-[#6f6044]"],
+html[data-theme="modern-2"] [class*="text-[#75664d]"] { color: var(--muted) !important; }
+
+html[data-theme="modern"] [class*="border-[#e"],
+html[data-theme="modern"] [class*="border-[#d"],
+html[data-theme="modern-2"] [class*="border-[#e"],
+html[data-theme="modern-2"] [class*="border-[#d"] { border-color: var(--border) !important; }
+
+html[data-theme="modern"] .crm-progress,
+html[data-theme="modern-2"] .crm-progress { background: #26312a; }
+html[data-theme="modern"] .crm-progress > span,
+html[data-theme="modern-2"] .crm-progress > span { background: linear-gradient(90deg, #ff9f1c, #1f9d55); }
+
+html[data-theme="modern"] .status-neutral,
+html[data-theme="modern-2"] .status-neutral { background: #29322c !important; color: #e9f1eb !important; }
+html[data-theme="modern"] .status-success,
+html[data-theme="modern-2"] .status-success { background: #123d24 !important; color: #9af0b6 !important; }
+html[data-theme="modern"] .status-warning,
+html[data-theme="modern-2"] .status-warning { background: #4a2c08 !important; color: #ffd08a !important; }
+html[data-theme="modern"] .status-danger,
+html[data-theme="modern-2"] .status-danger { background: #481c1c !important; color: #ffb1b1 !important; }
