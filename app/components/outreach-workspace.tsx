@@ -328,7 +328,10 @@ export function OutreachWorkspace() {
       setNotice(draftId ? "تم تحديث المسودة." : "تم حفظ المسودة الجديدة.");
       await load();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "تعذر حفظ المسودة.");
+      const saveError =
+        reason instanceof Error ? reason : new Error("تعذر حفظ المسودة.");
+      setError(saveError.message);
+      throw saveError;
     }
   };
   const deleteDraft = async (id: string) => {

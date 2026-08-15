@@ -1,5 +1,6 @@
 alter table public.messages
-  add column if not exists attachments jsonb not null default '[]'::jsonb;
+  add column if not exists attachments jsonb not null default '[]'::jsonb,
+  add column if not exists recipient text not null default '';
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('outreach-attachments', 'outreach-attachments', false, 104857600, null)
