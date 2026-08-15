@@ -169,3 +169,66 @@ export const supabaseCrm = {
     }, (row) => ({ id: text(row.id), companyId: text(row.company_id), companyName: item.companyName ?? '', title: text(row.title), service: item.service ?? '', probability: String(row.probability ?? ''), estimatedValue: String(row.value ?? ''), stage: text(row.stage), priority: item.priority ?? '', owner: item.owner ?? '', notes: text(row.notes), createdAt: text(row.created_at), updatedAt: text(row.created_at) } as Opportunity)),
   },
 };
+// ===== Contracts & Quotations =====
+async function currentUserId() {
+  const { data } = await getSupabaseClient().auth.getUser();
+  return data.user?.id ?? '';
+}
+
+function contractFromRow(row: DbRow) {
+  return {
+    id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
+    contractNumber: text(row.contract_number), title: text(row.title), value: String(row.value ?? ''),
+    startDate: text(row.start_date), endDate: text(row.end_date), status: text(row.status),
+    renewalReminderDate: '', notes: text(row.notes),
+    createdAt: text(row.created_at), updatedAt: text(row.updated_at),
+  };
+}
+
+function contractToRow(item: Record<string, unknown>) {
+  return {
+    company_id: nullable(String(item.companyId ?? '')), company_name: String(item.companyName ?? ''),
+    contract_number: String(item.contractNumber ?? ''), title: String(item.title ?? ''), value: Number(item.value || 0),
+    start_date: nullable(String(item.startDate ?? '')), end_date: nullable(String(item.endDate ?? '')),
+    status: String(item.status ?? 'Draft'), notes: String(item.notes ?? ''),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+function quotationFromRow(row: DbRow) {
+  return {
+    id: text(row.id), companyId: text(row.company_id), companyName: text(row.company_name),
+    quotationNumber: text(row.quotation_number), title: text(row.title), value: String(row.value ?? ''),
+    issueDate: text(row.issue_date), validUntil: text(row.expires_at), status: text(row.status),
+    followUpDate: '', notes: text(row.notes),
+    createdAt: text(row.created_at), updatedAt: text(row.updated_at),
+  };
+}
+
+function quotationToRow(item: Record<string, unknown>) {
+  return {
+    company_id: nullable(String(item.companyId ?? '')), company_name: String(item.companyName ?? ''),
+    quotation_number: String(item.quotationNumber ?? ''), title: String(item.title ?? ''), value: Number(item.value || 0),
+    issue_date: nullable(String(item.issueDate ?? '')), expires_at: nullable(String(item.validUntil ?? '')),
+    status: String(item.status ?? 'Draft'), notes: String(item.notes ?? ''),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export const contractsApi = {
+  list: () => list('contracts', contractFromRow) as Promise<ReturnType<typeof contractFromRow>[]>,
+  create: async (item: Record<string, unknown>) =>
+    insert('contracts', { ...contractToRow(item), owner_id: await currentUserId() }, contractFromRow),
+  update: (id: string, item: Record<string, unknown>) =>
+    update('contracts', id, contractToRow(item), contractFromRow),
+  remove: (id: string) => remove('contracts', id),
+};
+
+export const quotationsApi = {
+  list: () => list('quotations', quotationFromRow) as Promise<ReturnType<typeof quotationFromRow>[]>,
+  create: async (item: Record<string, unknown>) =>
+    insert('quotations', { ...quotationToRow(item), owner_id: await currentUserId() }, quotationFromRow),
+  update: (id: string, item: Record<string, unknown>) =>
+    update('quotations', id, quotationToRow(item), quotationFromRow),
+  remove: (id: string) => remove('quotations', id),
+};
