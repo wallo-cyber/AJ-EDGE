@@ -63,6 +63,7 @@ export function OutreachWorkspace() {
     next_action_date: "",
   });
   const [composeOpen, setComposeOpen] = useState(false);
+  const [composeDraft, setComposeDraft] = useState<SimpleRow | null>(null);
   const load = async () => {
     setLoading(true);
     setError("");
@@ -313,9 +314,13 @@ export function OutreachWorkspace() {
   };
   const saveComposedDraft = async (values: Record<string, unknown>) => {
     try {
-      await simpleCrud.create("messages", values);
+      const draftId = safe(values.id);
+      const { id: _id, ...payload } = values;
+      if (draftId) await simpleCrud.update("messages", draftId, payload);
+      else await simpleCrud.create("messages", payload);
       setComposeOpen(false);
-      setNotice("تم حفظ المسودة الجديدة.");
+      setComposeDraft(null);
+      setNotice(draftId ? "تم تحديث المسودة." : "تم حفظ المسودة الجديدة.");
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "تعذر حفظ المسودة.");
@@ -336,7 +341,13 @@ export function OutreachWorkspace() {
       title="التواصل"
       description="المسودة تحضير داخلي، والاعتماد مراجعة بشرية، أما تم التواصل وورد رد فيعتمدان فقط على حدث تواصل فعلي."
       action={
-        <button onClick={() => setComposeOpen(true)} className="btn-primary">
+        <button
+          onClick={() => {
+            setComposeDraft(null);
+            setComposeOpen(true);
+          }}
+          className="btn-primary"
+        >
           كتابة مسودة
         </button>
       }
@@ -470,7 +481,14 @@ export function OutreachWorkspace() {
                     · أولوية {safe(item.company.priority)}
                   </p>
                 </div>
-                <span
+                <button
+                  type="button"
+                  title="فتح المسودة وتحريرها"
+                  aria-label="فتح المسودة وتحريرها"
+                  onClick={() => {
+                    setComposeDraft(item.draft);
+                    setComposeOpen(true);
+                  }}
                   className={`crm-chip ${item.stage === "ready" ? "status-success" : item.stage === "review" ? "status-warning" : "status-neutral"}`}
                 >
                   {item.stage === "ready"
@@ -478,7 +496,7 @@ export function OutreachWorkspace() {
                     : item.stage === "review"
                       ? "جاهزة للمراجعة"
                       : "تحضير"}
-                </span>
+                </button>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs">
                 <span className="crm-chip status-neutral">
@@ -742,7 +760,11 @@ export function OutreachWorkspace() {
           companies={companies}
           contacts={contacts}
           assets={assets}
-          onClose={() => setComposeOpen(false)}
+          initialDraft={composeDraft}
+          onClose={() => {
+            setComposeOpen(false);
+            setComposeDraft(null);
+          }}
           onSave={saveComposedDraft}
         />
       )}

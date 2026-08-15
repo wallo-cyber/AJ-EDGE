@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SimpleRow } from "../lib/supabase/simple-crud";
 
 const s = (value: unknown) => String(value ?? "").trim();
@@ -31,20 +31,24 @@ export function GmailComposeModal({
   companies,
   contacts,
   assets,
+  initialDraft,
   onClose,
   onSave,
 }: {
   companies: SimpleRow[];
   contacts: SimpleRow[];
   assets: SimpleRow[];
+  initialDraft?: SimpleRow | null;
   onClose: () => void;
   onSave: (values: Record<string, unknown>) => Promise<void>;
 }) {
   const editor = useRef<HTMLDivElement>(null);
-  const [companyId, setCompanyId] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [subject, setSubject] = useState("");
-  const [attachmentId, setAttachmentId] = useState("");
+  const [companyId, setCompanyId] = useState(s(initialDraft?.company_id));
+  const [recipient, setRecipient] = useState(s(initialDraft?.recipient));
+  const [subject, setSubject] = useState(s(initialDraft?.subject));
+  const [attachmentId, setAttachmentId] = useState(
+    s(initialDraft?.recommended_attachment_id),
+  );
   const [busy, setBusy] = useState(false);
 
   const company = companies.find((row) => row.id === companyId);
@@ -53,6 +57,11 @@ export function GmailComposeModal({
     [companyId, contacts],
   );
   const attachment = assets.find((row) => String(row.id) === attachmentId);
+
+  useEffect(() => {
+    if (editor.current && initialDraft)
+      editor.current.innerText = s(initialDraft.body);
+  }, [initialDraft]);
 
   const command = (name: string, value?: string) => {
     editor.current?.focus();
@@ -89,6 +98,7 @@ export function GmailComposeModal({
         draft_classification: "PREPARATION",
         language: "ARABIC",
         recommended_attachment_id: attachmentId || null,
+        id: initialDraft?.id,
       });
     } finally {
       setBusy(false);
@@ -105,7 +115,9 @@ export function GmailComposeModal({
       <section className="mx-auto flex h-full max-h-[96vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#454b5c] bg-[#20232b] shadow-2xl">
         <header className="flex items-center justify-between bg-[#30343e] px-5 py-3">
           <div>
-            <h2 className="text-lg font-bold">رسالة جديدة</h2>
+            <h2 className="text-lg font-bold">
+              {initialDraft ? "تحرير المسودة" : "رسالة جديدة"}
+            </h2>
             <p className="text-xs text-[#aab0bf]">محرر بريد موسّع</p>
           </div>
           <button
@@ -346,7 +358,11 @@ export function GmailComposeModal({
             onClick={() => void save()}
             className="btn-primary"
           >
-            {busy ? "جارٍ الحفظ…" : "حفظ المسودة"}
+            {busy
+              ? "جارٍ الحفظ…"
+              : initialDraft
+                ? "حفظ التعديلات"
+                : "حفظ المسودة"}
           </button>
           <button
             type="button"
