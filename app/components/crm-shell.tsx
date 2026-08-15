@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 
 const primary = [
+  ['/', 'واجهة الموقع', '⌂'],
   ['/companies', 'السوق والشركات', '◉'],
   ['/marketing', 'فريق التسويق', '▣'],
   ['/radar', 'رادار الفرص', '◆'],
