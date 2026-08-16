@@ -61,30 +61,51 @@ export function ResearchWorkspace() {
   });
   const [refreshDays, setRefreshDays] = useState(30);
   const [refreshing, setRefreshing] = useState(false);
+  // Logs the raw Supabase error for a single load() query before it is swallowed into a generic message.
+  const withLoadLog = async <T,>(label: string, promise: Promise<T>): Promise<T> => {
+    try {
+      return await promise;
+    } catch (reason) {
+      console.error(`[research:load:${label}]`, reason);
+      throw reason;
+    }
+  };
   const load = async () => {
     setLoading(true);
     try {
       const [jobPage, companyPage, committeeRows, signalRows] =
         await Promise.all([
-          simpleCrud.page("agent_jobs", 1, 1000, {
-            column: "status",
-            value: "manual_research_required",
-            order: "priority",
-            ascending: false,
-          }),
-          simpleCrud.page("companies", 1, 500, {
-            order: "lead_score",
-            ascending: false,
-          }),
-          simpleCrud.listWhere(
-            "buying_committee_members",
-            "verification_status",
-            "needs_research",
+          withLoadLog(
+            "agent_jobs",
+            simpleCrud.page("agent_jobs", 1, 1000, {
+              column: "status",
+              value: "manual_research_required",
+              order: "priority",
+              ascending: false,
+            }),
           ),
-          simpleCrud.listWhere(
+          withLoadLog(
+            "companies",
+            simpleCrud.page("companies", 1, 500, {
+              order: "lead_score",
+              ascending: false,
+            }),
+          ),
+          withLoadLog(
+            "buying_committee_members",
+            simpleCrud.listWhere(
+              "buying_committee_members",
+              "verification_status",
+              "needs_research",
+            ),
+          ),
+          withLoadLog(
             "external_signals",
-            "verification_status",
-            "needs_research",
+            simpleCrud.listWhere(
+              "external_signals",
+              "verification_status",
+              "needs_research",
+            ),
           ),
         ]);
       setJobs(jobPage.rows);
@@ -92,8 +113,14 @@ export function ResearchWorkspace() {
       setCommitteeCandidates(committeeRows);
       setSignalCandidates(signalRows);
     } catch (reason) {
+      console.error("[research:load]", reason);
+      const code =
+        reason && typeof reason === "object" && "code" in reason
+          ? String((reason as { code?: unknown }).code ?? "")
+          : "";
       setError(
-        reason instanceof Error ? reason.message : "تعذر تحميل قائمة البحث.",
+        (reason instanceof Error ? reason.message : "تعذر تحميل قائمة البحث.") +
+          (code ? ` [${code}]` : ""),
       );
     } finally {
       setLoading(false);
@@ -117,6 +144,7 @@ export function ResearchWorkspace() {
     () =>
       jobs.filter((job) => {
         const company = companyById.get(String(job.company_id));
+        if (company && safe(company.archived_at)) return false;
         const text =
           `${safe(company?.company_name)} ${safe(job.agent_name)} ${safe(job.last_error)}`.toLowerCase();
         const rank = safe(company?.priority) || "C";
@@ -347,12 +375,17 @@ export function ResearchWorkspace() {
     }
   };
 
-  const staleJobs = jobs.filter((job) => {
+  // Archived companies never get renewed jobs so they cannot resurface in the research queue.
+  const activeJobs = jobs.filter((job) => {
+    const company = companyById.get(String(job.company_id));
+    return !(company && safe(company.archived_at));
+  });
+  const staleJobs = activeJobs.filter((job) => {
     const timestamp = Date.parse(safe(job.updated_at || job.created_at));
     return !timestamp || Date.now() - timestamp >= refreshDays * 86400000;
   });
   const refreshResearch = async () => {
-    const targets = staleJobs.length ? staleJobs : jobs;
+    const targets = staleJobs.length ? staleJobs : activeJobs;
     if (!targets.length) { setNotice("لا توجد مهام بحث لتجديدها حاليًا."); return; }
     const retireOld = window.confirm(`سيتم إنشاء ${targets.length} مهمة بحث محدثة. هل تريد إزالة المهام القديمة من القائمة بعد التجديد؟\n\nموافق = إزالة القديم\nإلغاء = الاحتفاظ بالقديم`);
     setRefreshing(true); setError("");
@@ -438,6 +471,7 @@ export function ResearchWorkspace() {
           </p>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             {companies
+              .filter((c) => !safe(c.archived_at))
               .filter((c) =>
                 safe(c.next_action).toLowerCase().includes("decision maker"),
               )
@@ -855,7 +889,7 @@ export function ResearchWorkspace() {
                 onClick={() => void saveResolution("resolved")}
                 className="rounded-xl bg-emerald-700 px-4 py-2 text-white"
               >
-                Resolve
+                إنهاء المهمة
               </button>
               <button
                 onClick={() => void saveResolution("unable")}

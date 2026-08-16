@@ -8,11 +8,20 @@ const tablesWithoutUpdatedAt = new Set(["campaign_companies"]);
 
 function databaseError(
   operation: string,
-  error: { code?: string; message?: string },
+  table: string,
+  error: { code?: string; message?: string; details?: string | null; hint?: string | null },
 ) {
-  console.error(`[Supabase:${operation}]`, error.code || "request_failed");
-  return new Error(
-    "تعذر إتمام العملية في قاعدة البيانات. أعد المحاولة، وإن استمرت المشكلة راجع حالة النظام.",
+  console.error(`[Supabase:${operation}:${table}]`, {
+    code: error.code || "request_failed",
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+  return Object.assign(
+    new Error(
+      "تعذر إتمام العملية في قاعدة البيانات. أعد المحاولة، وإن استمرت المشكلة راجع حالة النظام.",
+    ),
+    { code: error.code, details: error.message },
   );
 }
 
@@ -37,7 +46,7 @@ export const simpleCrud = {
         ascending: options?.ascending ?? false,
       })
       .range(from, from + pageSize - 1);
-    if (error) throw databaseError("page", error);
+    if (error) throw databaseError("page", table, error);
     return {
       rows: (data ?? []) as SimpleRow[],
       count: count ?? 0,
@@ -52,7 +61,7 @@ export const simpleCrud = {
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .limit(pageSize);
-    if (error) throw databaseError("forCompany", error);
+    if (error) throw databaseError("forCompany", table, error);
     return (data ?? []) as SimpleRow[];
   },
   async list(table: string) {
@@ -64,7 +73,7 @@ export const simpleCrud = {
         .select("*")
         .order("created_at", { ascending: false })
         .range(from, from + pageSize - 1);
-      if (error) throw databaseError("list", error);
+      if (error) throw databaseError("list", table, error);
       const page = (data ?? []) as SimpleRow[];
       rows.push(...page);
       if (page.length < pageSize) break;
@@ -81,7 +90,7 @@ export const simpleCrud = {
         .eq(column, value)
         .order("created_at", { ascending: false })
         .range(from, from + pageSize - 1);
-      if (error) throw databaseError("listWhere", error);
+      if (error) throw databaseError("listWhere", table, error);
       const page = (data ?? []) as SimpleRow[];
       rows.push(...page);
       if (page.length < pageSize) break;
@@ -94,7 +103,7 @@ export const simpleCrud = {
       .insert(values)
       .select("*")
       .single();
-    if (error) throw databaseError("create", error);
+    if (error) throw databaseError("create", table, error);
     return data as SimpleRow;
   },
   async update(table: string, id: string, values: Record<string, unknown>) {
@@ -107,7 +116,7 @@ export const simpleCrud = {
       .eq("id", id)
       .select("*")
       .single();
-    if (error) throw databaseError("update", error);
+    if (error) throw databaseError("update", table, error);
     return data as SimpleRow;
   },
   async remove(table: string, id: string) {
@@ -115,6 +124,6 @@ export const simpleCrud = {
       .from(table)
       .delete()
       .eq("id", id);
-    if (error) throw databaseError("remove", error);
+    if (error) throw databaseError("remove", table, error);
   },
 };
