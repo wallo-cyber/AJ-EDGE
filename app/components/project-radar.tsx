@@ -14,7 +14,8 @@ export function ProjectRadar() {
   const [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [filter, setFilter] = useState<"ALL" | "VERIFIED" | "REVIEW">("ALL");
+    // Defaults to REVIEW so rejected signals never show up without an explicit choice.
+    [filter, setFilter] = useState<"ALL" | "VERIFIED" | "REVIEW" | "REJECTED">("REVIEW");
   const load = async () => {
     setLoading(true);
     try {
@@ -51,13 +52,13 @@ export function ProjectRadar() {
           score: signalPriority(signal),
           linked: linked.has(s(signal.id)),
         }))
-        .filter(
-          (x) =>
-            filter === "ALL" ||
-            (filter === "VERIFIED"
-              ? s(x.signal.verification_status) === "verified"
-              : s(x.signal.verification_status) !== "verified"),
-        )
+        .filter((x) => {
+          const status = s(x.signal.verification_status);
+          if (filter === "ALL") return true;
+          if (filter === "VERIFIED") return status === "verified";
+          if (filter === "REJECTED") return status === "rejected";
+          return status !== "verified" && status !== "rejected";
+        })
         .sort(
           (a, b) => Number(a.linked) - Number(b.linked) || b.score - a.score,
         ),
@@ -141,6 +142,7 @@ export function ProjectRadar() {
                 ["ALL", "الكل"],
                 ["VERIFIED", "موثقة"],
                 ["REVIEW", "تحتاج مراجعة"],
+                ["REJECTED", "المرفوضة"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -166,7 +168,7 @@ export function ProjectRadar() {
                   <div>
                     <div className="flex flex-wrap gap-2">
                       <span
-                        className={`crm-chip ${s(signal.verification_status) === "verified" ? "status-success" : "status-warning"}`}
+                        className={`crm-chip ${s(signal.verification_status) === "verified" ? "status-success" : s(signal.verification_status) === "rejected" ? "status-danger" : "status-warning"}`}
                       >
                         {s(signal.verification_status)}
                       </span>
