@@ -13,6 +13,7 @@ import { supabaseCrm } from '../lib/supabase/crm';
 import { simpleCrud, type SimpleRow } from '../lib/supabase/simple-crud';
 import { buildCompanyIntelligence, buildRelationshipMemory, dealCoach } from '../lib/intelligence/v6';
 import { commercialEligibility, SEED_ITEMS, type ReadinessItem, type Gateway } from '../lib/readiness/core';
+import { lastResearchedLabel } from '../lib/presentation';
 
 type CompanyDetailsViewProps = {
   company: Company;
@@ -165,6 +166,7 @@ export function CompanyDetailsView({ company }: CompanyDetailsViewProps) {
           <div><p className="text-sm text-[#9a7b2f]">التأهيل</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.data_quality_status || '—')}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">زاوية التعاقد المقترحة</p><p className="mt-1 font-semibold text-[#2f2417]">{company.contractingAngle || String(companyRow?.contracting_angle || '—')}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">حالة البحث</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.verification_status || '—')}</p></div>
+          <div><p className="text-sm text-[#9a7b2f]">آخر بحث</p><p className="mt-1"><span className={`crm-chip ${lastResearchedLabel(company.lastResearchedAt).tone}`}>{lastResearchedLabel(company.lastResearchedAt).label}</span></p></div>
           <div><p className="text-sm text-[#9a7b2f]">حالة التواصل</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.outreach_status || 'Not Contacted')}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">المصدر</p><p className="mt-1 font-semibold text-[#2f2417]">{String(companyRow?.source_name || company.sourceName || '—')}</p></div>
           <div><p className="text-sm text-[#9a7b2f]">رابط المصدر</p>{companyRow?.source_url ? <a href={String(companyRow.source_url)} target="_blank" rel="noreferrer" className="mt-1 block break-all font-semibold text-[#8d6926] underline">فتح المصدر</a> : <p className="mt-1 font-semibold">—</p>}</div>

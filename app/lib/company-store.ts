@@ -59,6 +59,7 @@ export type Company = {
   verificationStatus?: string;
   sourceUrl?: string;
   archivedAt?: string;
+  lastResearchedAt?: string;
   vendorRegistrationRequirements?: string;
   vendorRegistrationAccountStatus?: string;
   vendorRegistrationLastChecked?: string;

@@ -9,6 +9,18 @@ import { simpleCrud, type SimpleRow } from "../lib/supabase/simple-crud";
 
 type Tab = "discovery" | "enrichment" | "verification" | "manual";
 const safe = (value: unknown) => String(value ?? "").trim();
+// Marks a company as freshly researched only after a research/enrichment step succeeds for it.
+const markCompanyResearched = async (companyId: unknown) => {
+  const id = safe(companyId);
+  if (!id) return;
+  try {
+    await simpleCrud.update("companies", id, {
+      last_researched_at: new Date().toISOString(),
+    });
+  } catch {
+    /* non-critical tracking field, do not block the main success flow */
+  }
+};
 const tabs: Array<[Tab, string]> = [
   ["discovery", "اكتشاف"],
   ["enrichment", "استكمال البيانات"],
@@ -190,6 +202,7 @@ export function ResearchWorkspace() {
         details: { source_url: sourceUrl },
       });
       setNotice(`تم اعتماد ${safe(item.name)} وربطه بملف الشركة.`);
+      await markCompanyResearched(item.company_id);
       await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "تعذر اعتماد الشخص.");
@@ -252,6 +265,7 @@ export function ResearchWorkspace() {
           ? "تم اعتماد الإشارة، ولن تُنشأ Opportunity تلقائياً."
           : "تم رفض الإشارة.",
       );
+      if (approved) await markCompanyResearched(item.company_id);
       await load();
     } catch (reason) {
       setError(
@@ -323,6 +337,7 @@ export function ResearchWorkspace() {
           ? "تم حفظ التقدم."
           : "تم إغلاق مهمة البحث مع حفظ الدليل.",
       );
+      if (mode === "resolved") await markCompanyResearched(selected.company_id);
       setSelected(null);
       await load();
     } catch (reason) {

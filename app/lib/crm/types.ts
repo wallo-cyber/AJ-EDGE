@@ -25,7 +25,7 @@ export type Company = {
   priority?: string; leadScore?: number; dataCompleteness?: number; dataQualityStatus?: string; missingFields?: string[]; scoreReasons?: string[]; sourceName?: string;
   targetSegment?: string; subsector?: string; businessAngle?: string; recommendedRole?: string; recommendedLanguage?: string; recommendedChannel?: string; recommendedMessageStyle?: string; relationshipStage?: string; opportunitySignalScore?: number; opportunitySignalReason?: string; nextBestActionCode?: string; nextBestActionReason?: string; nextBestActionConfidence?: number; nextBestActionDueAt?: string; doNotContact?: boolean; outreachCooldownUntil?: string; humanOverride?: boolean;
   qualificationStatus?: string; qualificationReason?: string; contractingAngle?: string; nextAction?: string;
-  vendorRegistrationUrl?: string; vendorRegistrationStatus?: string; vendorRegistrationRequirements?: string; vendorRegistrationAccountStatus?: string; vendorRegistrationLastChecked?: string; vendorRegistrationNextAction?: string; vendorRegistrationNotes?: string; outreachStatus?: string; verificationStatus?: string; sourceUrl?: string; archivedAt?: string;
+  vendorRegistrationUrl?: string; vendorRegistrationStatus?: string; vendorRegistrationRequirements?: string; vendorRegistrationAccountStatus?: string; vendorRegistrationLastChecked?: string; vendorRegistrationNextAction?: string; vendorRegistrationNotes?: string; outreachStatus?: string; verificationStatus?: string; sourceUrl?: string; archivedAt?: string; lastResearchedAt?: string;
   communicationHistory: CommunicationEntry[];
   followUps: FollowUpEntry[];
   opportunities: string[];
