@@ -313,7 +313,7 @@ export function AgentControlCenter() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="crm-kpi">
           <p className="text-xs text-[#75664d]">النظام</p>
-          <strong className="mt-2 block">ALGAEU متصل</strong>
+          <strong className="mt-2 block">نوفافيرك متصل</strong>
         </div>
         <div className="crm-kpi">
           <p className="text-xs text-[#75664d]">الوكلاء الداخليون</p>

@@ -1,4 +1,4 @@
-# ALGAEU Phase 1.1 — Commercial Workflow Fix
+# نوفافيرك Phase 1.1 — Commercial Workflow Fix
 
 ## Corrected from user review
 
@@ -10,7 +10,7 @@
    - Outreach Strategy now supports selecting a segment, priority, and reachability.
    - User can choose either **all current filtered results** or **manually selected companies**.
    - Bulk preparation only includes companies with a verified decision maker and a direct email; generic company email is not treated as decision access.
-   - External sending remains human-controlled; ALGAEU prepares the safe send list and personalized drafts.
+   - External sending remains human-controlled; نوفافيرك prepares the safe send list and personalized drafts.
 
 3. **Company editing no longer sends the user back to the company list**
    - The Edit Company action is now an in-place modal inside Company 360.

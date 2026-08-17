@@ -1,4 +1,4 @@
--- ALGAEU Plan B operational completion.
+-- نوفافيرك Plan B operational completion.
 -- Add only additive CRM fields required by existing screens and make job
 -- scheduling idempotent against the persisted company state.
 

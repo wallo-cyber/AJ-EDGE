@@ -1,4 +1,4 @@
-# ALGAEU Phase 2.2 — Acquisition OS
+# نوفافيرك Phase 2.2 — Acquisition OS
 
 Primary operating model:
 Market Signal → Project Candidate → Verified Project → Access Map → Work Package → Pursuit → RFQ/Bid → Won.

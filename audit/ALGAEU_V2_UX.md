@@ -1,4 +1,4 @@
-# ALGAEU V2 UX implementation
+# نوفافيرك V2 UX implementation
 
 Date: 2026-08-11  
 Branch: `codex/aj-edge-mvp`

@@ -1,4 +1,4 @@
-# ALGAEU Final Integrated Audit — 2026-08-12
+# نوفافيرك Final Integrated Audit — 2026-08-12
 
 ## Build/runtime
 - Vercel preview READY.

@@ -1,4 +1,4 @@
--- ALGAEU V1 consolidation. Additive only: preserve all production records.
+-- نوفافيرك V1 consolidation. Additive only: preserve all production records.
 
 alter table public.contacts
   add column if not exists decision_maker boolean not null default false,

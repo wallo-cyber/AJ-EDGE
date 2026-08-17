@@ -1,4 +1,4 @@
--- ALGAEU Phase 3.0 — Construction Acquisition OS
+-- نوفافيرك Phase 3.0 — Construction Acquisition OS
 -- Inspired by construction intelligence / bid-management operating models.
 -- Additive only; no existing data is deleted or rewritten.
 

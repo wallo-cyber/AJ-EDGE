@@ -1,4 +1,4 @@
--- ALGAEU production completion. External search remains paused; the same
+-- نوفافيرك production completion. External search remains paused; the same
 -- persisted agents continue in deterministic internal mode.
 
 alter table public.companies

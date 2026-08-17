@@ -114,7 +114,7 @@ tbody tr:hover { background: #fcf8f0; }
 }
 @media (min-width: 768px) { .mobile-cards { display:none; } }
 
-/* ALGAEU alternate visual theme — presentation only; layout and workflows stay unchanged. */
+/* نوفافيرك alternate visual theme — presentation only; layout and workflows stay unchanged. */
 .theme-toggle {
   display:inline-flex; min-height:38px; align-items:center; justify-content:center; gap:.4rem;
   border:1px solid #cdb77f; background:#fffdf9; color:#5f4b29; border-radius:12px;
@@ -138,16 +138,16 @@ html[data-theme="neon"] body {
   background-attachment:fixed;
 }
 html[data-theme="neon"] ::selection { background:#6d36ff; color:white; }
-html[data-theme="neon"] .algaeu-sidebar,
-html[data-theme="neon"] .algaeu-main,
-html[data-theme="neon"] .algaeu-mobile-header {
+html[data-theme="neon"] .نوفافيرك-sidebar,
+html[data-theme="neon"] .نوفافيرك-main,
+html[data-theme="neon"] .نوفافيرك-mobile-header {
   background:rgba(8,10,25,.88) !important;
   border-color:#292f62 !important;
   color:#f4f1ff !important;
   box-shadow:0 18px 55px rgba(0,0,0,.38), 0 0 28px rgba(91,51,255,.08) !important;
   backdrop-filter:blur(18px);
 }
-html[data-theme="neon"] .algaeu-brand {
+html[data-theme="neon"] .نوفافيرك-brand {
   color:#fff !important;
   border:1px solid rgba(124,82,255,.55);
   background:linear-gradient(135deg,#121431 0%,#261357 55%,#3b1744 100%) !important;
@@ -221,14 +221,14 @@ html[data-theme="neon"] body {
 }
 
 /* Main shells become graphite rather than near-black/white. */
-html[data-theme="neon"] .algaeu-sidebar,
-html[data-theme="neon"] .algaeu-main,
-html[data-theme="neon"] .algaeu-mobile-header {
+html[data-theme="neon"] .نوفافيرك-sidebar,
+html[data-theme="neon"] .نوفافيرك-main,
+html[data-theme="neon"] .نوفافيرك-mobile-header {
   background:rgba(28,31,39,.94) !important;
   border-color:#3b4050 !important;
 }
 
-html[data-theme="neon"] .algaeu-brand {
+html[data-theme="neon"] .نوفافيرك-brand {
   background:linear-gradient(135deg,#252936 0%,#302654 55%,#39243d 100%) !important;
 }
 
@@ -406,7 +406,7 @@ html[data-theme="teal"] {
   --nav-border:#1F2937; --nav-accent:#14B8A6; --nav-secondary:#9CA3AF; --nav-hover:#131417;
   color-scheme:dark;
 }
-/* ALGAEU — Teal theme (presentation only). */
+/* نوفافيرك — Teal theme (presentation only). */
 
 html[data-theme="teal"] body {
   color:#FFFFFF;
@@ -418,16 +418,16 @@ html[data-theme="teal"] body {
 }
 html[data-theme="teal"] ::selection { background:#14B8A6; color:#04211E; }
 
-html[data-theme="teal"] .algaeu-sidebar,
-html[data-theme="teal"] .algaeu-main,
-html[data-theme="teal"] .algaeu-mobile-header {
+html[data-theme="teal"] .نوفافيرك-sidebar,
+html[data-theme="teal"] .نوفافيرك-main,
+html[data-theme="teal"] .نوفافيرك-mobile-header {
   background:rgba(17,19,23,.94) !important;
   border-color:#1F2937 !important;
   color:#FFFFFF !important;
   box-shadow:0 18px 55px rgba(0,0,0,.42) !important;
   backdrop-filter:blur(18px);
 }
-html[data-theme="teal"] .algaeu-brand {
+html[data-theme="teal"] .نوفافيرك-brand {
   color:#fff !important;
   border:1px solid rgba(20,184,166,.45);
   background:linear-gradient(135deg,#101619 0%,#0E2E2B 55%,#0A3A35 100%) !important;

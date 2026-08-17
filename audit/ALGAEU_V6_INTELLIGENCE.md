@@ -1,4 +1,4 @@
-# ALGAEU V6 — Intelligence Core and Autonomous BD Foundation
+# نوفافيرك V6 — Intelligence Core and Autonomous BD Foundation
 
 ## Outcome
 
@@ -14,14 +14,14 @@ V6 application code is complete and locally verified. Production activation is b
 - Contextual follow-up and manual inbound-reply classification. Contacted/Replied remain derived only from direction-specific communication events. No reply automatically creates an opportunity.
 - Manual email-provider abstraction and future rules foundation. Effective automation level is always 0; even a requested higher level remains unable to send.
 - Relationship stages, Deal Coach, opportunity health, agent teams, Supervisor routing decisions, output standard, auditable human overrides, feedback controls, and a protected learning/analytics store.
-- UI integration across Today, Company 360, Outreach, Pipeline, Agent Center, Reports, Companies, and Settings without redesigning the ALGAEU identity.
+- UI integration across Today, Company 360, Outreach, Pipeline, Agent Center, Reports, Companies, and Settings without redesigning the نوفافيرك identity.
 
 ## Database design
 
 Pending migration order:
 
-1. `20260811153000_algaeu_v5_intelligence.sql`
-2. `20260811170000_algaeu_v6_intelligence_core.sql`
+1. `20260811153000_نوفافيرك_v5_intelligence.sql`
+2. `20260811170000_نوفافيرك_v6_intelligence_core.sql`
 
 The migrations are additive: columns, protected tables, safe placeholder-table reconciliation, checks, indexes, RLS, ownership policies, and explicit Data API grants only. There is no destructive DDL/DML, reset, truncate, production backfill, seed, or external-provider activation. New tables are `user_feedback`, `relationship_memories`, `business_signals`, `conversation_strategies`, `learning_events`, and `automation_rules`.
 

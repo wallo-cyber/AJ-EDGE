@@ -14,10 +14,10 @@ const arabicFont = Noto_Sans_Arabic({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "ALGAEU Business Development Platform",
-    template: "%s | ALGAEU",
+    default: "نوفافيرك Business Development Platform",
+    template: "%s | نوفافيرك",
   },
-  description: "منصة ALGAEU العربية لتطوير الأعمال وإدارة علاقات العملاء والوكلاء الداخليين.",
+  description: "منصة نوفافيرك العربية لتطوير الأعمال وإدارة علاقات العملاء والوكلاء الداخليين.",
   robots: { index: false, follow: false },
 };
 

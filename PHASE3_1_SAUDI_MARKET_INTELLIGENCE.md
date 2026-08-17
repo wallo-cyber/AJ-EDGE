@@ -1,4 +1,4 @@
-# ALGAEU Phase 3.1 — Saudi Market Intelligence
+# نوفافيرك Phase 3.1 — Saudi Market Intelligence
 
 Added:
 - Saudi Market Intelligence primary module.

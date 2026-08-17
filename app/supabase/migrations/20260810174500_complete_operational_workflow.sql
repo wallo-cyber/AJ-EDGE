@@ -84,7 +84,7 @@ select c.owner_id, c.id, c.company_name, 'outgoing', t.channel, t.subject,
   'Draft', t.template_name
 from public.companies c
 cross join (values
-  ('Phone', 'Phone Call Opening', 'افتتاحية مكالمة', 'السلام عليكم، معكم ALGAEU. نتواصل للتعريف المختصر وبحث {{focus}} لدى {{company}}. هل يمكن توجيهنا إلى مسؤول المشاريع أو المشتريات؟'),
+  ('Phone', 'Phone Call Opening', 'افتتاحية مكالمة', 'السلام عليكم، معكم نوفافيرك. نتواصل للتعريف المختصر وبحث {{focus}} لدى {{company}}. هل يمكن توجيهنا إلى مسؤول المشاريع أو المشتريات؟'),
   ('Email', 'Revisit Later', 'إعادة تواصل لاحقاً', 'تحية طيبة، نعيد التواصل مع {{company}} في الوقت المناسب لبحث {{focus}}. يسعدنا مشاركة الملف التعريفي عند الطلب والتعرف على آلية التسجيل أو التأهيل لديكم.')
 ) as t(channel, template_name, subject, body)
 where c.priority in ('A','B')

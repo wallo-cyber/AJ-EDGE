@@ -1,4 +1,4 @@
-# ALGAEU Project Status
+# نوفافيرك Project Status
 
 Status: **V4 PRODUCTION READY / V6 CODE READY — DATABASE MIGRATION BLOCKED**
 
@@ -11,7 +11,7 @@ Branch: `codex/aj-edge-mvp`
 - V1 application consolidation is implemented locally: eight primary workspaces, centralized business states, evidence-based research resolution, verified decision-maker gating, communication events, canonical pipeline stages, ranked Today actions, invite-only login, targeted manual agent runs, and focused/paginated queries.
 - TypeScript passes, 28/28 automated tests pass, and the production build passes with 29 routes.
 - A read-only server audit confirms the production state remains unchanged: 181 companies, 0 contacts, 881 drafts, 1 follow-up, 1,919 jobs, and zero duplicate company/contact/job groups. External research and external sending remain disabled.
-- The additive migration `20260811075453_algaeu_v1_core_consolidation.sql` is applied to project `vbdgfrkthvurbqeofeyj` and recorded in remote migration history. No destructive statement was present.
+- The additive migration `20260811075453_نوفافيرك_v1_core_consolidation.sql` is applied to project `vbdgfrkthvurbqeofeyj` and recorded in remote migration history. No destructive statement was present.
 - Pre/post counts are identical: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,919 jobs, 2,710 runs, and 114 intelligence records. The transactional Communication Event test rolled back with zero residue.
 - Communication Events have RLS enabled, explicit ownership policies for authenticated users, no anonymous table privileges, and no public anonymous policies. Security Advisor reports only the existing optional leaked-password-protection warning.
 - V1 verification: TypeScript PASS, ESLint PASS, automated tests PASS (33/33), npm audit PASS (0 vulnerabilities), production build PASS (29 routes), server access/Auth Admin/anonymous denial PASS.
@@ -43,7 +43,7 @@ Final handoff: the latest commit containing this document on the branch above.
 - Reports include conversion and agent metrics plus filtered CSV export. Settings persists company profile, targets, thresholds, work limits, and follow-up timing.
 - Vendor Registration and System Status have dedicated protected routes; loading, empty, error, success, not-found, and application-error states are operational.
 - Manual Research has a dedicated protected, filtered, paginated workspace for all 692 retained external-research tasks; it never invokes Tavily and never deletes pending work.
-- The desktop navigation is collapsible, mobile navigation remains drawer-based, and the application metadata consistently uses `ALGAEU Business Development Platform`.
+- The desktop navigation is collapsible, mobile navigation remains drawer-based, and the application metadata consistently uses `نوفافيرك Business Development Platform`.
 - Arabic RTL and responsive login/auth boundaries were verified at desktop and 390px mobile width with no horizontal overflow.
 
 ## Agents and persistence
@@ -134,7 +134,7 @@ These deferred dependencies are not production blockers for the current draft-an
 ## NEXT DEVICE RESUME
 
 1. Clone `https://github.com/wallo-cyber/AJ-EDGE.git` and check out `codex/aj-edge-mvp`.
-2. Confirm the latest commit subject is `ALGAEU master checkpoint before V8`; do not reset, re-seed, or re-import production data.
+2. Confirm the latest commit subject is `نوفافيرك master checkpoint before V8`; do not reset, re-seed, or re-import production data.
 3. Enter `app/`, run `npm ci`, then copy `app/.env.example` to the ignored `app/.env.local`.
 4. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` locally. For the optional server-only cross-device audit, add `SUPABASE_SECRET_KEY` to the ignored `.env.local`; never put it in Git or any `NEXT_PUBLIC_` variable.
 5. Sign in with the existing Supabase account. Project `vbdgfrkthvurbqeofeyj` is the source of truth for companies, contacts, drafts, follow-ups, opportunities, settings, agent jobs, queue state, runs, logs, errors, and progress.
@@ -163,7 +163,7 @@ These deferred dependencies are not production blockers for the current draft-an
 - Company 360 now opens contact creation already scoped to the current company. Contacts preserves the company filter and pre-fills the relationship without inventing a person or verification evidence.
 - Agent Center replaced technical ON/OFF/provider-quota language with Arabic business states that separate healthy internal agents, waiting external research, and disabled external communication.
 - Reports now presents one ten-step decision funnel: targets, verified decision makers, ready, contacted, replies, active opportunities, won, lost, vendor portals, and manual-research backlog.
-- Global route loading and recoverable error states were added. Responsive guards prevent accidental horizontal page overflow and keep controls touch-friendly without changing the ALGAEU identity.
+- Global route loading and recoverable error states were added. Responsive guards prevent accidental horizontal page overflow and keep controls touch-friendly without changing the نوفافيرك identity.
 - Visual checks passed at 1440px, 1024px, and 390px on the local authenticated boundary with RTL and zero horizontal overflow. Protected workspaces were not accessed by bypassing Supabase Auth.
 - Final gates: TypeScript PASS, ESLint PASS, tests 33/33 PASS, production build 29 routes PASS, and Supabase/Auth/RLS audit PASS. Production remains 181 companies, 692 manual-research tasks, 881 drafts, one follow-up, and zero duplicate company/contact/job groups.
 - No schema change, production mutation, external search, Tavily call, or external sending occurred during V4.
@@ -183,7 +183,7 @@ These deferred dependencies are not production blockers for the current draft-an
 - Implemented a provider-free V6 domain layer for explainable company intelligence, structured relationship memory, evidence-gated business signals, an Opportunity Signal independent from the canonical stored Lead Score, one Next Best Action, relationship stages, conversation strategy, bilingual/channel-aware messages, quality dimensions, duplicate detection, contextual follow-ups, reply intent, Deal Coach, opportunity health, agent-team routing, auditable human overrides, user feedback, and a locked Manual email provider.
 - Today now exposes high-value signals and one primary action per company. Company 360 uses eight business tabs and shows Lead Score, Opportunity Signal, Relationship Stage, memory, signals, outreach strategy, and Deal Coach. Outreach remains copy/manual-event only; Agent Center groups the existing internal agents into teams; Reports adds only evidence-backed V6 analytics.
 - Automation is hard-locked to Level 0. External research remains PAUSED and external sending remains DISABLED. No Gmail, Resend, Tavily, WhatsApp, LinkedIn, or other external provider was called or connected.
-- Added additive migrations `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql`. They contain no destructive DDL/DML or production backfill, revoke anonymous access to new tables, enable ownership RLS, grant only authenticated/service roles, and tolerate pre-existing policies.
+- Added additive migrations `20260811153000_نوفافيرك_v5_intelligence.sql` and `20260811170000_نوفافيرك_v6_intelligence_core.sql`. They contain no destructive DDL/DML or production backfill, revoke anonymous access to new tables, enable ownership RLS, grant only authenticated/service roles, and tolerate pre-existing policies.
 - Production migration application is **blocked**. The local `SUPABASE_ACCESS_TOKEN` exists but is not a valid `sbp_` Personal Access Token, and no cached Supabase CLI login or database password exists. The value was never displayed, logged, or committed. No unsafe workaround was used.
 - Read-only server verification passes with server access, Auth Admin access, anonymous denial, and unchanged production counts: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 0 communication events, 1 follow-up, 0 opportunities, 1,939 jobs, 2,730 runs, 692 manual-research jobs, and zero duplicate company/contact/job groups.
 - The Data API confirms the V5/V6 company/message columns and required intelligence-table shapes are not yet available. The migrations now reconcile any protected placeholder tables additively. Until both migrations are recorded remotely, V6 persistence is intentionally blocked while existing V4 workflows remain usable.
@@ -196,7 +196,7 @@ These deferred dependencies are not production blockers for the current draft-an
 - Final checkpoint QA: automated tests PASS (57/57) and Next.js production build PASS (29 routes).
 - Read-only Supabase verification confirms the business source of truth is remote: 181 companies, 0 contacts, 882 messages (881 Draft/Approved), 1 follow-up, 0 opportunities, 1,939 agent jobs, 2,730 runs, and 692 manual-research jobs. Duplicate company/contact/job groups remain zero. Browser storage contains only the sidebar-collapse preference, never CRM data.
 - Supabase server access, Auth Admin access, ownership RLS continuity, and anonymous denial PASS. No production record was created, changed, deleted, reprocessed, or copied locally during this checkpoint.
-- Migration synchronization remains blocked and must not be reported as complete: `20260811153000_algaeu_v5_intelligence.sql` and `20260811170000_algaeu_v6_intelligence_core.sql` are committed but their required Data API shapes are not present remotely. The ignored local `SUPABASE_ACCESS_TOKEN` is not a valid `sbp_` Personal Access Token.
+- Migration synchronization remains blocked and must not be reported as complete: `20260811153000_نوفافيرك_v5_intelligence.sql` and `20260811170000_نوفافيرك_v6_intelligence_core.sql` are committed but their required Data API shapes are not present remotely. The ignored local `SUPABASE_ACCESS_TOKEN` is not a valid `sbp_` Personal Access Token.
 - Vercel readiness PASS: `vercel.json`, Next.js production build, dynamic site URL fallback, protected routes, and the public Supabase client configuration are ready. Required hosted variables are only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `NEXT_PUBLIC_SITE_URL`. Server secrets, PATs, service-role credentials, and Tavily must not be added to Vercel.
 - Vercel CLI is not installed/linked on this device, so no deployment or share URL was created. Use the Vercel Dashboard to import `wallo-cyber/AJ-EDGE`, select branch `codex/aj-edge-mvp`, set Root Directory to `app`, add the three public variables, and deploy. Keep Supabase Auth enabled and add the final deployment URL to Supabase Auth URL Configuration.
 - Exact clean-device resume command (PowerShell): `git clone https://github.com/wallo-cyber/AJ-EDGE.git; Set-Location AJ-EDGE; git switch --track origin/codex/aj-edge-mvp; Set-Location app; npm ci`

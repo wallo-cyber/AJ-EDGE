@@ -1,4 +1,4 @@
--- ALGAEU V6 intelligence core and autonomous BD foundation.
+-- نوفافيرك V6 intelligence core and autonomous BD foundation.
 -- Additive only: no destructive DDL/DML, hard-coded production data, or external-provider activation.
 
 alter table public.companies

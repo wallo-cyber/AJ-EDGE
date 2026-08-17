@@ -1,6 +1,6 @@
-# ALGAEU
+# نوفافيرك
 
-ALGAEU is an Arabic RTL Business Development Platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
+نوفافيرك is an Arabic RTL Business Development Platform for a contracting company. It combines company qualification, CRM operations, outreach preparation, follow-ups, opportunities, reporting, and durable background agents on the existing Supabase project.
 
 ## Production status
 
@@ -84,17 +84,17 @@ The internal workflow is ready to operate without an external research provider:
 
 ## V4 operational product
 
-V4 focuses ALGAEU on daily decisions rather than product noise. Today prioritizes human actions, Companies uses an eight-column decision view, Company 360 opens company-scoped contact work, Reports follows the real business-development funnel, and Agent Center describes internal/external states in business language. Global loading/error handling and responsive overflow guards support desktop, tablet, and mobile. No external research or sending integration is activated.
+V4 focuses نوفافيرك on daily decisions rather than product noise. Today prioritizes human actions, Companies uses an eight-column decision view, Company 360 opens company-scoped contact work, Reports follows the real business-development funnel, and Agent Center describes internal/external states in business language. Global loading/error handling and responsive overflow guards support desktop, tablet, and mobile. No external research or sending integration is activated.
 
 ## V5 intelligence checkpoint
 
-The repository contains a provider-free business intelligence and outreach engine with segment classification, business angles, role targeting, bilingual/channel-aware drafts, contextual follow-ups, quality scoring, duplicate detection, weighted completeness, and Next Best Action. Apply `20260811153000_algaeu_v5_intelligence.sql` before enabling V5 persistence. The migration is additive and must be applied only after the Supabase project is verified with a valid local personal access token. External research and sending remain disabled.
+The repository contains a provider-free business intelligence and outreach engine with segment classification, business angles, role targeting, bilingual/channel-aware drafts, contextual follow-ups, quality scoring, duplicate detection, weighted completeness, and Next Best Action. Apply `20260811153000_نوفافيرك_v5_intelligence.sql` before enabling V5 persistence. The migration is additive and must be applied only after the Supabase project is verified with a valid local personal access token. External research and sending remain disabled.
 
 ## V6 autonomous BD foundation
 
 V6 adds a deterministic intelligence core over the existing Supabase source of truth: explainable scores, structured relationship memory, evidence-only signals, Opportunity Signal, one Next Best Action, conversation strategy, Arabic/English draft generation, message-quality dimensions, duplicate warnings, reply/follow-up intelligence, Deal Coach, opportunity health, agent teams, feedback analytics, and a future email-provider interface. The current provider is `ManualProvider`; automation is locked to Level 0 and cannot send.
 
-Apply the additive migrations in timestamp order only after verifying project ref `vbdgfrkthvurbqeofeyj` with a valid local `SUPABASE_ACCESS_TOKEN`: first `20260811153000_algaeu_v5_intelligence.sql`, then `20260811170000_algaeu_v6_intelligence_core.sql`. Never deploy the Personal Access Token or `SUPABASE_SECRET_KEY` to the client. The application deliberately blocks V6 persistence until the required columns are available. External research remains paused and external sending remains disabled.
+Apply the additive migrations in timestamp order only after verifying project ref `vbdgfrkthvurbqeofeyj` with a valid local `SUPABASE_ACCESS_TOKEN`: first `20260811153000_نوفافيرك_v5_intelligence.sql`, then `20260811170000_نوفافيرك_v6_intelligence_core.sql`. Never deploy the Personal Access Token or `SUPABASE_SECRET_KEY` to the client. The application deliberately blocks V6 persistence until the required columns are available. External research remains paused and external sending remains disabled.
 
 Run `npm run audit:resume` for a read-only server check of production counts, Auth, anonymous denial, V5/V6 schema availability, and duplicate protection. The command never prints secrets and performs no writes without the explicit `--resume` flag.
 
@@ -110,10 +110,10 @@ The operational path is Company → data completion → verified decision maker 
 
 ## V2 user experience
 
-ALGAEU now opens into **Today**, a compact action inbox fed by persisted Supabase data. It explains what needs attention, why it matters, who is involved, and where to act next. The primary navigation follows the business-development journey; administrative tools are secondary. Reports is the analytics destination and keeps Ready, Contacted, Replied, and Opportunity aligned with the domain rules. The responsive shell uses a drawer on small screens, compact KPI grids, card fallbacks for data tables, correct RTL, and isolated LTR rendering for technical values.
+نوفافيرك now opens into **Today**, a compact action inbox fed by persisted Supabase data. It explains what needs attention, why it matters, who is involved, and where to act next. The primary navigation follows the business-development journey; administrative tools are secondary. Reports is the analytics destination and keeps Ready, Contacted, Replied, and Opportunity aligned with the domain rules. The responsive shell uses a drawer on small screens, compact KPI grids, card fallbacks for data tables, correct RTL, and isolated LTR rendering for technical values.
 
 External research remains paused and external sending remains disabled. No V2 interface action changes those safety controls.
 
 ## V1 consolidated workspaces
 
-The primary product flow is now: Today → Companies → Contacts → Research → Outreach → Pipeline → Agents → Reports. Legacy deep links redirect to the matching workspace tab. The additive V1 migration documented in `audit/ALGAEU_V1_IMPLEMENTATION.md` is applied to production; it provides the protected communication-event ledger and supporting decision-maker, pipeline, and research fields.
+The primary product flow is now: Today → Companies → Contacts → Research → Outreach → Pipeline → Agents → Reports. Legacy deep links redirect to the matching workspace tab. The additive V1 migration documented in `audit/نوفافيرك_V1_IMPLEMENTATION.md` is applied to production; it provides the protected communication-event ledger and supporting decision-maker, pipeline, and research fields.

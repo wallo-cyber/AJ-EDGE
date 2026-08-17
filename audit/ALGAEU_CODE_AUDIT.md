@@ -1,4 +1,4 @@
-# ALGAEU Static + Data Product Audit
+# نوفافيرك Static + Data Product Audit
 
 Audit date: 2026-08-11  
 Scope: static code, routes, components, Supabase schema/RLS, read-only production data, agents, queues, tests, documentation.  
@@ -6,7 +6,7 @@ Method: source inspection plus the existing server-side read-only Supabase audit
 
 ## EXECUTIVE SUMMARY
 
-ALGAEU has a substantial protected CRM foundation: 27 Next.js page routes, ownership-based RLS, persistent agent jobs, duplicate guards, and working CRUD primitives. The application is not ready for a V1 business-development release because its core commercial chain is disconnected at the most important point: 181 companies and 881 Draft messages exist, but there are 0 contacts, 0 verified decision makers, 0 meetings, and 0 opportunities. The UI labels 58 companies as ready for outreach even though the product has no saved person to contact.
+نوفافيرك has a substantial protected CRM foundation: 27 Next.js page routes, ownership-based RLS, persistent agent jobs, duplicate guards, and working CRUD primitives. The application is not ready for a V1 business-development release because its core commercial chain is disconnected at the most important point: 181 companies and 881 Draft messages exist, but there are 0 contacts, 0 verified decision makers, 0 meetings, and 0 opportunities. The UI labels 58 companies as ready for outreach even though the product has no saved person to contact.
 
 The navigation exposes 21 primary items, several of which are overlapping workspaces or empty downstream modules. The application also downloads entire tables into the browser for dashboard, search, reports, Company 360, and agent monitoring. This works at current scale but produces slow, fragile screens and makes the product feel like a collection of administrative tables rather than a focused daily sales workflow.
 
@@ -65,7 +65,7 @@ Production snapshot observed read-only:
 | F11 | Medium | `/system-status` | `app/system-status/page.tsx` | “Application RUNNING,” external states, and some health meanings are hardcoded or inferred from successful list loads. | Status can be green while Cron/Edge Function/provider is unhealthy. | Use explicit server health checks and last-heartbeat timestamps. |
 | F12 | Medium | `/settings` | `app/settings/page.tsx` | Supabase CONNECTED, research PAUSED, and sending DISABLED are static labels. | Configuration screen can misrepresent runtime state. | Read real integration/feature-flag state from protected server endpoints. |
 | F13 | Low | All routes | route inventory | No route-level `loading.tsx` exists and only a global `error.tsx` exists; loading is repeated inconsistently inside client pages. | Transitions feel blank/inconsistent and errors lack recovery context. | Add shared route loading/error boundaries when implementing fixes. |
-| F14 | Low | App documentation | `app/README.md` | App README is still the generic create-next-app document. | Operators/developers receive conflicting setup information. | Replace with ALGAEU-specific documentation after product decisions. |
+| F14 | Low | App documentation | `app/README.md` | App README is still the generic create-next-app document. | Operators/developers receive conflicting setup information. | Replace with نوفافيرك-specific documentation after product decisions. |
 
 ## BUSINESS LOGIC ISSUES
 

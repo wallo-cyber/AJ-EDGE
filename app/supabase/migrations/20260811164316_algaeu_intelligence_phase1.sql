@@ -1,4 +1,4 @@
--- ALGAEU Intelligence Expansion Phase 1. Additive only; no production data is changed.
+-- نوفافيرك Intelligence Expansion Phase 1. Additive only; no production data is changed.
 alter table public.companies
   add column if not exists company_types text[] not null default '{}'::text[],
   add column if not exists sectors text[] not null default '{}'::text[],

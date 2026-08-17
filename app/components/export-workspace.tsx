@@ -20,7 +20,7 @@ export function ExportWorkspace() {
       const headers = [...new Set(rows.flatMap((row) => Object.keys(row)))].filter((key) => !excluded.has(key));
       const csv = '\uFEFF' + [headers.join(','), ...rows.map((row) => headers.map((key) => csvCell(row[key])).join(','))].join('\r\n');
       const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-      const link = document.createElement('a'); link.href = url; link.download = `algaeu-${table}-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url);
+      const link = document.createElement('a'); link.href = url; link.download = `نوفافيرك-${table}-${new Date().toISOString().slice(0,10)}.csv`; link.click(); URL.revokeObjectURL(url);
       setNotice(`تم تصدير ${rows.length} سجل من ${label}.`);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر تصدير البيانات.'); }
     finally { setExporting(''); }

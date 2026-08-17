@@ -1,4 +1,4 @@
-# ALGAEU Phase 1.5 — Critical Revenue Path Hardening
+# نوفافيرك Phase 1.5 — Critical Revenue Path Hardening
 
 Implemented before any additional UI work.
 
@@ -32,7 +32,7 @@ Implemented before any additional UI work.
 - Authenticated user invocation is scoped to the JWT user's `owner_id` for jobs and companies.
 - Internal cron invocation remains available only through the stored secret token.
 - Secret comparison is constant-time style rather than direct string equality.
-- CORS is restricted to ALGAEU Vercel domains and local development, not `*`.
+- CORS is restricted to نوفافيرك Vercel domains and local development, not `*`.
 - Every update is additionally constrained by the job's `owner_id`.
 - The worker does not auto-create VERIFIED contacts or VERIFIED signals.
 

@@ -1,4 +1,4 @@
-# ALGAEU V1 Consolidation — Implementation Report
+# نوفافيرك V1 Consolidation — Implementation Report
 
 Date: 2026-08-11
 
@@ -19,7 +19,7 @@ Date: 2026-08-11
 
 ## Database migration
 
-Migration: `app/supabase/migrations/20260811075453_algaeu_v1_core_consolidation.sql`
+Migration: `app/supabase/migrations/20260811075453_نوفافيرك_v1_core_consolidation.sql`
 
 The migration is additive, preserves existing records, creates `communication_events`, adds decision-maker/evidence/archive fields, normalizes opportunity stages, enables RLS, revokes anonymous access, and grants ownership-scoped authenticated access. It was applied on 2026-08-11 to project `vbdgfrkthvurbqeofeyj` and recorded as remote migration `20260811075453`.
 

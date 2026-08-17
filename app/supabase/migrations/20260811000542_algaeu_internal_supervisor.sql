@@ -1,4 +1,4 @@
--- ALGAEU production activation: keep external research paused while the
+-- نوفافيرك production activation: keep external research paused while the
 -- Supervisor schedules only work that can be completed from persisted data.
 
 create or replace function aj_agents.supervisor_tick(p_owner uuid)
@@ -175,8 +175,8 @@ where agent_name in ('Verification', 'Enrichment', 'Decision Maker', 'Vendor Reg
   and status = 'manual_research_required';
 
 update public.messages
-set subject = replace(replace(replace(coalesce(subject, ''), 'AJ-EDGE CRM', 'ALGAEU'), 'AJ-EDGE', 'ALGAEU'), 'AJ EDGE', 'ALGAEU'),
-    body = replace(replace(replace(coalesce(body, ''), 'AJ-EDGE CRM', 'ALGAEU'), 'AJ-EDGE', 'ALGAEU'), 'AJ EDGE', 'ALGAEU'),
+set subject = replace(replace(replace(coalesce(subject, ''), 'AJ-EDGE CRM', 'نوفافيرك'), 'AJ-EDGE', 'نوفافيرك'), 'AJ EDGE', 'نوفافيرك'),
+    body = replace(replace(replace(coalesce(body, ''), 'AJ-EDGE CRM', 'نوفافيرك'), 'AJ-EDGE', 'نوفافيرك'), 'AJ EDGE', 'نوفافيرك'),
     updated_at = now()
 where coalesce(subject, '') like '%AJ-EDGE%'
    or coalesce(subject, '') like '%AJ EDGE%'

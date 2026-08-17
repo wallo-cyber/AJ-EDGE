@@ -1,4 +1,4 @@
--- ALGAEU Phase 3.1 — Saudi Market Intelligence
+-- نوفافيرك Phase 3.1 — Saudi Market Intelligence
 -- Source-centric discovery. Events are never promoted to projects automatically.
 
 create table if not exists public.market_source_catalog (

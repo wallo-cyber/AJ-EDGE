@@ -200,7 +200,7 @@ export function EmailCenterWorkspace() {
 
     const subjectOptions = [
       `${objective.replace(/_/g, ' ')} — ${text(company.company_name)}`,
-      `${serviceAngle || 'Capability'} — ALGAEU`,
+      `${serviceAngle || 'Capability'} — نوفافيرك`,
       `${text(company.company_name)} — ${objective === 'FOLLOW_UP' ? 'Follow-up' : 'Business Inquiry'}`,
     ].map((item) => item.replace(/\s+/g, ' ').trim());
 

@@ -690,7 +690,7 @@ export function OutreachWorkspace() {
               تسجيل تواصل فعلي — {safe(selected.company.company_name)}
             </h3>
             <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-              هذا النموذج يسجل حدثاً تم فعلياً خارج ALGAEU؛ لن يرسل النظام أي
+              هذا النموذج يسجل حدثاً تم فعلياً خارج نوفافيرك؛ لن يرسل النظام أي
               رسالة.
             </p>
             <div className="mt-4 grid gap-3 md:grid-cols-2">

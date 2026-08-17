@@ -1,4 +1,4 @@
--- ALGAEU V5 intelligence additions. Additive only; no existing row is rewritten.
+-- نوفافيرك V5 intelligence additions. Additive only; no existing row is rewritten.
 
 alter table public.companies
   add column if not exists arabic_name text not null default '',

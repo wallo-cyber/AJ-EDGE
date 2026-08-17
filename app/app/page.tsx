@@ -44,7 +44,7 @@ export default function Home() {
   return (
     <CRMPage
       title="واجهة الموقع"
-      description="نقطة البداية الموحدة لمنصة ALGAEU. اختر مساحة العمل التي تريدها دون فقدان مكانك داخل النظام."
+      description="نقطة البداية الموحدة لمنصة نوفافيرك. اختر مساحة العمل التي تريدها دون فقدان مكانك داخل النظام."
       action={
         <Link href="/daily" className="btn-primary">
           فتح عمل اليوم
@@ -54,7 +54,7 @@ export default function Home() {
       <section className="crm-card overflow-hidden p-6 sm:p-8">
         <div className="max-w-3xl">
           <p className="text-xs font-black tracking-[.28em] text-[#ff9b4a]">
-            ALGAEU BUSINESS DEVELOPMENT
+            نوفافيرك BUSINESS DEVELOPMENT
           </p>
           <h3 className="mt-3 text-3xl font-black sm:text-4xl">
             من السوق إلى المشروع، ثم إلى الإيراد

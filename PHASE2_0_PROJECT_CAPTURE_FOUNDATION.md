@@ -1,7 +1,7 @@
-# ALGAEU Phase 2.0 — Project Capture Foundation
+# نوفافيرك Phase 2.0 — Project Capture Foundation
 
 Goal
-Turn ALGAEU from company-centric CRM behavior into a project/opportunity capture operating system without deleting or replacing the existing workflows.
+Turn نوفافيرك from company-centric CRM behavior into a project/opportunity capture operating system without deleting or replacing the existing workflows.
 
 Implemented
 - New primary navigation item: Projects.

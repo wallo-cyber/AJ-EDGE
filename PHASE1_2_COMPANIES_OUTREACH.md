@@ -1,4 +1,4 @@
-# ALGAEU Phase 1.2 — Companies & Outreach
+# نوفافيرك Phase 1.2 — Companies & Outreach
 
 - Rebuilt desktop companies table to fit the viewport without the previous 1380px forced width.
 - Reduced the table to five commercial columns: company, segment, priority, decision access, and next commercial action.

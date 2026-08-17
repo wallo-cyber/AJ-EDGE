@@ -1,4 +1,4 @@
-# ALGAEU — Revenue Phase 1 Implementation
+# نوفافيرك — Revenue Phase 1 Implementation
 
 Date: 2026-08-12
 

@@ -1,4 +1,4 @@
-# ALGAEU Phase 3.0 — World-Class Construction Acquisition OS
+# نوفافيرك Phase 3.0 — World-Class Construction Acquisition OS
 
 Operating references:
 - Dodge Construction Network: early project visibility, lifecycle intelligence, project/relationship context, saved matching.

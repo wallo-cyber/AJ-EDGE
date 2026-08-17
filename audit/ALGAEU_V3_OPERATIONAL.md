@@ -1,4 +1,4 @@
-# ALGAEU Operational V3
+# نوفافيرك Operational V3
 
 Date: 2026-08-11
 Branch: `codex/aj-edge-mvp`

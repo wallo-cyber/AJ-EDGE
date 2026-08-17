@@ -1,4 +1,4 @@
-# ALGAEU Phase 1.4 — Evidence Review Gate
+# نوفافيرك Phase 1.4 — Evidence Review Gate
 
 Live runtime:
 - Brave Search is the primary provider; Tavily remains fallback only.
