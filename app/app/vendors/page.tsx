@@ -1,40 +1,75 @@
 'use client';
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
-// ↓↓ تحقّق من هذا السطر: افتح app/companies/page.tsx وانسخ منه سطر استيراد CRMPage كما هو ↓↓
 import { CRMPage } from '../../components/crm-shell';
 
 const TABLE = 'vendors';
 
+const TRADES = [
+  'حفريات وأسفلت',
+  'خرسانة وعظم',
+  'بلوك وأرصفة',
+  'دهانات',
+  'جبس بورد',
+  'زجاج وكلادينج',
+  'سباكة',
+  'كهرباء',
+  'تكييف',
+  'عزل',
+  'ألمنيوم',
+  'حديد وتسليح',
+  'تأجير معدات',
+  'مواد بناء',
+  'مقاول عام',
+  'أخرى',
+] as const;
+
 type Draft = {
   company_name: string;
+  trade: string;
   contact_name: string;
   phone: string;
   email: string;
   city: string;
   scope: string;
   notes: string;
+  is_active: boolean;
 };
 
 const EMPTY: Draft = {
   company_name: '',
+  trade: '',
   contact_name: '',
   phone: '',
   email: '',
   city: '',
   scope: '',
   notes: '',
+  is_active: true,
 };
 
 const safe = (v: unknown) => String(v ?? '').trim();
+
+/** يحوّل أي صيغة جوال سعودي إلى 9665xxxxxxxx لرابط واتساب */
+function waNumber(raw: string) {
+  const d = safe(raw).replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('966')) return d;
+  if (d.startsWith('0')) return '966' + d.slice(1);
+  if (d.length === 9 && d.startsWith('5')) return '966' + d;
+  return d;
+}
 
 export default function VendorsPage() {
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [tradeFilter, setTradeFilter] = useState('');
+  const [showInactive, setShowInactive] = useState(false);
+  const [expandedId, setExpandedId] = useState('');
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [editingId, setEditingId] = useState('');
   const [saving, setSaving] = useState(false);
@@ -60,16 +95,36 @@ export default function VendorsPage() {
     void load();
   }, []);
 
+  /** التخصصات الموجودة فعلًا في البيانات — لا نعرض فلترًا فارغًا */
+  const presentTrades = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => {
+      const t = safe(r.trade);
+      if (t) set.add(t);
+    });
+    return TRADES.filter((t) => set.has(t)).concat(
+      [...set].filter((t) => !TRADES.includes(t as (typeof TRADES)[number])),
+    );
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = query.trim();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.company_name, r.contact_name, r.city, r.scope, r.phone, r.email, r.notes]
+    return rows.filter((r) => {
+      const active = r.is_active !== false;
+      if (!showInactive && !active) return false;
+      if (tradeFilter && safe(r.trade) !== tradeFilter) return false;
+      if (!q) return true;
+      return [r.company_name, r.trade, r.contact_name, r.city, r.scope, r.phone, r.email, r.notes]
         .map(safe)
         .join(' ')
-        .includes(q),
-    );
-  }, [rows, query]);
+        .includes(q);
+    });
+  }, [rows, query, tradeFilter, showInactive]);
+
+  const inactiveCount = useMemo(
+    () => rows.filter((r) => r.is_active === false).length,
+    [rows],
+  );
 
   async function save() {
     if (!draft.company_name.trim()) {
@@ -79,17 +134,23 @@ export default function VendorsPage() {
     setSaving(true);
     setError('');
     try {
-      const values = {
+      const values: Record<string, unknown> = {
         company_name: draft.company_name.trim(),
+        trade: draft.trade || null,
         contact_name: draft.contact_name.trim() || null,
         phone: draft.phone.trim() || null,
         email: draft.email.trim() || null,
         city: draft.city.trim() || null,
         scope: draft.scope.trim() || null,
         notes: draft.notes.trim() || null,
+        is_active: draft.is_active,
       };
-      if (editingId) await simpleCrud.update(TABLE, editingId, values);
-      else await simpleCrud.create(TABLE, values);
+      if (editingId) {
+        values.updated_at = new Date().toISOString();
+        await simpleCrud.update(TABLE, editingId, values);
+      } else {
+        await simpleCrud.create(TABLE, values);
+      }
       setDraft(EMPTY);
       setEditingId('');
       setShowForm(false);
@@ -104,19 +165,41 @@ export default function VendorsPage() {
   function edit(row: SimpleRow) {
     setDraft({
       company_name: safe(row.company_name),
+      trade: safe(row.trade),
       contact_name: safe(row.contact_name),
       phone: safe(row.phone),
       email: safe(row.email),
       city: safe(row.city),
       scope: safe(row.scope),
       notes: safe(row.notes),
+      is_active: row.is_active !== false,
     });
     setEditingId(String(row.id));
     setShowForm(true);
   }
 
+  /** إيقاف/تنشيط بدل الحذف — لا نفقد السجل */
+  async function toggleActive(row: SimpleRow) {
+    setError('');
+    const next = row.is_active === false;
+    try {
+      await simpleCrud.update(TABLE, String(row.id), {
+        is_active: next,
+        updated_at: new Date().toISOString(),
+      });
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر تحديث الحالة.');
+    }
+  }
+
   async function remove(row: SimpleRow) {
-    if (!confirm(`حذف المورد "${safe(row.company_name)}"؟ لا يمكن التراجع.`)) return;
+    if (
+      !confirm(
+        `حذف المورد "${safe(row.company_name)}" نهائيًا؟ لا يمكن التراجع.\n\nالأفضل عادةً "إيقاف" المورد بدل حذفه.`,
+      )
+    )
+      return;
     setError('');
     try {
       await simpleCrud.remove(TABLE, String(row.id));
@@ -126,19 +209,26 @@ export default function VendorsPage() {
     }
   }
 
+  // كل الأنماط تعتمد متغيرات الثيم — تعمل مع original و neon و teal
   const field =
-    'w-full rounded-xl border border-[var(--nav-border)] bg-white/70 px-3 py-2 text-sm outline-none focus:border-[var(--nav-accent)]';
+    'w-full rounded-xl border border-[var(--nav-border)] bg-transparent px-3 py-2 text-sm outline-none placeholder:text-[var(--nav-secondary)] focus:border-[var(--nav-accent)]';
   const label = 'mb-1 block text-xs font-semibold text-[var(--nav-secondary)]';
-  const th = 'px-4 py-3 text-right text-xs font-bold text-[var(--nav-secondary)]';
-  const td = 'px-4 py-3 text-sm align-top';
+  const panel = 'rounded-2xl border border-[var(--nav-border)] p-5';
+  const th = 'px-3 py-3 text-right text-xs font-bold text-[var(--nav-secondary)]';
+  const td = 'px-3 py-3 text-sm align-top';
+  const chip = 'rounded-full border px-3 py-1 text-xs font-semibold transition';
+  const chipOn = 'border-[var(--nav-accent)] text-[var(--nav-accent)]';
+  const chipOff = 'border-[var(--nav-border)] text-[var(--nav-secondary)] hover:opacity-80';
+  const iconBtn =
+    'rounded-lg border border-[var(--nav-border)] px-2 py-1 text-xs font-semibold hover:border-[var(--nav-accent)]';
 
   return (
     <CRMPage
       title="الموردون"
-      description="سجل الموردين المعتمدين: بيانات التواصل، المدينة، ونطاق الأعمال الذي يغطيه كل مورد."
+      description="سجل الموردين ومقاولي الباطن: التخصص، بيانات التواصل، ونطاق الأعمال."
       action={
         <button
-          className="rounded-xl bg-[#2f2417] px-4 py-2 text-sm font-bold text-[#fff8e8] hover:opacity-90"
+          className="btn-primary"
           onClick={() => {
             setDraft(EMPTY);
             setEditingId('');
@@ -150,13 +240,13 @@ export default function VendorsPage() {
       }
     >
       {error && (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-xl border border-rose-400/60 px-4 py-3 text-sm text-rose-400">
           {error}
         </div>
       )}
 
       {showForm && (
-        <section className="rounded-2xl border border-[var(--nav-border)] bg-white/60 p-5">
+        <section className={panel}>
           <h3 className="mb-4 text-base font-bold">
             {editingId ? 'تعديل بيانات المورد' : 'مورد جديد'}
           </h3>
@@ -170,6 +260,21 @@ export default function VendorsPage() {
                 onChange={(e) => setDraft({ ...draft, company_name: e.target.value })}
                 placeholder="مؤسسة / شركة ..."
               />
+            </div>
+            <div>
+              <label className={label}>التخصص</label>
+              <select
+                className={field}
+                value={draft.trade}
+                onChange={(e) => setDraft({ ...draft, trade: e.target.value })}
+              >
+                <option value="">— بلا تحديد —</option>
+                {TRADES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={label}>اسم المسؤول</label>
@@ -217,7 +322,7 @@ export default function VendorsPage() {
                 className={field}
                 value={draft.scope}
                 onChange={(e) => setDraft({ ...draft, scope: e.target.value })}
-                placeholder="مثال: أعمال خرسانة وحفريات — تنفيذ قواعد وأرضيات صناعية"
+                placeholder="مثال: تنفيذ قواعد وأرضيات صناعية — خرسانة مسلحة"
               />
             </div>
             <div className="md:col-span-3">
@@ -226,21 +331,27 @@ export default function VendorsPage() {
                 className={`${field} min-h-[80px]`}
                 value={draft.notes}
                 onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
-                placeholder="أسعار، مشاريع سابقة، تقييم..."
+                placeholder="أسعار مرجعية، مشاريع سابقة، ملاحظات على الالتزام..."
               />
+            </div>
+            <div className="md:col-span-3">
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+                <input
+                  type="checkbox"
+                  checked={draft.is_active}
+                  onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
+                />
+                مورد نشط
+              </label>
             </div>
           </div>
 
           <div className="mt-5 flex gap-3">
-            <button
-              className="rounded-xl bg-[#2f2417] px-5 py-2 text-sm font-bold text-[#fff8e8] hover:opacity-90 disabled:opacity-50"
-              onClick={() => void save()}
-              disabled={saving}
-            >
+            <button className="btn-primary" onClick={() => void save()} disabled={saving}>
               {saving ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديل' : 'حفظ المورد'}
             </button>
             <button
-              className="rounded-xl border border-[var(--nav-border)] px-5 py-2 text-sm font-semibold hover:bg-black/5"
+              className="btn-secondary"
               onClick={() => {
                 setDraft(EMPTY);
                 setEditingId('');
@@ -254,7 +365,7 @@ export default function VendorsPage() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-[var(--nav-border)] bg-white/60 p-5">
+      <section className={panel}>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <input
             className={`${field} max-w-sm`}
@@ -262,16 +373,48 @@ export default function VendorsPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="بحث بالاسم أو المدينة أو نطاق الأعمال..."
           />
-          <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-            {filtered.length} مورد
-          </span>
+          <div className="flex items-center gap-3">
+            {inactiveCount > 0 && (
+              <button
+                className={`${chip} ${showInactive ? chipOn : chipOff}`}
+                onClick={() => setShowInactive((v) => !v)}
+              >
+                {showInactive ? 'إخفاء الموقوفين' : `إظهار الموقوفين (${inactiveCount})`}
+              </button>
+            )}
+            <span className="text-xs font-semibold text-[var(--nav-secondary)]">
+              {filtered.length} من {rows.length} مورد
+            </span>
+          </div>
         </div>
+
+        {presentTrades.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <button
+              className={`${chip} ${tradeFilter === '' ? chipOn : chipOff}`}
+              onClick={() => setTradeFilter('')}
+            >
+              الكل
+            </button>
+            {presentTrades.map((t) => (
+              <button
+                key={t}
+                className={`${chip} ${tradeFilter === t ? chipOn : chipOff}`}
+                onClick={() => setTradeFilter(tradeFilter === t ? '' : t)}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">جارٍ التحميل...</p>
         ) : filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">
-            {rows.length === 0 ? 'لا يوجد موردون بعد. ابدأ بإضافة مورد.' : 'لا نتائج مطابقة للبحث.'}
+            {rows.length === 0
+              ? 'لا يوجد موردون بعد. ابدأ بإضافة مورد.'
+              : 'لا نتائج مطابقة للفلترة الحالية.'}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -283,41 +426,118 @@ export default function VendorsPage() {
                   <th className={th}>الجوال</th>
                   <th className={th}>المدينة</th>
                   <th className={th}>نطاق الأعمال</th>
-                  <th className={th}></th>
+                  <th className={th}>إجراء</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row) => (
-                  <tr key={String(row.id)} className="border-b border-[var(--nav-border)]/60">
-                    <td className={`${td} font-semibold`}>{safe(row.company_name)}</td>
-                    <td className={td}>{safe(row.contact_name) || '—'}</td>
-                    <td className={td} dir="ltr">
-                      {safe(row.phone) ? (
-                        <a className="hover:underline" href={`tel:${safe(row.phone)}`}>
-                          {safe(row.phone)}
-                        </a>
-                      ) : (
-                        '—'
+                {filtered.map((row) => {
+                  const id = String(row.id);
+                  const active = row.is_active !== false;
+                  const wa = waNumber(safe(row.phone));
+                  const open = expandedId === id;
+                  const hasDetails = safe(row.email) || safe(row.notes);
+
+                  return (
+                    <Fragment key={id}>
+                      <tr
+                        className={`border-b border-[var(--nav-border)]/60 ${active ? '' : 'opacity-50'}`}
+                      >
+                        <td className={td}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-semibold">{safe(row.company_name)}</span>
+                            {!active && (
+                              <span className="rounded-full border border-rose-400/60 px-2 py-0.5 text-[10px] font-bold text-rose-400">
+                                موقوف
+                              </span>
+                            )}
+                          </div>
+                          {safe(row.trade) && (
+                            <div className="mt-1 text-xs text-[var(--nav-accent)]">
+                              {safe(row.trade)}
+                            </div>
+                          )}
+                        </td>
+                        <td className={td}>{safe(row.contact_name) || '—'}</td>
+                        <td className={td}>
+                          {safe(row.phone) ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <a className="hover:underline" dir="ltr" href={`tel:${safe(row.phone)}`}>
+                                {safe(row.phone)}
+                              </a>
+                              {wa && (
+                                <a
+                                  className={iconBtn}
+                                  href={`https://wa.me/${wa}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  واتساب
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className={td}>{safe(row.city) || '—'}</td>
+                        <td className={`${td} max-w-xs`}>
+                          {safe(row.scope) || '—'}
+                          {hasDetails && (
+                            <button
+                              className="mt-1 block text-xs font-semibold text-[var(--nav-secondary)] hover:underline"
+                              onClick={() => setExpandedId(open ? '' : id)}
+                            >
+                              {open ? 'إخفاء التفاصيل' : 'تفاصيل أكثر'}
+                            </button>
+                          )}
+                        </td>
+                        <td className={`${td} whitespace-nowrap`}>
+                          <div className="flex flex-wrap gap-2">
+                            <button className={iconBtn} onClick={() => edit(row)}>
+                              تعديل
+                            </button>
+                            <button className={iconBtn} onClick={() => void toggleActive(row)}>
+                              {active ? 'إيقاف' : 'تنشيط'}
+                            </button>
+                            <button
+                              className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                              onClick={() => void remove(row)}
+                            >
+                              حذف
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {open && (
+                        <tr className="border-b border-[var(--nav-border)]/60">
+                          <td className="px-3 pb-4 text-sm" colSpan={6}>
+                            <div className="grid gap-3 md:grid-cols-2">
+                              {safe(row.email) && (
+                                <div>
+                                  <div className={label}>البريد الإلكتروني</div>
+                                  <a
+                                    className="hover:underline"
+                                    dir="ltr"
+                                    href={`mailto:${safe(row.email)}`}
+                                  >
+                                    {safe(row.email)}
+                                  </a>
+                                </div>
+                              )}
+                              {safe(row.notes) && (
+                                <div>
+                                  <div className={label}>ملاحظات</div>
+                                  <p className="whitespace-pre-wrap">{safe(row.notes)}</p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className={td}>{safe(row.city) || '—'}</td>
-                    <td className={`${td} max-w-xs`}>{safe(row.scope) || '—'}</td>
-                    <td className={`${td} whitespace-nowrap`}>
-                      <button
-                        className="text-xs font-semibold text-[var(--nav-accent)] hover:underline"
-                        onClick={() => edit(row)}
-                      >
-                        تعديل
-                      </button>
-                      <button
-                        className="mr-3 text-xs font-semibold text-rose-600 hover:underline"
-                        onClick={() => void remove(row)}
-                      >
-                        حذف
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
