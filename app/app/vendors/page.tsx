@@ -96,16 +96,17 @@ export default function VendorsPage() {
   }, []);
 
   /** التخصصات الموجودة فعلًا في البيانات — لا نعرض فلترًا فارغًا */
-  const presentTrades = useMemo(() => {
+const presentTrades = useMemo(() => {
     const set = new Set<string>();
     rows.forEach((r) => {
       const t = safe(r.trade);
       if (t) set.add(t);
     });
-    return TRADES.filter((t) => set.has(t)).concat(
-      [...set].filter((t) => !TRADES.includes(t as (typeof TRADES)[number])),
-    );
+    const known: string[] = TRADES.filter((t) => set.has(t));
+    return [...known, ...[...set].filter((t) => !known.includes(t))];
   }, [rows]);
+    const known: string[] = TRADES.filter((t) => set.has(t));
+    return [...known, ...[...set].filter((t) => !known.includes(t))];
 
   const filtered = useMemo(() => {
     const q = query.trim();
