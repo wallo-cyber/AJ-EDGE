@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CRMPage } from "../../../components/crm-shell";
 import { ProjectVendorsPanel } from "../../../components/project-vendors-panel";
+import { ProjectLaborPanel } from "../../../components/project-labor-panel";
 import { simpleCrud, type SimpleRow } from "../../../lib/supabase/simple-crud";
 import {
   ROUTE_LABELS,
@@ -649,10 +650,10 @@ export default function ProjectCapturePage() {
             );
           })}
         </div>
-        <div className="mt-4 rounded-2xl border border-[#ff9d5c]/40 p-3">
+        <div className="mt-4 rounded-2xl border border-[var(--nav-accent)]/40 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <span className="text-xs text-[#ff9d5c]">BEST ACCESS ROUTE</span>
+              <span className="text-xs text-[var(--nav-accent)]">BEST ACCESS ROUTE</span>
               <b className="mr-2">
                 {best ? safe(best.path_type) : "لم يحدد بعد"}
               </b>
@@ -759,7 +760,7 @@ export default function ProjectCapturePage() {
         <p className="mt-2 text-xs text-[#8f96a3]">Capture Score وConfidence معلومات مساعدة للقرار، ولا تمنع اعتمادك البشري.</p>
       </section>
       <section className="crm-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-bold text-[#ff9d5c]">سجل القرارات</p><h3 className="text-lg font-bold">الموافقات والقرارات المعتمدة</h3></div><span className="crm-chip status-neutral">{approvals.length + (bidDecision && safe(bidDecision.human_decision)!=="UNDECIDED" ? 1 : 0)} قرار</span></div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-bold text-[var(--nav-accent)]">سجل القرارات</p><h3 className="text-lg font-bold">الموافقات والقرارات المعتمدة</h3></div><span className="crm-chip status-neutral">{approvals.length + (bidDecision && safe(bidDecision.human_decision)!=="UNDECIDED" ? 1 : 0)} قرار</span></div>
         <div className="mt-3 grid gap-2">
           {approvals.map((item)=>{const details=(item.details && typeof item.details==="object" ? item.details : {}) as Record<string,unknown>;return <article key={item.id} className="rounded-xl border p-3"><div className="flex flex-wrap justify-between gap-2"><b>{safe(item.action)==="HUMAN_PROJECT_APPROVAL"?"اعتماد المشروع":"قرار مشروع"}</b><span className="crm-chip status-success">معتمد</span></div><p className="mt-2 text-sm">{safe(details.reason)||"دون سبب مسجل"}</p><p className="mt-1 text-xs text-[#8f96a3]">Capture Score {safe(details.capture_score)||"—"} · Confidence {safe(details.confidence)||"—"} · {safe(item.created_at)}</p></article>})}
           {bidDecision && safe(bidDecision.human_decision)!=="UNDECIDED" && <article className="rounded-xl border p-3"><div className="flex justify-between gap-2"><b>قرار Bid / No-Bid</b><span className="crm-chip status-warning">{safe(bidDecision.human_decision)}</span></div><p className="mt-2 text-sm">{safe(bidDecision.decision_reason)||"دون سبب مسجل"}</p></article>}
@@ -945,6 +946,7 @@ export default function ProjectCapturePage() {
         </section>
       </div>
       <ProjectVendorsPanel projectId={id} />
+      <ProjectLaborPanel projectId={id} />
       <section className="crm-card p-4">
         <div className="flex justify-between gap-2">
           <div>
@@ -1151,7 +1153,7 @@ export default function ProjectCapturePage() {
       <section className="crm-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#ff9d5c]">PURSUIT PLAYBOOK</p>
+            <p className="text-xs font-bold text-[var(--nav-accent)]">PURSUIT PLAYBOOK</p>
             <h3 className="text-xl font-bold">خطوات الفوز حسب مسار الدخول</h3>
             <p className="text-xs text-[#75664d]">
               {ROUTE_LABELS[safe(project.route_to_revenue) as RevenueRoute] ||

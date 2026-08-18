@@ -4,26 +4,22 @@ export const dynamic = 'force-dynamic';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
 import { CRMPage } from '../../components/crm-shell';
-import { VendorProjectsPanel } from '../../components/vendor-projects-panel';
+import { LaborProjectsPanel } from '../../components/labor-projects-panel';
 
-const TABLE = 'vendors';
+const TABLE = 'labor';
 
 const TRADES = [
-  'حفريات وأسفلت',
-  'خرسانة وعظم',
-  'بلوك وأرصفة',
-  'دهانات',
-  'جبس بورد',
-  'زجاج وكلادينج',
-  'سباكة',
-  'كهرباء',
-  'تكييف',
-  'عزل',
-  'ألمنيوم',
-  'حديد وتسليح',
-  'تأجير معدات',
-  'مواد بناء',
-  'مقاول عام',
+  'حداد مسلح',
+  'نجار مسلح',
+  'سباك',
+  'كهربائي',
+  'دهان',
+  'مبلط وجبس',
+  'لحّام',
+  'عامل خرسانة',
+  'سائق معدات',
+  'مشرف عمالة',
+  'عامل عام',
   'أخرى',
 ] as const;
 
@@ -73,7 +69,7 @@ type ImportRow = {
   scope: string;
 };
 
-const IMPORT_HEADER_HINTS = ['اسم الشركة', 'company', 'الشركة', 'company_name'];
+const IMPORT_HEADER_HINTS = ['الاسم', 'name', 'اسم العامل'];
 
 /** يفصل سطرًا بـ Tab (لصق من Excel) أو بفاصلة/فاصلة منقوطة (CSV) مع دعم الاقتباس */
 function splitImportLine(line: string): string[] {
@@ -100,8 +96,8 @@ function splitImportLine(line: string): string[] {
   return out;
 }
 
-/** يقرأ نصًا ملصوقًا من Excel أو محتوى CSV إلى صفوف موردين. الترتيب: الشركة، التخصص، المسؤول، الجوال، البريد، المدينة، النطاق */
-function parseVendorImport(text: string): ImportRow[] {
+/** يقرأ نصًا ملصوقًا من Excel أو محتوى CSV إلى صفوف عمالة. الترتيب: الاسم، المهنة، المسؤول، الجوال، البريد، المدينة، النطاق */
+function parseLaborImport(text: string): ImportRow[] {
   const lines = text.split(/\r\n|\n|\r/).filter((l) => l.trim() !== '');
   if (!lines.length) return [];
   const rows = lines.map(splitImportLine);
@@ -122,22 +118,22 @@ function parseVendorImport(text: string): ImportRow[] {
     .filter((r) => r.company_name);
 }
 
-const CSV_TEMPLATE_HEADER = 'اسم الشركة,التخصص,اسم المسؤول,الجوال,البريد الإلكتروني,المدينة,نطاق الأعمال';
-const CSV_TEMPLATE_EXAMPLE = 'مؤسسة الخليج للألمنيوم,ألمنيوم,أحمد محمد,0555xxxxxx,ahmed@example.com,الدمام,ألمنيوم وكلادينج';
+const CSV_TEMPLATE_HEADER = 'الاسم,المهنة,اسم المسؤول,الجوال,البريد الإلكتروني,المدينة,نطاق العمل';
+const CSV_TEMPLATE_EXAMPLE = 'محمد عبدالله,حداد مسلح,محمد عبدالله,0555xxxxxx,mohammed@example.com,الدمام,حديد تسليح خرساني';
 
 /** يولّد ملف CSV نموذج للتحميل — صف عناوين + صف مثال، بترميز يدعم العربي في Excel */
-function downloadVendorCsvTemplate() {
+function downloadLaborCsvTemplate() {
   const csv = '﻿' + CSV_TEMPLATE_HEADER + '\n' + CSV_TEMPLATE_EXAMPLE + '\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'قالب-الموردين.csv';
+  a.download = 'قالب-العمالة.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
 
-export default function VendorsPage() {
+export default function LaborPage() {
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -165,7 +161,7 @@ export default function VendorsPage() {
       );
       setRows(sorted);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'تعذر تحميل الموردين.');
+      setError(e instanceof Error ? e.message : 'تعذر تحميل العمالة.');
     } finally {
       setLoading(false);
     }
@@ -203,7 +199,7 @@ export default function VendorsPage() {
 
   async function save() {
     if (!draft.company_name.trim()) {
-      setError('اسم الشركة مطلوب.');
+      setError('الاسم مطلوب.');
       return;
     }
     setSaving(true);
@@ -248,9 +244,9 @@ export default function VendorsPage() {
 
   function previewImport() {
     setError('');
-    const parsed = parseVendorImport(importText);
+    const parsed = parseLaborImport(importText);
     if (!parsed.length) {
-      setError('لم يُعثر على صفوف صالحة. تأكد أن اسم الشركة موجود في العمود الأول.');
+      setError('لم يُعثر على صفوف صالحة. تأكد أن الاسم موجود في العمود الأول.');
       return;
     }
     setImportPreview(parsed);
@@ -278,7 +274,7 @@ export default function VendorsPage() {
       setShowImport(false);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'تعذر استيراد الموردين.');
+      setError(e instanceof Error ? e.message : 'تعذر استيراد العمالة.');
     } finally {
       setImporting(false);
     }
@@ -318,7 +314,7 @@ export default function VendorsPage() {
   async function remove(row: SimpleRow) {
     if (
       !confirm(
-        `حذف المورد "${safe(row.company_name)}" نهائيًا؟ لا يمكن التراجع.\n\nالأفضل عادةً "إيقاف" المورد بدل حذفه.`,
+        `حذف العامل "${safe(row.company_name)}" نهائيًا؟ لا يمكن التراجع.\n\nالأفضل عادةً "إيقاف" العامل بدل حذفه.`,
       )
     )
       return;
@@ -346,8 +342,8 @@ export default function VendorsPage() {
 
   return (
     <CRMPage
-      title="الموردون"
-      description="سجل الموردين ومقاولي الباطن: التخصص، بيانات التواصل، ونطاق الأعمال."
+      title="العمالة"
+      description="سجل العمالة: المهنة، بيانات التواصل، ونطاق العمل."
       action={
         <div className="flex flex-wrap gap-2">
           <button
@@ -357,7 +353,7 @@ export default function VendorsPage() {
               setShowImport((v) => !v);
             }}
           >
-            {showImport ? 'إغلاق الاستيراد' : 'استيراد موردين'}
+            {showImport ? 'إغلاق الاستيراد' : 'استيراد عمالة'}
           </button>
           <button
             className="btn-primary"
@@ -368,7 +364,7 @@ export default function VendorsPage() {
               setShowForm((v) => !v);
             }}
           >
-            {showForm ? 'إغلاق النموذج' : 'إضافة مورد'}
+            {showForm ? 'إغلاق النموذج' : 'إضافة عامل'}
           </button>
         </div>
       }
@@ -381,13 +377,13 @@ export default function VendorsPage() {
 
       {showImport && (
         <section className={panel}>
-          <h3 className="mb-2 text-base font-bold">استيراد موردين بالجملة</h3>
+          <h3 className="mb-2 text-base font-bold">استيراد عمالة بالجملة</h3>
           <p className="mb-3 text-xs text-[var(--nav-secondary)]">
-            الأعمدة بالترتيب: اسم الشركة، التخصص، اسم المسؤول، الجوال، البريد الإلكتروني، المدينة، نطاق الأعمال.
+            الأعمدة بالترتيب: الاسم، المهنة، اسم المسؤول، الجوال، البريد الإلكتروني، المدينة، نطاق العمل.
             الصف الأول اختياري كعناوين. الصق مباشرة من Excel (Tab) أو ارفع ملف CSV.
           </p>
           <div className="mb-3 flex flex-wrap items-center gap-3">
-            <button type="button" className="btn-ghost" onClick={downloadVendorCsvTemplate}>
+            <button type="button" className="btn-ghost" onClick={downloadLaborCsvTemplate}>
               تحميل نموذج CSV
             </button>
             <label className="btn-secondary cursor-pointer">
@@ -406,7 +402,7 @@ export default function VendorsPage() {
             dir="ltr"
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
-            placeholder={'مؤسسة الخليج للألمنيوم, ألمنيوم, أحمد, 0555xxxxxx, ahmed@example.com, الدمام, ألمنيوم وكلادينج'}
+            placeholder={'محمد عبدالله, حداد مسلح, محمد عبدالله, 0555xxxxxx, mohammed@example.com, الدمام, حديد تسليح خرساني'}
           />
           <div className="mt-3 flex flex-wrap gap-3">
             <button className="btn-primary" onClick={previewImport} disabled={!importText.trim()}>
@@ -427,13 +423,13 @@ export default function VendorsPage() {
           </div>
           {importPreview.length > 0 && (
             <div className="mt-4">
-              <p className="mb-2 text-sm font-semibold">{importPreview.length} مورد جاهز للاستيراد</p>
+              <p className="mb-2 text-sm font-semibold">{importPreview.length} عامل جاهز للاستيراد</p>
               <div className="max-h-64 overflow-auto rounded-xl border border-[var(--nav-border)]">
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr className="border-b border-[var(--nav-border)]">
-                      <th className={th}>الشركة</th>
-                      <th className={th}>التخصص</th>
+                      <th className={th}>الاسم</th>
+                      <th className={th}>المهنة</th>
                       <th className={th}>المسؤول</th>
                       <th className={th}>الجوال</th>
                       <th className={th}>المدينة</th>
@@ -455,7 +451,7 @@ export default function VendorsPage() {
                 </table>
               </div>
               <button className="btn-primary mt-3" disabled={importing} onClick={() => void runImport()}>
-                {importing ? 'جارٍ الاستيراد...' : `استيراد ${importPreview.length} مورد`}
+                {importing ? 'جارٍ الاستيراد...' : `استيراد ${importPreview.length} عامل`}
               </button>
             </div>
           )}
@@ -465,21 +461,21 @@ export default function VendorsPage() {
       {showForm && (
         <section className={panel}>
           <h3 className="mb-4 text-base font-bold">
-            {editingId ? 'تعديل بيانات المورد' : 'مورد جديد'}
+            {editingId ? 'تعديل بيانات العامل' : 'عامل جديد'}
           </h3>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className={label}>اسم الشركة *</label>
+              <label className={label}>الاسم *</label>
               <input
                 className={field}
                 value={draft.company_name}
                 onChange={(e) => setDraft({ ...draft, company_name: e.target.value })}
-                placeholder="مؤسسة / شركة ..."
+                placeholder="اسم العامل أو مؤسسة توريد العمالة"
               />
             </div>
             <div>
-              <label className={label}>التخصص</label>
+              <label className={label}>المهنة</label>
               <select
                 className={field}
                 value={draft.trade}
@@ -534,12 +530,12 @@ export default function VendorsPage() {
               />
             </div>
             <div className="md:col-span-3">
-              <label className={label}>نطاق الأعمال</label>
+              <label className={label}>نطاق العمل</label>
               <input
                 className={field}
                 value={draft.scope}
                 onChange={(e) => setDraft({ ...draft, scope: e.target.value })}
-                placeholder="مثال: تنفيذ قواعد وأرضيات صناعية — خرسانة مسلحة"
+                placeholder="مثال: أعمال حدادة مسلحة للقواعد والأعمدة"
               />
             </div>
             <div className="md:col-span-3">
@@ -558,14 +554,14 @@ export default function VendorsPage() {
                   checked={draft.is_active}
                   onChange={(e) => setDraft({ ...draft, is_active: e.target.checked })}
                 />
-                مورد نشط
+                عامل نشط
               </label>
             </div>
           </div>
 
           <div className="mt-5 flex gap-3">
             <button className="btn-primary" onClick={() => void save()} disabled={saving}>
-              {saving ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديل' : 'حفظ المورد'}
+              {saving ? 'جارٍ الحفظ...' : editingId ? 'حفظ التعديل' : 'حفظ العامل'}
             </button>
             <button
               className="btn-secondary"
@@ -588,7 +584,7 @@ export default function VendorsPage() {
             className={`${field} max-w-sm`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="بحث بالاسم أو المدينة أو نطاق الأعمال..."
+            placeholder="بحث بالاسم أو المدينة أو نطاق العمل..."
           />
           <div className="flex items-center gap-3">
             {inactiveCount > 0 && (
@@ -600,7 +596,7 @@ export default function VendorsPage() {
               </button>
             )}
             <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-              {filtered.length} من {rows.length} مورد
+              {filtered.length} من {rows.length} عامل
             </span>
           </div>
         </div>
@@ -630,7 +626,7 @@ export default function VendorsPage() {
         ) : filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">
             {rows.length === 0
-              ? 'لا يوجد موردون بعد. ابدأ بإضافة مورد.'
+              ? 'لا يوجد عمالة بعد. ابدأ بإضافة عامل.'
               : 'لا نتائج مطابقة للفلترة الحالية.'}
           </p>
         ) : (
@@ -638,11 +634,11 @@ export default function VendorsPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--nav-border)]">
-                  <th className={th}>الشركة</th>
+                  <th className={th}>الاسم</th>
                   <th className={th}>المسؤول</th>
                   <th className={th}>الجوال</th>
                   <th className={th}>المدينة</th>
-                  <th className={th}>نطاق الأعمال</th>
+                  <th className={th}>نطاق العمل</th>
                   <th className={th}>إجراء</th>
                 </tr>
               </thead>
@@ -753,7 +749,7 @@ export default function VendorsPage() {
                               )}
                             </div>
                             <div className="mt-3">
-                              <VendorProjectsPanel vendorId={id} />
+                              <LaborProjectsPanel laborId={id} />
                             </div>
                           </td>
                         </tr>

@@ -17,6 +17,15 @@ function databaseError(
     details: error.details,
     hint: error.hint,
   });
+  // PGRST303: ساعة الجهاز متقدمة عن ساعة خادم Supabase، فيبدو JWT وكأنه صدر "في المستقبل" — تخطّي عرض السبب التقني وتوضيح الحل مباشرة
+  if (error.code === "PGRST303" || /jwt issued at future/i.test(error.message || "")) {
+    return Object.assign(
+      new Error(
+        `تعارض في ساعة الجهاز [${table}]: ساعة جهازك متقدمة عن الوقت الفعلي، فرفض الخادم جلسة الدخول. صحّح ساعة وتاريخ جهازك (فعّل المزامنة التلقائية)، ثم سجّل خروج ودخول مرة أخرى.`,
+      ),
+      { code: error.code, table, operation, details: error.details, hint: error.hint },
+    );
+  }
   const detail = [error.code, error.message].filter(Boolean).join(" — ");
   return Object.assign(
     new Error(

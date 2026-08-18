@@ -335,7 +335,7 @@ export function SaudiMarketIntelligence() {
       <section className="crm-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#ff9d5c]">REVIEW QUEUE</p>
+            <p className="text-xs font-bold text-[var(--nav-accent)]">REVIEW QUEUE</p>
             <h3 className="text-xl font-bold">إشارات تحتاج قرارًا</h3>
           </div>
           <div className="flex gap-2">

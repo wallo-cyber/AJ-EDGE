@@ -6,66 +6,25 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
 import { cachedLogoUrl, fetchLogoUrl } from '../lib/supabase/branding';
 
+/** الرئيسية فقط مثبّتة فوق — كل شي ثاني صار داخل مجموعات قابلة للطي بطلب المستخدم */
 const primary = [
   ['/', 'واجهة الموقع', '⌂'],
-  ['/companies', 'السوق والشركات', '◉'],
-  ['/marketing', 'فريق التسويق', '▣'],
-  ['/radar', 'رادار الفرص', '◆'],
-  ['/daily', 'مركز الاستقطاب', '◎'],
 ] as const;
-/** العلاقات والتواصل أول مجموعة بطلب المستخدم — تضم الآن التواصل والإيميلات مع الموردين وبنك الأسعار */
+/** العلاقات والتواصل أول مجموعة فعليًا — ضُمّ لها فريق التسويق، والسوق/الرادار/مركز الاستقطاب نزلوا للمجموعة اللي تحتها */
 const secondaryGroups = [
-  { label: 'العلاقات والتواصل', links: [['/outreach', 'التواصل'], ['/email-center', 'الإيميلات'], ['/vendors', 'الموردون'], ['/prices', 'بنك الأسعار'], ['/research', 'البحث والتحقق']] },
-  { label: 'الاستقطاب والمشاريع', links: [['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
+  { label: 'العلاقات والتواصل', links: [['/outreach', 'التواصل'], ['/email-center', 'الإيميلات'], ['/marketing', 'فريق التسويق'], ['/vendors', 'الموردون'], ['/labor', 'العمالة'], ['/prices', 'بنك الأسعار'], ['/research', 'البحث والتحقق']] },
+  { label: 'الاستقطاب والمشاريع', links: [['/companies', 'السوق والشركات'], ['/radar', 'رادار الفرص'], ['/daily', 'مركز الاستقطاب'], ['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
   { label: 'الإدارة والنتائج', links: [['/contracts', 'العقود'], ['/quotations', 'عروض الأسعار'], ['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
 ] as const;
 
-/** علامة N وحدها — للرأس والتذييل والقائمة المطويّة */
-function NovawerkMark({ className = '', tone = 'light' }: { className?: string; tone?: 'light' | 'dark' }) {
-  const bar = tone === 'light' ? '#FFFFFF' : '#0F1E2D';
-  const fold = tone === 'light' ? '#8FA6BC' : '#17293A';
-  return (
-    <svg viewBox="0 0 120 140" className={className} aria-hidden focusable="false">
-      <rect x="0" y="24" width="28" height="116" fill={bar} />
-      <polygon points="28,24 56,24 92,140 64,140" fill={fold} />
-      <rect x="92" y="0" width="28" height="140" fill="#C79A2B" />
-    </svg>
-  );
-}
+/** الشعار الحقيقي المرسل من المستخدم — أصول ثابتة بديلة عن الرسم البرمجي السابق */
+const DEFAULT_MARK = '/novawerk-mark.png';
+const DEFAULT_LOCKUP = '/novawerk-logo.png';
 
-/** الشعار الكامل — العلامة والاسم والوصف، للخلفيات الداكنة */
-function NovawerkLockup({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 280 210" className={className} role="img" aria-label="نوفاويرك — مقاولات عامة">
-      <g transform="translate(107,6) scale(0.48)">
-        <rect x="0" y="24" width="28" height="116" fill="#FFFFFF" />
-        <polygon points="28,24 56,24 92,140 64,140" fill="#8FA6BC" />
-        <rect x="92" y="0" width="28" height="140" fill="#C79A2B" />
-      </g>
-      <text x="140" y="128" textAnchor="middle"
-            fontFamily="'Poppins','Montserrat','Segoe UI',Arial,sans-serif"
-            fontSize="34" letterSpacing="2.5" fill="#FFFFFF">
-        <tspan fontWeight="700">NOVA</tspan><tspan fontWeight="300">WERK</tspan>
-      </text>
-      <rect x="52" y="142" width="176" height="1.6" fill="#C79A2B" />
-      <text x="140" y="164" textAnchor="middle"
-            fontFamily="'Poppins','Montserrat','Segoe UI',Arial,sans-serif"
-            fontSize="11.5" fontWeight="400" letterSpacing="4.5" fill="#C79A2B">
-        GENERAL CONTRACTING
-      </text>
-      <text x="140" y="192" textAnchor="middle" direction="rtl"
-            fontFamily="'Tajawal','Cairo','Almarai','Segoe UI',Tahoma,Arial"
-            fontSize="17" fontWeight="700" letterSpacing="1" fill="#C6D6E4">
-        نوفاويرك
-      </text>
-    </svg>
-  );
-}
-
-/** يعرض شعار المستخدم المرفوع إن وُجد (من صفحة الإعدادات)، وإلا يرجع لعلامة نوفاويرك الافتراضية */
+/** يعرض شعار المستخدم المرفوع من الإعدادات إن وُجد، وإلا يرجع لشعار نوفاويرك الحقيقي */
 function Brand({ className = '', kind, logoUrl }: { className?: string; kind: 'mark' | 'lockup'; logoUrl: string | null }) {
-  if (logoUrl) return <img src={logoUrl} alt="شعار الشركة" className={`${className} object-contain`} />;
-  return kind === 'mark' ? <NovawerkMark className={className} /> : <NovawerkLockup className={className} />;
+  const src = logoUrl || (kind === 'mark' ? DEFAULT_MARK : DEFAULT_LOCKUP);
+  return <img src={src} alt="نوفاويرك" className={`${className} object-contain`} />;
 }
 
 type Props = { title: string; description: string; action?: ReactNode; children: ReactNode };
@@ -132,9 +91,9 @@ export function CRMPage({ title, description, action, children }: Props) {
         <button onClick={toggleCollapsed} className="btn-ghost mb-3 hidden w-full lg:block" title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>{collapsed ? '←' : 'طي القائمة'}</button>
         <Link href="/" onClick={() => setOpen(false)} className="نوفافيرك-brand mb-5 block rounded-2xl bg-[#2f2417] px-4 py-6 text-center text-[#fff8e8]" aria-label="العودة إلى واجهة الموقع">
           {collapsed
-            ? <Brand kind="mark" logoUrl={logoUrl} className="mx-auto h-9 w-8" />
+            ? <span className="mx-auto grid h-10 w-10 place-items-center rounded-xl bg-[#fdf8ee] p-1.5"><Brand kind="mark" logoUrl={logoUrl} className="h-full w-full" /></span>
             : <>
-                <Brand kind="lockup" logoUrl={logoUrl} className="mx-auto block h-28 w-full" />
+                <span className="mx-auto block rounded-xl bg-[#fdf8ee] p-3"><Brand kind="lockup" logoUrl={logoUrl} className="mx-auto block h-24 w-full" /></span>
                 <p className="mt-4 text-[11px] text-[#9FB3C6]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p>
               </>}
         </Link>
