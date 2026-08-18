@@ -462,9 +462,17 @@ export default function ProjectCapturePage() {
     const route = (safe(project.route_to_revenue) ||
       "UNDEFINED") as PursuitRoute;
     const template = PLAYBOOKS[route] || PLAYBOOKS.UNDEFINED;
+    setError("");
+    setNotice("");
     try {
+      // نجيب أحدث نسخة من الخطوات مباشرة من القاعدة بدل الاعتماد على الحالة المحلية —
+      // تفاديًا لتكرار الإدراج (23505) عند نقر الزر أكثر من مرة أو قبل تحديث الحالة محليًا
+      const freshSteps = await simpleCrud.listWhere("pursuit_steps", "project_id", id);
+      const existingKeys = new Set(freshSteps.map((x) => safe(x.step_key)));
+      let created = 0;
       for (const st of template) {
-        if (!steps.some((x) => safe(x.step_key) === st.key))
+        if (existingKeys.has(st.key)) continue;
+        try {
           await simpleCrud.create("pursuit_steps", {
             project_id: id,
             step_key: st.key,
@@ -475,8 +483,20 @@ export default function ProjectCapturePage() {
             status: "TODO",
             requires_human_approval: st.human,
           });
+          existingKeys.add(st.key);
+          created += 1;
+        } catch (stepError) {
+          // خطوة موجودة مسبقًا (23505) — نتجاهلها ونكمل باقي الخطوات بدل إيقاف العملية كلها
+          const code = (stepError as { code?: string })?.code;
+          if (code !== "23505") throw stepError;
+          existingKeys.add(st.key);
+        }
       }
-      setNotice("تم تجهيز Pursuit Playbook للمسار الحالي.");
+      setNotice(
+        created > 0
+          ? `تم تجهيز Pursuit Playbook — أُضيفت ${created} خطوة جديدة.`
+          : "Pursuit Playbook مجهّز مسبقًا لهذا المسار.",
+      );
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذر تجهيز Playbook.");

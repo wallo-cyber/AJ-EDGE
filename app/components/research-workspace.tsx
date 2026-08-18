@@ -447,7 +447,7 @@ export function ResearchWorkspace() {
           <Link
             key={id}
             href={`/research?tab=${id}`}
-            className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold ${tab === id ? "bg-[#2f2417] text-white" : "bg-white text-[#6f6044]"}`}
+            className={tab === id ? "btn-primary shrink-0" : "btn-ghost shrink-0"}
           >
             {label}
           </Link>

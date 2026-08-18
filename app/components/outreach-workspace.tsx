@@ -371,14 +371,12 @@ export function OutreachWorkspace() {
           <Link
             key={id}
             href={`/outreach?tab=${id}`}
-            className={`inline-flex min-h-[38px] shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition ${
-              tab === id
-                ? "border-[var(--nav-accent)] bg-[var(--nav-accent)]/15 text-[var(--nav-accent)]"
-                : "border-[var(--nav-border)] bg-transparent text-[var(--nav-secondary)] hover:bg-[var(--nav-hover)]"
-            }`}
+            className={
+              tab === id ? "btn-primary shrink-0" : "btn-ghost shrink-0"
+            }
           >
             {label}
-            <span className="crm-chip bg-white/10">{counts[id]}</span>
+            <span className="crm-chip bg-white/20">{counts[id]}</span>
           </Link>
         ))}
       </div>
