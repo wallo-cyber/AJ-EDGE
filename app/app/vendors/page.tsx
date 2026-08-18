@@ -154,6 +154,7 @@ export default function VendorsPage() {
   const [importFileName, setImportFileName] = useState('');
   const [importPreview, setImportPreview] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
+  const [movingId, setMovingId] = useState('');
 
   async function load() {
     setLoading(true);
@@ -328,6 +329,45 @@ export default function VendorsPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذر الحذف.');
+    }
+  }
+
+  /** نقل مورد إلى قسم العمالة: ننسخ بياناته وروابط مشاريعه، ثم نحذفه من الموردين */
+  async function moveToLabor(row: SimpleRow) {
+    if (
+      !confirm(`نقل "${safe(row.company_name)}" إلى قسم العمالة؟ سيُحذف من الموردين، وتنتقل معه روابط مشاريعه.`)
+    )
+      return;
+    setError('');
+    setMovingId(String(row.id));
+    try {
+      const created = await simpleCrud.create('labor', {
+        company_name: safe(row.company_name),
+        trade: safe(row.trade),
+        contact_name: safe(row.contact_name),
+        phone: safe(row.phone),
+        email: safe(row.email),
+        city: safe(row.city),
+        scope: safe(row.scope),
+        notes: safe(row.notes),
+        is_active: row.is_active !== false,
+      });
+      const links = await simpleCrud.listWhere('project_vendors', 'vendor_id', String(row.id));
+      for (const link of links) {
+        await simpleCrud.create('project_labor', {
+          project_id: link.project_id,
+          labor_id: created.id,
+          role: safe(link.role),
+          status: safe(link.status) || 'مبدئي',
+          notes: safe(link.notes),
+        });
+      }
+      await simpleCrud.remove(TABLE, String(row.id));
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر نقل المورد إلى العمالة.');
+    } finally {
+      setMovingId('');
     }
   }
 
@@ -743,6 +783,13 @@ export default function VendorsPage() {
                             </button>
                             <button className={iconBtn} onClick={() => void toggleActive(row)}>
                               {active ? 'إيقاف' : 'تنشيط'}
+                            </button>
+                            <button
+                              className={iconBtn}
+                              disabled={movingId === id}
+                              onClick={() => void moveToLabor(row)}
+                            >
+                              {movingId === id ? '...' : 'نقل إلى العمالة'}
                             </button>
                             <button
                               className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
