@@ -459,10 +459,34 @@ export default function LaborPage() {
       )}
 
       {showForm && (
-        <section className={panel}>
-          <h3 className="mb-4 text-base font-bold">
-            {editingId ? 'تعديل بيانات العامل' : 'عامل جديد'}
-          </h3>
+        <div
+          className="fixed inset-0 z-[80] grid place-items-center bg-black/45 p-3"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setDraft(EMPTY);
+              setEditingId('');
+              setShowForm(false);
+              setError('');
+            }
+          }}
+        >
+        <section className={`crm-card max-h-[92vh] w-full max-w-3xl overflow-auto p-5`}>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h3 className="text-base font-bold">
+              {editingId ? 'تعديل بيانات العامل' : 'عامل جديد'}
+            </h3>
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                setDraft(EMPTY);
+                setEditingId('');
+                setShowForm(false);
+                setError('');
+              }}
+            >
+              إغلاق
+            </button>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
@@ -576,6 +600,7 @@ export default function LaborPage() {
             </button>
           </div>
         </section>
+        </div>
       )}
 
       <section className={panel}>

@@ -297,7 +297,7 @@ export default function PricesPage() {
 
   return (
     <CRMPage
-      title="بنك الأسعار المرجعية"
+      title="أسعار المواد"
       description="أسعار البنود من الموردين: أقل وأعلى ومتوسط سعر لكل بند، لتسعير العطاءات من مصدر حقيقي."
       action={
         <button
