@@ -141,8 +141,8 @@ export function CRMPage({ title, description, action, children }: Props) {
               <p className="text-xs font-bold text-[var(--nav-secondary)]">نوفاويرك · تطوير الأعمال</p>
               <span className="nav-current-chip">القسم الحالي: {currentNavLabel}</span>
             </div>
-            <h2 className="mt-1 text-2xl font-bold sm:text-3xl">{title}</h2>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-[#75664d]">{description}</p>
+            <h2 dir="auto" className="mt-1 text-2xl font-bold sm:text-3xl">{title}</h2>
+            <p dir="auto" className="mt-1 max-w-3xl text-sm leading-6 text-[#75664d]">{description}</p>
           </div>
           {action}
         </div>

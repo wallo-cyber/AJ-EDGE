@@ -4,6 +4,8 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 type Row=Record<string,unknown>;
 type SearchResult={title?:string;url?:string;content?:string;score?:number;provider?:string;rank?:number};
 const s=(v:unknown)=>String(v??'').trim();
+/** نص نظيف من مزودي البحث: يزيل وسوم HTML (Brave يغلّف كلمات الاستعلام بـ<strong>) ويفكّ الكيانات. */
+const plain=(v:unknown)=>String(v??'').replace(/<[^>]*>/g,'').replace(/&nbsp;/gi,' ').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/&amp;/gi,'&').replace(/\s+/g,' ').trim();
 const n=(v:unknown)=>Number(v||0)||0;
 const domainOf=(value:string)=>{try{return new URL(value.startsWith('http')?value:`https://${value}`).hostname.replace(/^www\./,'').toLowerCase()}catch{return''}};
 const allowedOrigin=(origin:string)=> {
@@ -26,14 +28,14 @@ async function braveSearch(query:string):Promise<SearchResult[]>{
  const r=await fetch(url,{headers:{Accept:'application/json','X-Subscription-Token':key}});
  if(!r.ok) throw new Error(`Brave ${r.status}`);
  const body=await r.json();
- return (body?.web?.results??[]).map((x:Record<string,unknown>,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.description),score:Math.max(.55,.92-i*.03),provider:'brave',rank:i+1}));
+ return (body?.web?.results??[]).map((x:Record<string,unknown>,i:number)=>({title:plain(x.title),url:s(x.url),content:plain(x.description),score:Math.max(.55,.92-i*.03),provider:'brave',rank:i+1}));
 }
 async function tavilySearch(query:string):Promise<SearchResult[]>{
  const key=Deno.env.get('TAVILY_API_KEY'); if(!key)return[];
  const r=await fetch('https://api.tavily.com/search',{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({query,search_depth:'advanced',max_results:10,include_answer:false})});
  if(!r.ok) throw new Error(`Tavily ${r.status}`);
  const body=await r.json();
- return (body.results??[]).map((x:Record<string,unknown>,i:number)=>({title:s(x.title),url:s(x.url),content:s(x.content),score:Number(x.score??.6),provider:'tavily',rank:i+1}));
+ return (body.results??[]).map((x:Record<string,unknown>,i:number)=>({title:plain(x.title),url:s(x.url),content:plain(x.content),score:Number(x.score??.6),provider:'tavily',rank:i+1}));
 }
 async function search(query:string){
  const errors:string[]=[];

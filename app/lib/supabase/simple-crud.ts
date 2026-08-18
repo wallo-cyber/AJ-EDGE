@@ -17,11 +17,12 @@ function databaseError(
     details: error.details,
     hint: error.hint,
   });
+  const detail = [error.code, error.message].filter(Boolean).join(" — ");
   return Object.assign(
     new Error(
-      "تعذر إتمام العملية في قاعدة البيانات. أعد المحاولة، وإن استمرت المشكلة راجع حالة النظام.",
+      `تعذر إتمام العملية في قاعدة البيانات [${table}]${detail ? ` — ${detail}` : ""}. أعد المحاولة، وإن استمرت المشكلة راجع حالة النظام.`,
     ),
-    { code: error.code, details: error.message },
+    { code: error.code, table, operation, details: error.details, hint: error.hint },
   );
 }
 

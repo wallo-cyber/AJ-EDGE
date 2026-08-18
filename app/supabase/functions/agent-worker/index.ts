@@ -6,6 +6,18 @@ type SearchResult = { title?: string; url?: string; content?: string; score?: nu
 type AuthScope = { kind: 'cron'; ownerId: null } | { kind: 'user'; ownerId: string };
 
 const safe = (value: unknown) => String(value ?? '').trim();
+/** نص نظيف من مزودي البحث: Brave يغلّف كلمات الاستعلام بـ<strong>. يزيل الوسوم ويفكّ الكيانات. */
+const plain = (value: unknown) =>
+  String(value ?? '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
 const allowedOrigin = (origin: string) => {
   if (!origin) return '';
   if (origin === 'https://aj-edge.vercel.app' || origin === 'https://aj-edge-wallo-8917.vercel.app') return origin;
@@ -76,7 +88,7 @@ async function braveSearch(query: string): Promise<SearchResult[]> {
   const response = await fetch(url, { headers: { Accept: 'application/json', 'X-Subscription-Token': key } });
   if (!response.ok) throw new Error(`Brave request failed (${response.status})`);
   const body = await response.json();
-  return (body?.web?.results ?? []).map((x: Record<string, unknown>, i: number) => ({ title:safe(x.title), url:safe(x.url), content:safe(x.description), score:Math.max(.58,.90-i*.035), provider:'brave', rank:i+1 }));
+  return (body?.web?.results ?? []).map((x: Record<string, unknown>, i: number) => ({ title:plain(x.title), url:safe(x.url), content:plain(x.description), score:Math.max(.58,.90-i*.035), provider:'brave', rank:i+1 }));
 }
 async function tavilySearch(query: string): Promise<SearchResult[]> {
   const key = Deno.env.get('TAVILY_API_KEY'); if (!key) return [];

@@ -5,7 +5,8 @@ import { CRMPage } from "./crm-shell";
 import { simpleCrud, type SimpleRow } from "../lib/supabase/simple-crud";
 import { signalPriority } from "../lib/acquisition-os/core";
 
-const s = (v: unknown) => String(v ?? "").trim();
+// تجريد دفاعي لوسوم HTML: صفوف قديمة في قاعدة البيانات خُزّنت بوسوم <strong> من Brave.
+const s = (v: unknown) => String(v ?? "").replace(/<[^>]*>/g, "").trim();
 
 export function ProjectRadar() {
   const [signals, setSignals] = useState<SimpleRow[]>([]),
@@ -90,8 +91,7 @@ export function ProjectRadar() {
         source_url: s(signal.source_url),
         why_now: s(signal.summary) || s(signal.title),
         last_signal_at:
-          s(signal.date_found) ||
-          s(signal.found_at) ||
+          s(signal.detected_at) || s(signal.event_date) ||
           new Date().toISOString(),
         next_action:
           "تحقق من المشروع ثم ارسم Owner / Consultant / Main Contractor",
