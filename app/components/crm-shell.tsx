@@ -20,15 +20,44 @@ const secondaryGroups = [
   { label: 'الإدارة والنتائج', links: [['/contracts', 'العقود'], ['/quotations', 'عروض الأسعار'], ['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
 ] as const;
 
-/** شعار نوفاويرك — حرف N. tone='light' للخلفيات الداكنة، 'dark' للفاتحة */
+/** علامة N وحدها — للرأس والتذييل والقائمة المطويّة */
 function NovawerkMark({ className = '', tone = 'light' }: { className?: string; tone?: 'light' | 'dark' }) {
   const bar = tone === 'light' ? '#FFFFFF' : '#0F1E2D';
-  const fold = tone === 'light' ? '#C6D5E3' : '#17293A';
+  const fold = tone === 'light' ? '#8FA6BC' : '#17293A';
   return (
     <svg viewBox="0 0 120 140" className={className} aria-hidden focusable="false">
       <rect x="0" y="24" width="28" height="116" fill={bar} />
       <polygon points="28,24 56,24 92,140 64,140" fill={fold} />
       <rect x="92" y="0" width="28" height="140" fill="#C79A2B" />
+    </svg>
+  );
+}
+
+/** الشعار الكامل — العلامة والاسم والوصف، للخلفيات الداكنة */
+function NovawerkLockup({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 280 210" className={className} role="img" aria-label="نوفاويرك — مقاولات عامة">
+      <g transform="translate(107,6) scale(0.48)">
+        <rect x="0" y="24" width="28" height="116" fill="#FFFFFF" />
+        <polygon points="28,24 56,24 92,140 64,140" fill="#8FA6BC" />
+        <rect x="92" y="0" width="28" height="140" fill="#C79A2B" />
+      </g>
+      <text x="140" y="128" textAnchor="middle"
+            fontFamily="'Poppins','Montserrat','Segoe UI',Arial,sans-serif"
+            fontSize="34" letterSpacing="2.5" fill="#FFFFFF">
+        <tspan fontWeight="700">NOVA</tspan><tspan fontWeight="300">WERK</tspan>
+      </text>
+      <rect x="52" y="142" width="176" height="1.6" fill="#C79A2B" />
+      <text x="140" y="164" textAnchor="middle"
+            fontFamily="'Poppins','Montserrat','Segoe UI',Arial,sans-serif"
+            fontSize="11.5" fontWeight="400" letterSpacing="4.5" fill="#C79A2B">
+        GENERAL CONTRACTING
+      </text>
+      <text x="140" y="192" textAnchor="middle" direction="rtl"
+            fontFamily="'Tajawal','Cairo','Almarai','Segoe UI',Tahoma,Arial"
+            fontSize="17" fontWeight="700" letterSpacing="1" fill="#C6D6E4">
+        نوفاويرك
+      </text>
     </svg>
   );
 }
@@ -89,9 +118,13 @@ export function CRMPage({ title, description, action, children }: Props) {
       {open && <button aria-label="إغلاق القائمة" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-[#24190d]/35 lg:hidden" />}
       <aside className={`نوفافيرك-sidebar ${open ? 'translate-x-0' : 'translate-x-full'} ${collapsed ? 'lg:w-[78px]' : 'lg:w-60'} fixed inset-y-0 right-0 z-50 w-[286px] overflow-y-auto border-l border-[#e8d9b7] bg-[#fffdf9] p-3 shadow-2xl transition-[width,transform] lg:sticky lg:top-5 lg:z-auto lg:h-[calc(100vh-2.5rem)] lg:translate-x-0 lg:rounded-3xl lg:border` }>
         <button onClick={toggleCollapsed} className="btn-ghost mb-3 hidden w-full lg:block" title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>{collapsed ? '←' : 'طي القائمة'}</button>
-        <Link href="/" onClick={() => setOpen(false)} className="نوفافيرك-brand mb-4 flex items-center gap-3 rounded-2xl bg-[#2f2417] p-4 text-[#fff8e8]" aria-label="العودة إلى واجهة الموقع">
-          <NovawerkMark className={collapsed ? 'h-8 w-7' : 'h-11 w-9 shrink-0'} />
-          {!collapsed && <div><p className="text-[11px] font-bold tracking-[.3em] text-[#d5b66f]">نوفاويرك</p><h1 className="mt-0.5 font-bold">منصة تطوير الأعمال</h1><p className="mt-1.5 text-xs text-[#d9c8a2]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p></div>}
+        <Link href="/" onClick={() => setOpen(false)} className="نوفافيرك-brand mb-5 block rounded-2xl bg-[#2f2417] px-4 py-6 text-center text-[#fff8e8]" aria-label="العودة إلى واجهة الموقع">
+          {collapsed
+            ? <NovawerkMark className="mx-auto h-9 w-8" />
+            : <>
+                <NovawerkLockup className="mx-auto block h-28 w-full" />
+                <p className="mt-4 text-[11px] text-[#9FB3C6]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p>
+              </>}
         </Link>
         <nav aria-label="التنقل الرئيسي" className="نوفافيرك-primary-nav space-y-1">
           {primary.map(([href, label, icon]) => <Link key={href} href={href} title={collapsed ? label : undefined} aria-current={active(href) ? 'page' : undefined} onClick={() => setOpen(false)} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold ${active(href) ? 'nav-active' : 'text-[#59482f] hover:bg-[#f5ecdb]'}`}><span className={collapsed ? 'lg:hidden' : ''}>{label}</span><span aria-hidden>{icon}</span></Link>)}
@@ -104,7 +137,7 @@ export function CRMPage({ title, description, action, children }: Props) {
         <div className="mb-5 flex flex-col gap-3 border-b border-[var(--nav-border)] pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <NovawerkMark className="h-5 w-4" tone="dark" />
+              <NovawerkMark className="h-5 w-4" />
               <p className="text-xs font-bold text-[var(--nav-secondary)]">نوفاويرك · تطوير الأعمال</p>
               <span className="nav-current-chip">القسم الحالي: {currentNavLabel}</span>
             </div>
@@ -117,7 +150,7 @@ export function CRMPage({ title, description, action, children }: Props) {
 
         <footer className="nw-footer mt-10 flex flex-col gap-3 pt-5 text-xs sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <NovawerkMark className="h-6 w-5" tone="dark" />
+            <NovawerkMark className="h-6 w-5" />
             <span><strong>نوفاويرك</strong> · مقاولات عامة</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">

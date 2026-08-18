@@ -886,3 +886,303 @@ html:not([data-theme="neon"]):not([data-theme="teal"]) .nw-footer {
 }
 html:not([data-theme="neon"]):not([data-theme="teal"]) .nw-footer strong { color: var(--nw-navy); }
 
+/* ═══════════════════════════════════════════════════════════
+   ثيم نوفاويرك — النسخة الداكنة الكاملة
+   يحلّ محل كل الكتل السابقة مني في هذا الملف.
+   كحلي في كل الصفحات · ذهبي وحده للتمييز · لا ألوان أخرى
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --nw-deep:    #0A1622;
+  --nw-navy:    #0F1E2D;
+  --nw-panel:   #16293B;
+  --nw-raised:  #1C3346;
+  --nw-line:    #27435E;
+  --nw-gold:    #C79A2B;
+  --nw-gold-br: #E3B84A;
+  --nw-gold-dk: #8E6B1C;
+  --nw-text:    #E7EEF5;
+  --nw-muted:   #92A6B9;
+
+  --background: var(--nw-deep);
+  --foreground: var(--nw-text);
+  --surface: var(--nw-panel);
+  --surface-soft: var(--nw-raised);
+  --border: var(--nw-line);
+  --gold: var(--nw-gold);
+  --brown: var(--nw-navy);
+  --muted: var(--nw-muted);
+  --nav-border: var(--nw-line);
+  --nav-accent: var(--nw-gold-br);
+  --nav-secondary: var(--nw-muted);
+  --nav-hover: rgba(255,255,255,.07);
+}
+
+/* اختصار النطاق: كل ما يلي للثيم الافتراضي فقط */
+
+/* ═══ 1 · الخلفية ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) body {
+  color: var(--nw-text) !important;
+  background: linear-gradient(180deg, #0C1A28 0%, var(--nw-deep) 100%) !important;
+  background-attachment: fixed;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) ::selection { background: var(--nw-gold); color: var(--nw-navy); }
+html:not([data-theme="neon"]):not([data-theme="teal"]) ::placeholder { color: #6E839A !important; }
+
+/* ═══ 2 · قلب كل الأسطح الفاتحة إلى كحلي ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#fffdf9]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#fdf8ee]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#fdf9f1]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#fef8ec]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#faf5eb]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#f8f1e4]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#f6f0e4]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-[#f5ecdb]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-white"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-slate-5"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-slate-1"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-gray-5"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-gray-1"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-neutral-1"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-stone-1"] {
+  background-color: var(--nw-panel) !important;
+}
+
+/* كل الحدود */
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-[#e8d9b7]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-[#e7d8b8]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-[#eadfc9]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-[#ead9b3]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-[#d8c08d]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-slate-2"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-slate-1"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-gray-2"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-gray-1"] {
+  border-color: var(--nw-line) !important;
+}
+
+/* كل النصوص الداكنة تصير فاتحة */
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#2f2417]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#291f14]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-slate-9"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-slate-8"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-gray-9"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-gray-8"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-black"] {
+  color: var(--nw-text) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#75664d]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#6f6044]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#59482f]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-slate-6"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-slate-5"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-gray-6"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-gray-5"] {
+  color: var(--nw-muted) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#7a5e1c]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#9a7b2f]"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-[#8a6f35]"] {
+  color: var(--nw-gold-br) !important;
+}
+
+/* ═══ 3 · إزالة كل لون خارج الهوية — يصير ذهبيًا ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-emerald-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-green-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-amber-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-yellow-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-orange-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-lime-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-blue-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-sky-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-cyan-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-teal-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-violet-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-purple-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-indigo-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-fuchsia-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-pink-"] {
+  color: var(--nw-gold-br) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-emerald-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-green-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-amber-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-yellow-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-orange-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-lime-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-blue-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-sky-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-cyan-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-teal-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-violet-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-purple-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-indigo-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-pink-"] {
+  background-color: rgba(199,154,43,.14) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-emerald-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-green-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-amber-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-yellow-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-blue-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-sky-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-teal-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-violet-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-purple-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-indigo-"] {
+  border-color: rgba(199,154,43,.42) !important;
+}
+/* نقطة الاتصال الخضراء تبقى ذهبية كذلك */
+html:not([data-theme="neon"]):not([data-theme="teal"]) .bg-emerald-400 { background-color: var(--nw-gold-br) !important; }
+
+/* الأحمر وحده يبقى — لأنه خطأ حقيقي لا زينة */
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-rose-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="text-red-"] { color: #F08A8A !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-rose-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="bg-red-"] { background-color: rgba(240,138,138,.12) !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-rose-"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) [class*="border-red-"] { border-color: rgba(240,138,138,.45) !important; }
+
+/* ═══ 4 · الشريط الجانبي والرأس ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"],
+html:not([data-theme="neon"]):not([data-theme="teal"]) header[class*="mobile-header"] {
+  background: var(--nw-navy) !important;
+  background-color: var(--nw-navy) !important;
+  background-image: none !important;
+  border-color: var(--nw-line) !important;
+  color: var(--nw-text) !important;
+  box-shadow: 0 16px 44px rgba(0,0,0,.35) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] a:not(.nav-active),
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] details,
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] .btn-ghost,
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] .theme-toggle,
+html:not([data-theme="neon"]):not([data-theme="teal"]) header[class*="mobile-header"] .btn-ghost,
+html:not([data-theme="neon"]):not([data-theme="teal"]) header[class*="mobile-header"] .theme-toggle {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: rgba(255,255,255,.13) !important;
+  color: #C9D9E7 !important;
+  box-shadow: none !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] a:not(.nav-active) { border: 0 !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] a:not(.nav-active):hover {
+  background: rgba(255,255,255,.08) !important; color: #FFFFFF !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] summary {
+  color: var(--nw-gold-br) !important; letter-spacing: .06em;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) aside[class*="sidebar"] [class*="brand"] {
+  background: linear-gradient(150deg, #1A2E42 0%, var(--nw-deep) 100%) !important;
+  border: 1px solid rgba(199,154,43,.35) !important;
+}
+
+/* العنصر النشط */
+html:not([data-theme="neon"]):not([data-theme="teal"]) .nav-active {
+  background: linear-gradient(100deg, var(--nw-gold-dk), var(--nw-gold), var(--nw-gold-br)) !important;
+  color: #0A1622 !important; border: 0 !important;
+  box-shadow: 0 4px 16px rgba(199,154,43,.30) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .nav-group-active {
+  background: rgba(199,154,43,.10) !important; border-color: rgba(199,154,43,.40) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .nav-current-chip {
+  background: rgba(199,154,43,.13) !important; color: var(--nw-gold-br) !important;
+  border: 1px solid rgba(199,154,43,.35);
+}
+
+/* ═══ 5 · مساحة العمل ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) main[class*="main"] {
+  background: var(--nw-navy) !important;
+  border-color: var(--nw-line) !important;
+  border-top: 3px solid var(--nw-gold) !important;
+  color: var(--nw-text) !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,.30) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main h1,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main h2,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main h3 { color: #FFFFFF !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main section,
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-card,
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-kpi {
+  background: var(--nw-panel) !important;
+  border-color: var(--nw-line) !important;
+  border-radius: 12px;
+  box-shadow: none !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-kpi::after { background: rgba(199,154,43,.10); }
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-progress { background: #24405A; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-progress > span {
+  background: linear-gradient(90deg, var(--nw-gold-dk), var(--nw-gold-br));
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .crm-empty {
+  border-color: var(--nw-line) !important; background: var(--nw-panel) !important; color: var(--nw-muted) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .section-title { color: var(--nw-gold-br); }
+
+/* ═══ 6 · الأزرار ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-primary,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main [class*="bg-[#2f2417]"] {
+  background: linear-gradient(100deg, var(--nw-gold-dk), var(--nw-gold)) !important;
+  background-image: linear-gradient(100deg, var(--nw-gold-dk), var(--nw-gold)) !important;
+  color: #0A1622 !important; border: 0 !important; border-radius: 10px; font-weight: 700;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-primary:hover { filter: brightness(1.1); }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-secondary,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-ghost {
+  background: var(--nw-raised) !important; border-color: var(--nw-line) !important;
+  color: #D6E3EF !important; border-radius: 10px;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-secondary:hover,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main .btn-ghost:hover { border-color: var(--nw-gold) !important; }
+
+/* ═══ 7 · الحقول ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) main input,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main select,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main textarea {
+  background: var(--nw-deep) !important; border-color: var(--nw-line) !important; color: var(--nw-text) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main input:focus,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main select:focus,
+html:not([data-theme="neon"]):not([data-theme="teal"]) main textarea:focus { border-color: var(--nw-gold) !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main option { background: var(--nw-navy); color: var(--nw-text); }
+html:not([data-theme="neon"]):not([data-theme="teal"]) button:focus-visible,
+html:not([data-theme="neon"]):not([data-theme="teal"]) a:focus-visible,
+html:not([data-theme="neon"]):not([data-theme="teal"]) input:focus-visible { outline: 3px solid rgba(199,154,43,.35); }
+
+/* ═══ 8 · الجداول ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) main table {
+  border: 1px solid var(--nw-line) !important; border-radius: 10px; overflow: hidden;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main thead th {
+  background: var(--nw-deep) !important; color: var(--nw-gold-br) !important;
+  border-bottom: 2px solid rgba(199,154,43,.35) !important;
+  font-weight: 700; letter-spacing: .03em; padding-top: .85rem !important; padding-bottom: .85rem !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody tr { background: #14283A !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody tr:nth-child(even) { background: #101F2E !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody tr:hover { background: #1E3852 !important; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody td {
+  color: #DCE7F1 !important; border-color: var(--nw-line) !important;
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum";
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody td:first-child {
+  border-right: 3px solid rgba(199,154,43,.5) !important;
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) main tbody td:first-child .font-semibold {
+  color: #FFFFFF !important; font-weight: 800;
+}
+
+/* ═══ 9 · النصوص اللاتينية والتذييل ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) main :lang(en) { text-align: start; }
+html:not([data-theme="neon"]):not([data-theme="teal"]) .nw-footer {
+  border-top: 1px solid var(--nw-line); color: var(--nw-muted);
+}
+html:not([data-theme="neon"]):not([data-theme="teal"]) .nw-footer strong { color: var(--nw-gold-br); }
+
+/* ═══ 10 · شاشة التحقق من الجلسة ═══ */
+html:not([data-theme="neon"]):not([data-theme="teal"]) .min-h-screen[class*="bg-[#f6f0e4]"] {
+  background: var(--nw-deep) !important; color: var(--nw-muted) !important;
+}
+
