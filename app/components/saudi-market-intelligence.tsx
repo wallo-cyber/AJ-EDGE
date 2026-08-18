@@ -270,7 +270,7 @@ export function SaudiMarketIntelligence() {
       <section className="crm-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">SOURCE CONTROL</p>
+            <p className="text-xs font-bold text-[var(--nav-accent)]">SOURCE CONTROL</p>
             <h3 className="text-xl font-bold">مصادر السوق السعودية</h3>
             <p className="mt-1 text-xs text-[#8f96a3]">
               افتراضيًا نراقب اعتماد، مدن، الهيئة السعودية للمقاولين، أرامكو وسابك.
@@ -378,14 +378,14 @@ export function SaudiMarketIntelligence() {
               (project) => s(project.id) === s(event.linked_project_id),
             );
             return (
-              <article key={event.id} className={`crm-card p-4 ${selected.has(s(event.id)) ? 'ring-2 ring-[#8058ff]' : ''}`}>
+              <article key={event.id} className={`crm-card p-4 ${selected.has(s(event.id)) ? 'ring-2 ring-[var(--nav-accent)]' : ''}`}>
                 <div className="grid gap-4 lg:grid-cols-[auto_1.45fr_.55fr_.8fr_auto] lg:items-center">
                   <button
                     type="button"
                     role="checkbox"
                     aria-checked={selected.has(s(event.id))}
                     onClick={() => toggleSelected(s(event.id))}
-                    className={`grid h-7 w-7 place-items-center rounded-md border-2 text-sm font-black ${selected.has(s(event.id)) ? 'border-[#8058ff] bg-[#8058ff] text-white' : 'border-[#8f96a3] bg-transparent text-transparent'}`}
+                    className={`grid h-7 w-7 place-items-center rounded-md border-2 text-sm font-black ${selected.has(s(event.id)) ? 'border-[var(--nav-accent)] bg-[var(--nav-accent)] text-white' : 'border-[#8f96a3] bg-transparent text-transparent'}`}
                     aria-label={`تحديد ${s(event.title)}`}
                   >
                     ✓

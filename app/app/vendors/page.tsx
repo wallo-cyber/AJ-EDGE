@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { simpleCrud, type SimpleRow } from '../../lib/supabase/simple-crud';
 import { CRMPage } from '../../components/crm-shell';
+import { VendorProjectsPanel } from '../../components/vendor-projects-panel';
 
 const TABLE = 'vendors';
 
@@ -62,6 +63,65 @@ function waNumber(raw: string) {
   return d;
 }
 
+type ImportRow = {
+  company_name: string;
+  trade: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  city: string;
+  scope: string;
+};
+
+const IMPORT_HEADER_HINTS = ['اسم الشركة', 'company', 'الشركة', 'company_name'];
+
+/** يفصل سطرًا بـ Tab (لصق من Excel) أو بفاصلة/فاصلة منقوطة (CSV) مع دعم الاقتباس */
+function splitImportLine(line: string): string[] {
+  if (line.includes('\t')) return line.split('\t').map((c) => c.trim());
+  const out: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else inQuotes = false;
+      } else cur += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',' || c === ';') {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+/** يقرأ نصًا ملصوقًا من Excel أو محتوى CSV إلى صفوف موردين. الترتيب: الشركة، التخصص، المسؤول، الجوال، البريد، المدينة، النطاق */
+function parseVendorImport(text: string): ImportRow[] {
+  const lines = text.split(/\r\n|\n|\r/).filter((l) => l.trim() !== '');
+  if (!lines.length) return [];
+  const rows = lines.map(splitImportLine);
+  const looksLikeHeader = rows[0].some((c) =>
+    IMPORT_HEADER_HINTS.some((hint) => c.toLowerCase().includes(hint.toLowerCase())),
+  );
+  const dataRows = looksLikeHeader ? rows.slice(1) : rows;
+  return dataRows
+    .map((cols) => ({
+      company_name: (cols[0] || '').trim(),
+      trade: (cols[1] || '').trim(),
+      contact_name: (cols[2] || '').trim(),
+      phone: (cols[3] || '').trim(),
+      email: (cols[4] || '').trim(),
+      city: (cols[5] || '').trim(),
+      scope: (cols[6] || '').trim(),
+    }))
+    .filter((r) => r.company_name);
+}
+
 export default function VendorsPage() {
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +134,11 @@ export default function VendorsPage() {
   const [editingId, setEditingId] = useState('');
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importFileName, setImportFileName] = useState('');
+  const [importPreview, setImportPreview] = useState<ImportRow[]>([]);
+  const [importing, setImporting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -157,6 +222,53 @@ export default function VendorsPage() {
     }
   }
 
+  function onImportFile(file: File | undefined) {
+    if (!file) return;
+    setImportFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => setImportText(String(reader.result || ''));
+    reader.onerror = () => setError('تعذرت قراءة الملف.');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function previewImport() {
+    setError('');
+    const parsed = parseVendorImport(importText);
+    if (!parsed.length) {
+      setError('لم يُعثر على صفوف صالحة. تأكد أن اسم الشركة موجود في العمود الأول.');
+      return;
+    }
+    setImportPreview(parsed);
+  }
+
+  async function runImport() {
+    setImporting(true);
+    setError('');
+    try {
+      const values = importPreview.map((r) => ({
+        company_name: r.company_name,
+        trade: r.trade || null,
+        contact_name: r.contact_name || null,
+        phone: r.phone || null,
+        email: r.email || null,
+        city: r.city || null,
+        scope: r.scope || null,
+        notes: null,
+        is_active: true,
+      }));
+      await simpleCrud.createMany(TABLE, values);
+      setImportText('');
+      setImportFileName('');
+      setImportPreview([]);
+      setShowImport(false);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر استيراد الموردين.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   function edit(row: SimpleRow) {
     setDraft({
       company_name: safe(row.company_name),
@@ -222,22 +334,114 @@ export default function VendorsPage() {
       title="الموردون"
       description="سجل الموردين ومقاولي الباطن: التخصص، بيانات التواصل، ونطاق الأعمال."
       action={
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setDraft(EMPTY);
-            setEditingId('');
-            setShowForm((v) => !v);
-          }}
-        >
-          {showForm ? 'إغلاق النموذج' : 'إضافة مورد'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              setShowForm(false);
+              setShowImport((v) => !v);
+            }}
+          >
+            {showImport ? 'إغلاق الاستيراد' : 'استيراد موردين'}
+          </button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setShowImport(false);
+              setDraft(EMPTY);
+              setEditingId('');
+              setShowForm((v) => !v);
+            }}
+          >
+            {showForm ? 'إغلاق النموذج' : 'إضافة مورد'}
+          </button>
+        </div>
       }
     >
       {error && (
         <div className="rounded-xl border border-rose-400/60 px-4 py-3 text-sm text-rose-400">
           {error}
         </div>
+      )}
+
+      {showImport && (
+        <section className={panel}>
+          <h3 className="mb-2 text-base font-bold">استيراد موردين بالجملة</h3>
+          <p className="mb-3 text-xs text-[var(--nav-secondary)]">
+            الأعمدة بالترتيب: اسم الشركة، التخصص، اسم المسؤول، الجوال، البريد الإلكتروني، المدينة، نطاق الأعمال.
+            الصف الأول اختياري كعناوين. الصق مباشرة من Excel (Tab) أو ارفع ملف CSV.
+          </p>
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <label className="btn-secondary cursor-pointer">
+              رفع ملف CSV
+              <input
+                type="file"
+                accept=".csv,.txt"
+                className="hidden"
+                onChange={(e) => onImportFile(e.target.files?.[0])}
+              />
+            </label>
+            {importFileName && <span className="text-xs text-[var(--nav-secondary)]">{importFileName}</span>}
+          </div>
+          <textarea
+            className={`${field} min-h-[140px] font-mono text-xs`}
+            dir="ltr"
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={'مؤسسة الخليج للألمنيوم, ألمنيوم, أحمد, 0555xxxxxx, ahmed@example.com, الدمام, ألمنيوم وكلادينج'}
+          />
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button className="btn-primary" onClick={previewImport} disabled={!importText.trim()}>
+              معاينة
+            </button>
+            {(importText.trim() || importPreview.length > 0) && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setImportText('');
+                  setImportFileName('');
+                  setImportPreview([]);
+                }}
+              >
+                مسح
+              </button>
+            )}
+          </div>
+          {importPreview.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-sm font-semibold">{importPreview.length} مورد جاهز للاستيراد</p>
+              <div className="max-h-64 overflow-auto rounded-xl border border-[var(--nav-border)]">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--nav-border)]">
+                      <th className={th}>الشركة</th>
+                      <th className={th}>التخصص</th>
+                      <th className={th}>المسؤول</th>
+                      <th className={th}>الجوال</th>
+                      <th className={th}>المدينة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importPreview.map((r, i) => (
+                      <tr key={i} className="border-b border-[var(--nav-border)]/60">
+                        <td className={td}>{r.company_name}</td>
+                        <td className={td}>{r.trade || '—'}</td>
+                        <td className={td}>{r.contact_name || '—'}</td>
+                        <td className={td} dir="ltr">
+                          {r.phone || '—'}
+                        </td>
+                        <td className={td}>{r.city || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button className="btn-primary mt-3" disabled={importing} onClick={() => void runImport()}>
+                {importing ? 'جارٍ الاستيراد...' : `استيراد ${importPreview.length} مورد`}
+              </button>
+            </div>
+          )}
+        </section>
       )}
 
       {showForm && (
@@ -430,7 +634,6 @@ export default function VendorsPage() {
                   const active = row.is_active !== false;
                   const wa = waNumber(safe(row.phone));
                   const open = expandedId === id;
-                  const hasDetails = safe(row.email) || safe(row.notes);
 
                   return (
                     <Fragment key={id}>
@@ -477,14 +680,12 @@ export default function VendorsPage() {
                         <td className={td}>{safe(row.city) || '—'}</td>
                         <td className={`${td} max-w-xs`}>
                           {safe(row.scope) || '—'}
-                          {hasDetails && (
-                            <button
-                              className="mt-1 block text-xs font-semibold text-[var(--nav-secondary)] hover:underline"
-                              onClick={() => setExpandedId(open ? '' : id)}
-                            >
-                              {open ? 'إخفاء التفاصيل' : 'تفاصيل أكثر'}
-                            </button>
-                          )}
+                          <button
+                            className="mt-1 block text-xs font-semibold text-[var(--nav-secondary)] hover:underline"
+                            onClick={() => setExpandedId(open ? '' : id)}
+                          >
+                            {open ? 'إخفاء التفاصيل' : 'تفاصيل / ربط بمشروع'}
+                          </button>
                         </td>
                         <td className={`${td} whitespace-nowrap`}>
                           <div className="flex flex-wrap gap-2">
@@ -526,6 +727,9 @@ export default function VendorsPage() {
                                   <p className="whitespace-pre-wrap">{safe(row.notes)}</p>
                                 </div>
                               )}
+                            </div>
+                            <div className="mt-3">
+                              <VendorProjectsPanel vendorId={id} />
                             </div>
                           </td>
                         </tr>

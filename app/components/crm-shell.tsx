@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState, type ReactNode } from 'react';
 import { getSupabaseClient } from '../lib/supabase/client';
+import { cachedLogoUrl, fetchLogoUrl } from '../lib/supabase/branding';
 
 const primary = [
   ['/', 'واجهة الموقع', '⌂'],
@@ -11,12 +12,11 @@ const primary = [
   ['/marketing', 'فريق التسويق', '▣'],
   ['/radar', 'رادار الفرص', '◆'],
   ['/daily', 'مركز الاستقطاب', '◎'],
-  ['/outreach', 'التواصل', '◈'],
-  ['/email-center', 'الإيميلات', '✉'],
 ] as const;
+/** العلاقات والتواصل أول مجموعة بطلب المستخدم — تضم الآن التواصل والإيميلات مع الموردين وبنك الأسعار */
 const secondaryGroups = [
+  { label: 'العلاقات والتواصل', links: [['/outreach', 'التواصل'], ['/email-center', 'الإيميلات'], ['/vendors', 'الموردون'], ['/prices', 'بنك الأسعار'], ['/research', 'البحث والتحقق']] },
   { label: 'الاستقطاب والمشاريع', links: [['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
-  { label: 'العلاقات والتواصل', links: [['/vendors', 'الموردون'], ['/prices', 'بنك الأسعار'], ['/research', 'البحث والتحقق']] },
   { label: 'الإدارة والنتائج', links: [['/contracts', 'العقود'], ['/quotations', 'عروض الأسعار'], ['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
 ] as const;
 
@@ -62,6 +62,12 @@ function NovawerkLockup({ className = '' }: { className?: string }) {
   );
 }
 
+/** يعرض شعار المستخدم المرفوع إن وُجد (من صفحة الإعدادات)، وإلا يرجع لعلامة نوفاويرك الافتراضية */
+function Brand({ className = '', kind, logoUrl }: { className?: string; kind: 'mark' | 'lockup'; logoUrl: string | null }) {
+  if (logoUrl) return <img src={logoUrl} alt="شعار الشركة" className={`${className} object-contain`} />;
+  return kind === 'mark' ? <NovawerkMark className={className} /> : <NovawerkLockup className={className} />;
+}
+
 type Props = { title: string; description: string; action?: ReactNode; children: ReactNode };
 
 export function CRMPage({ title, description, action, children }: Props) {
@@ -72,6 +78,12 @@ export function CRMPage({ title, description, action, children }: Props) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [theme, setTheme] = useState<'original' | 'neon' | 'teal'>('original');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLogoUrl(cachedLogoUrl());
+    void fetchLogoUrl().then(setLogoUrl).catch(() => {});
+  }, []);
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem('نوفافيرك-nav-collapsed') === '1');
@@ -110,7 +122,7 @@ export function CRMPage({ title, description, action, children }: Props) {
 
   return <div className="min-h-screen text-[#2f2417]">
     <header className="نوفافيرك-mobile-header sticky top-0 z-40 flex items-center justify-between border-b border-[#e7d8b8] bg-[#fffdf9]/95 px-4 py-3 backdrop-blur lg:hidden">
-      <div className="flex items-center gap-2"><NovawerkMark className="h-7 w-6" /><div><strong>نوفاويرك</strong><span className="mr-2 text-xs text-[#8a6f35]">تطوير الأعمال</span></div></div>
+      <div className="flex items-center gap-2"><Brand kind="mark" logoUrl={logoUrl} className="h-7 w-6" /><div><strong>نوفاويرك</strong><span className="mr-2 text-xs text-[#8a6f35]">تطوير الأعمال</span></div></div>
       <div className="flex items-center gap-2"><button className="theme-toggle" onClick={toggleTheme} aria-label="تغيير الواجهة">{theme === 'original' ? '✦ Neon' : theme === 'neon' ? '✦ Teal' : '◆ نوفاويرك'}</button>
       <button className="btn-ghost" aria-label="فتح القائمة" onClick={() => setOpen(!open)}>{open ? 'إغلاق' : 'القائمة'}</button></div>
     </header>
@@ -120,9 +132,9 @@ export function CRMPage({ title, description, action, children }: Props) {
         <button onClick={toggleCollapsed} className="btn-ghost mb-3 hidden w-full lg:block" title={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>{collapsed ? '←' : 'طي القائمة'}</button>
         <Link href="/" onClick={() => setOpen(false)} className="نوفافيرك-brand mb-5 block rounded-2xl bg-[#2f2417] px-4 py-6 text-center text-[#fff8e8]" aria-label="العودة إلى واجهة الموقع">
           {collapsed
-            ? <NovawerkMark className="mx-auto h-9 w-8" />
+            ? <Brand kind="mark" logoUrl={logoUrl} className="mx-auto h-9 w-8" />
             : <>
-                <NovawerkLockup className="mx-auto block h-28 w-full" />
+                <Brand kind="lockup" logoUrl={logoUrl} className="mx-auto block h-28 w-full" />
                 <p className="mt-4 text-[11px] text-[#9FB3C6]"><span className="ml-2 inline-block h-2 w-2 rounded-full bg-emerald-400" />متصل ببيانات العمل</p>
               </>}
         </Link>
@@ -137,7 +149,7 @@ export function CRMPage({ title, description, action, children }: Props) {
         <div className="mb-5 flex flex-col gap-3 border-b border-[var(--nav-border)] pb-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <NovawerkMark className="h-5 w-4" />
+              <Brand kind="mark" logoUrl={logoUrl} className="h-5 w-4" />
               <p className="text-xs font-bold text-[var(--nav-secondary)]">نوفاويرك · تطوير الأعمال</p>
               <span className="nav-current-chip">القسم الحالي: {currentNavLabel}</span>
             </div>
@@ -150,7 +162,7 @@ export function CRMPage({ title, description, action, children }: Props) {
 
         <footer className="nw-footer mt-10 flex flex-col gap-3 pt-5 text-xs sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
-            <NovawerkMark className="h-6 w-5" />
+            <Brand kind="mark" logoUrl={logoUrl} className="h-6 w-5" />
             <span><strong>نوفاويرك</strong> · مقاولات عامة</span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">

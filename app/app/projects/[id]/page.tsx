@@ -3,6 +3,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CRMPage } from "../../../components/crm-shell";
+import { ProjectVendorsPanel } from "../../../components/project-vendors-panel";
 import { simpleCrud, type SimpleRow } from "../../../lib/supabase/simple-crud";
 import {
   ROUTE_LABELS,
@@ -598,7 +599,7 @@ export default function ProjectCapturePage() {
       <section className="crm-card p-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">ACCESS MAP</p>
+            <p className="text-xs font-bold text-[var(--nav-accent)]">ACCESS MAP</p>
             <h3 className="text-xl font-bold">كيف ندخل هذا المشروع؟</h3>
             <p className="mt-1 text-xs text-[#75664d]">
               الجهة ليست الهدف بحد ذاتها؛ نستخدمها كمسار للوصول إلى الحزمة
@@ -623,7 +624,7 @@ export default function ProjectCapturePage() {
             return (
               <div key={role} className="contents">
                 <div
-                  className={`rounded-2xl border p-3 ${entity ? "border-[#6f5cff]" : "border-dashed"}`}
+                  className={`rounded-2xl border p-3 ${entity ? "border-[var(--nav-accent)]" : "border-dashed"}`}
                 >
                   <span className="text-xs text-[#75664d]">{label[role]}</span>
                   <b className="mt-1 block">
@@ -640,7 +641,7 @@ export default function ProjectCapturePage() {
                   </p>
                 </div>
                 {index < 3 && (
-                  <div className="hidden text-center text-xl text-[#8c7cff] lg:block">
+                  <div className="hidden text-center text-xl text-[var(--nav-accent)] lg:block">
                     ←
                   </div>
                 )}
@@ -943,6 +944,7 @@ export default function ProjectCapturePage() {
           </button>
         </section>
       </div>
+      <ProjectVendorsPanel projectId={id} />
       <section className="crm-card p-4">
         <div className="flex justify-between gap-2">
           <div>
@@ -1019,7 +1021,7 @@ export default function ProjectCapturePage() {
       <section className="crm-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">
+            <p className="text-xs font-bold text-[var(--nav-accent)]">
               PROJECT LIFECYCLE INTELLIGENCE
             </p>
             <h3 className="text-xl font-bold">من أول إشارة إلى الترسية</h3>
@@ -1045,7 +1047,7 @@ export default function ProjectCapturePage() {
             return (
               <div
                 key={x}
-                className={`rounded-2xl border p-3 ${active ? "border-[#6f5cff]" : "border-dashed"}`}
+                className={`rounded-2xl border p-3 ${active ? "border-[var(--nav-accent)]" : "border-dashed"}`}
               >
                 <span className="text-xs">{i + 1}</span>
                 <b className="mt-1 block text-xs">{x}</b>
@@ -1212,7 +1214,7 @@ export default function ProjectCapturePage() {
       <section className="crm-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">
+            <p className="text-xs font-bold text-[var(--nav-accent)]">
               BID / NO-BID ENGINE
             </p>
             <h3 className="text-xl font-bold">هل تستحق الفرصة وقتنا فعلًا؟</h3>
@@ -1294,7 +1296,7 @@ export default function ProjectCapturePage() {
       <section className="crm-card p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">
+            <p className="text-xs font-bold text-[var(--nav-accent)]">
               PROJECT RELATIONSHIPS
             </p>
             <h3 className="text-xl font-bold">

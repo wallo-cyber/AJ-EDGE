@@ -71,9 +71,9 @@ export default function Home() {
           <Link
             key={area.href}
             href={area.href}
-            className="crm-card group flex min-h-40 flex-col justify-between p-5 transition hover:-translate-y-1 hover:border-[#8058ff]"
+            className="crm-card group flex min-h-40 flex-col justify-between p-5 transition hover:-translate-y-1 hover:border-[var(--nav-accent)]"
           >
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#312a54] text-xl text-[#b7aaff]">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-[rgba(199,154,43,.16)] text-xl text-[var(--nav-accent)]">
               {area.icon}
             </span>
             <div className="mt-6">

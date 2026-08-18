@@ -124,7 +124,7 @@ export function WatchlistsV3() {
       )}
       <section className="crm-card p-4">
         <div>
-          <p className="text-xs font-bold text-[#8c7cff]">NEW WATCHLIST</p>
+          <p className="text-xs font-bold text-[var(--nav-accent)]">NEW WATCHLIST</p>
           <h3 className="text-xl font-bold">احفظ استراتيجية البحث</h3>
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-3">

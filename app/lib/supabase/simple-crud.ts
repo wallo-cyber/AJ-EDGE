@@ -107,6 +107,16 @@ export const simpleCrud = {
     if (error) throw databaseError("create", table, error);
     return data as SimpleRow;
   },
+  /** إدراج جماعي بطلب واحد — للاستيراد (CSV/لصق) بدل حلقة create() لكل صف */
+  async createMany(table: string, rows: Record<string, unknown>[]) {
+    if (!rows.length) return [] as SimpleRow[];
+    const { data, error } = await getSupabaseClient()
+      .from(table)
+      .insert(rows)
+      .select("*");
+    if (error) throw databaseError("createMany", table, error);
+    return (data ?? []) as SimpleRow[];
+  },
   async update(table: string, id: string, values: Record<string, unknown>) {
     const payload = tablesWithoutUpdatedAt.has(table)
       ? values

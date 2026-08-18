@@ -133,7 +133,7 @@ export function ProjectRadar() {
       <section className="crm-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-[#8c7cff]">SIGNAL → PROJECT</p>
+            <p className="text-xs font-bold text-[var(--nav-accent)]">SIGNAL → PROJECT</p>
             <h3 className="text-xl font-bold">رادار الفرص الخارجية</h3>
           </div>
           <div className="flex gap-2">
