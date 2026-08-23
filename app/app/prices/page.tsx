@@ -65,6 +65,89 @@ function daysSince(d: unknown) {
   return Math.floor((Date.now() - t) / 86400000);
 }
 
+type MaterialImportRow = {
+  vendor_name: string;
+  item: string;
+  unit: string;
+  price: string;
+  quoted_at: string;
+  source: string;
+  notes: string;
+};
+
+type MaterialImportStatus = 'new' | 'duplicate' | 'no-vendor' | 'no-price';
+
+type MaterialImportPreviewRow = MaterialImportRow & {
+  resolvedVendorId: string;
+  willCreateVendor: boolean;
+  status: MaterialImportStatus;
+};
+
+const MATERIAL_IMPORT_HEADER_HINTS = ['المورد', 'vendor', 'البند', 'item', 'السعر', 'price'];
+
+/** يفصل سطرًا بـ Tab (لصق من Excel) أو بفاصلة/فاصلة منقوطة (CSV) مع دعم الاقتباس */
+function splitImportLine(line: string): string[] {
+  if (line.includes('\t')) return line.split('\t').map((c) => c.trim());
+  const out: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else inQuotes = false;
+      } else cur += c;
+    } else if (c === '"') inQuotes = true;
+    else if (c === ',' || c === ';') {
+      out.push(cur.trim());
+      cur = '';
+    } else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+
+/** يقرأ نصًا ملصوقًا من Excel أو محتوى CSV إلى صفوف تسعيرات. الترتيب: المورد، البند، الوحدة، السعر، تاريخ التسعير، المصدر، ملاحظات */
+function parseMaterialsImport(text: string): MaterialImportRow[] {
+  const lines = text.split(/\r\n|\n|\r/).filter((l) => l.trim() !== '');
+  if (!lines.length) return [];
+  const rows = lines.map(splitImportLine);
+  const looksLikeHeader = rows[0].some((c) =>
+    MATERIAL_IMPORT_HEADER_HINTS.some((hint) => c.toLowerCase().includes(hint.toLowerCase())),
+  );
+  const dataRows = looksLikeHeader ? rows.slice(1) : rows;
+  return dataRows
+    .map((cols) => ({
+      vendor_name: (cols[0] || '').trim(),
+      item: (cols[1] || '').trim(),
+      unit: (cols[2] || '').trim(),
+      price: (cols[3] || '').trim(),
+      quoted_at: (cols[4] || '').trim(),
+      source: (cols[5] || '').trim(),
+      notes: (cols[6] || '').trim(),
+    }))
+    .filter((r) => r.item);
+}
+
+const MATERIAL_CSV_TEMPLATE_HEADER = 'اسم المورد,البند,الوحدة,السعر,تاريخ التسعير,المصدر,ملاحظات';
+const MATERIAL_CSV_TEMPLATE_EXAMPLE =
+  'مؤسسة الفوز العربية,خرسانة مسلحة للقواعد شاملة الحديد والصب,م٣,450,2026-08-01,عرض سعر مكتوب,شامل التوريد';
+
+/** يولّد ملف CSV نموذج للتحميل — صف عناوين + صف مثال، بترميز يدعم العربي في Excel */
+function downloadMaterialsCsvTemplate() {
+  const csv = '﻿' + MATERIAL_CSV_TEMPLATE_HEADER + '\n' + MATERIAL_CSV_TEMPLATE_EXAMPLE + '\n';
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'قالب-أسعار-المواد.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 type Group = {
   key: string;
   item: string;
@@ -90,6 +173,12 @@ export default function PricesPage() {
   const [editingId, setEditingId] = useState('');
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importFileName, setImportFileName] = useState('');
+  const [importDefaultVendorId, setImportDefaultVendorId] = useState('');
+  const [importPreview, setImportPreview] = useState<MaterialImportPreviewRow[]>([]);
+  const [importing, setImporting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -125,6 +214,23 @@ export default function PricesPage() {
         .sort((a, b) => safe(a.company_name).localeCompare(safe(b.company_name), 'ar')),
     [vendors],
   );
+
+  /** لمطابقة اسم المورد بالاستيراد باسم موجود فعلًا (بدون حساسية لحالة الأحرف أو المسافات الزائدة) */
+  const vendorIdByName = useMemo(() => {
+    const map = new Map<string, string>();
+    vendors.forEach((v) => {
+      const n = norm(v.company_name);
+      if (n && !map.has(n)) map.set(n, String(v.id));
+    });
+    return map;
+  }, [vendors]);
+
+  /** مفاتيح التسعيرات الموجودة فعلًا (مورد + بند + وحدة) — لتجاهل المكرر عند الاستيراد */
+  const existingPriceKeys = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => set.add(`${String(r.vendor_id)}|${norm(r.item)}|${norm(r.unit)}`));
+    return set;
+  }, [rows]);
 
   const vendorName = (id: unknown) => safe(vendorById.get(String(id))?.company_name) || 'مورد محذوف';
   const vendorTrade = (id: unknown) => safe(vendorById.get(String(id))?.trade);
@@ -257,6 +363,108 @@ export default function PricesPage() {
     }
   }
 
+  function onImportFile(file: File | undefined) {
+    if (!file) return;
+    setImportFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => setImportText(String(reader.result || ''));
+    reader.onerror = () => setError('تعذرت قراءة الملف.');
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function previewImport() {
+    setError('');
+    const parsed = parseMaterialsImport(importText);
+    if (!parsed.length) {
+      setError('لم يُعثر على صفوف صالحة. تأكد أن اسم البند موجود في العمود الثاني.');
+      return;
+    }
+
+    const seenInBatch = new Set<string>();
+    const preview: MaterialImportPreviewRow[] = parsed.map((r) => {
+      let vendorName = r.vendor_name;
+      let resolvedVendorId = '';
+      let willCreateVendor = false;
+
+      if (vendorName) {
+        const match = vendorIdByName.get(norm(vendorName));
+        if (match) resolvedVendorId = match;
+        else willCreateVendor = true;
+      } else if (importDefaultVendorId) {
+        resolvedVendorId = importDefaultVendorId;
+        vendorName = safe(vendors.find((v) => String(v.id) === importDefaultVendorId)?.company_name);
+      }
+
+      const priceNum = toNum(r.price);
+      let status: MaterialImportStatus;
+      if (!vendorName && !willCreateVendor) {
+        status = 'no-vendor';
+      } else if (!Number.isFinite(priceNum) || priceNum <= 0) {
+        status = 'no-price';
+      } else {
+        const vendorKey = resolvedVendorId || `new:${norm(vendorName)}`;
+        const key = `${vendorKey}|${norm(r.item)}|${norm(r.unit)}`;
+        if (existingPriceKeys.has(key) || seenInBatch.has(key)) {
+          status = 'duplicate';
+        } else {
+          status = 'new';
+          seenInBatch.add(key);
+        }
+      }
+
+      return { ...r, vendor_name: vendorName, resolvedVendorId, willCreateVendor, status };
+    });
+
+    setImportPreview(preview);
+  }
+
+  async function runImport() {
+    const toImport = importPreview.filter((r) => r.status === 'new');
+    if (!toImport.length) {
+      setError('لا توجد صفوف جديدة صالحة للاستيراد.');
+      return;
+    }
+
+    setImporting(true);
+    setError('');
+    try {
+      // أنشئ الموردين الجدد أولًا (مرة واحدة لكل اسم) ثم اربط الصفوف بمعرفاتهم
+      const newVendorNames = [
+        ...new Set(toImport.filter((r) => r.willCreateVendor).map((r) => norm(r.vendor_name))),
+      ];
+      const createdVendorIds = new Map<string, string>();
+      for (const key of newVendorNames) {
+        const original = toImport.find((r) => norm(r.vendor_name) === key)?.vendor_name || '';
+        const created = await simpleCrud.create(VENDOR_TABLE, {
+          company_name: original,
+          is_active: true,
+        });
+        createdVendorIds.set(key, String(created.id));
+      }
+
+      const values = toImport.map((r) => ({
+        vendor_id: r.resolvedVendorId || createdVendorIds.get(norm(r.vendor_name)) || null,
+        item: r.item,
+        unit: r.unit || null,
+        price: toNum(r.price),
+        quoted_at: r.quoted_at || todayISO(),
+        source: r.source || null,
+        notes: r.notes || null,
+      }));
+
+      await simpleCrud.createMany(TABLE, values);
+      setImportText('');
+      setImportFileName('');
+      setImportPreview([]);
+      setShowImport(false);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر استيراد الأسعار.');
+    } finally {
+      setImporting(false);
+    }
+  }
+
   function edit(row: SimpleRow) {
     setDraft({
       vendor_id: String(row.vendor_id ?? ''),
@@ -300,16 +508,28 @@ export default function PricesPage() {
       title="أسعار المواد"
       description="أسعار البنود من الموردين: أقل وأعلى ومتوسط سعر لكل بند، لتسعير العطاءات من مصدر حقيقي."
       action={
-        <button
-          className="btn-primary"
-          onClick={() => {
-            setDraft(EMPTY);
-            setEditingId('');
-            setShowForm((v) => !v);
-          }}
-        >
-          {showForm ? 'إغلاق النموذج' : 'إضافة تسعيرة'}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              setShowForm(false);
+              setShowImport((v) => !v);
+            }}
+          >
+            {showImport ? 'إغلاق الاستيراد' : 'استيراد المواد'}
+          </button>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setShowImport(false);
+              setDraft(EMPTY);
+              setEditingId('');
+              setShowForm((v) => !v);
+            }}
+          >
+            {showForm ? 'إغلاق النموذج' : 'إضافة تسعيرة'}
+          </button>
+        </div>
       }
     >
       {error && (
@@ -322,6 +542,153 @@ export default function PricesPage() {
         <div className="rounded-xl border border-amber-400/60 px-4 py-3 text-sm text-amber-400">
           لا يوجد موردون بعد. أضف موردين أولًا من صفحة الموردين، ثم سجّل أسعارهم هنا.
         </div>
+      )}
+
+      {showImport && (
+        <section className={panel}>
+          <h3 className="mb-2 text-base font-bold">استيراد أسعار بالجملة</h3>
+          <p className="mb-3 text-xs text-[var(--nav-secondary)]">
+            الأعمدة بالترتيب: اسم المورد، البند، الوحدة، السعر، تاريخ التسعير، المصدر، ملاحظات. الصف
+            الأول اختياري كعناوين. الصق مباشرة من Excel (Tab) أو ارفع ملف CSV. إذا كانت كل الصفوف
+            لمورد واحد اترك عمود المورد فارغًا واختر المورد الافتراضي أدناه. المورد غير الموجود
+            يُنشأ تلقائيًا عند الاستيراد، والبنود المكررة (نفس المورد + البند + الوحدة) تُتجاهل
+            تلقائيًا فلا تتكرر بياناتك.
+          </p>
+
+          <div className="mb-3 grid gap-4 md:grid-cols-3">
+            <div>
+              <label className={label}>المورد الافتراضي (إن لم يوجد عمود مورد بالملف)</label>
+              <select
+                className={field}
+                value={importDefaultVendorId}
+                onChange={(e) => setImportDefaultVendorId(e.target.value)}
+              >
+                <option value="">— بدون —</option>
+                {activeVendors.map((v) => (
+                  <option key={String(v.id)} value={String(v.id)}>
+                    {safe(v.company_name)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            <button type="button" className="btn-ghost" onClick={downloadMaterialsCsvTemplate}>
+              تحميل نموذج CSV
+            </button>
+            <label className="btn-secondary cursor-pointer">
+              رفع ملف CSV
+              <input
+                type="file"
+                accept=".csv,.txt"
+                className="hidden"
+                onChange={(e) => onImportFile(e.target.files?.[0])}
+              />
+            </label>
+            {importFileName && (
+              <span className="text-xs text-[var(--nav-secondary)]">{importFileName}</span>
+            )}
+          </div>
+
+          <textarea
+            className={`${field} min-h-[140px] font-mono text-xs`}
+            dir="ltr"
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={
+              'مؤسسة الفوز العربية, خرسانة مسلحة للقواعد شاملة الحديد والصب, م٣, 450, 2026-08-01, عرض سعر مكتوب, شامل التوريد'
+            }
+          />
+
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button className="btn-primary" onClick={previewImport} disabled={!importText.trim()}>
+              معاينة
+            </button>
+            {(importText.trim() || importPreview.length > 0) && (
+              <button
+                className="btn-secondary"
+                onClick={() => {
+                  setImportText('');
+                  setImportFileName('');
+                  setImportPreview([]);
+                }}
+              >
+                مسح
+              </button>
+            )}
+          </div>
+
+          {importPreview.length > 0 && (
+            <div className="mt-4">
+              {(() => {
+                const newCount = importPreview.filter((r) => r.status === 'new').length;
+                const dupCount = importPreview.filter((r) => r.status === 'duplicate').length;
+                const badCount = importPreview.length - newCount - dupCount;
+                return (
+                  <p className="mb-2 text-sm font-semibold">
+                    {newCount} بند جديد جاهز للاستيراد
+                    {dupCount > 0 && ` · ${dupCount} مكرر سيُتجاهل`}
+                    {badCount > 0 && ` · ${badCount} صف فيه خلل (بلا مورد أو بلا سعر)`}
+                  </p>
+                );
+              })()}
+              <div className="max-h-64 overflow-auto rounded-xl border border-[var(--nav-border)]">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--nav-border)]">
+                      <th className={th}>المورد</th>
+                      <th className={th}>البند</th>
+                      <th className={th}>الوحدة</th>
+                      <th className={th}>السعر</th>
+                      <th className={th}>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importPreview.map((r, i) => (
+                      <tr key={i} className="border-b border-[var(--nav-border)]/60">
+                        <td className={td}>
+                          {r.vendor_name || '—'}
+                          {r.willCreateVendor && (
+                            <span className="mr-1 rounded-full border border-amber-400/60 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                              مورد جديد
+                            </span>
+                          )}
+                        </td>
+                        <td className={td}>{r.item}</td>
+                        <td className={td}>{r.unit || '—'}</td>
+                        <td className={td} dir="ltr">
+                          {r.price || '—'}
+                        </td>
+                        <td className={td}>
+                          {r.status === 'new' && <span className="text-emerald-400">جديد</span>}
+                          {r.status === 'duplicate' && (
+                            <span className="text-[var(--nav-secondary)]">مكرر — سيُتجاهل</span>
+                          )}
+                          {r.status === 'no-vendor' && (
+                            <span className="text-rose-400">بلا مورد</span>
+                          )}
+                          {r.status === 'no-price' && (
+                            <span className="text-rose-400">بلا سعر صحيح</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                className="btn-primary mt-3"
+                disabled={importing || importPreview.every((r) => r.status !== 'new')}
+                onClick={() => void runImport()}
+              >
+                {importing
+                  ? 'جارٍ الاستيراد...'
+                  : `استيراد ${importPreview.filter((r) => r.status === 'new').length} بند`}
+              </button>
+            </div>
+          )}
+        </section>
       )}
 
       <div className="grid gap-4 md:grid-cols-3">
