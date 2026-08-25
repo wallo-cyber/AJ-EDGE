@@ -179,6 +179,7 @@ export default function PricesPage() {
   const [importDefaultVendorId, setImportDefaultVendorId] = useState('');
   const [importPreview, setImportPreview] = useState<MaterialImportPreviewRow[]>([]);
   const [importing, setImporting] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -487,6 +488,31 @@ export default function PricesPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذر الحذف.');
+    }
+  }
+
+  /** حذف كل التسعيرات المطابقة للفلترة/البحث الحالي دفعة واحدة — لحذف مجموعة كاملة (دفعة استيراد) بسهولة، مثلًا بالبحث باسم المورد */
+  async function bulkDeleteFiltered() {
+    if (!filtered.length) return;
+    if (
+      !confirm(
+        `حذف ${filtered.length} تسعيرة مطابقة للبحث/الفلترة الحالية؟ هذا الإجراء لا يمكن التراجع عنه.`,
+      )
+    )
+      return;
+    setBulkDeleting(true);
+    setError('');
+    try {
+      await simpleCrud.removeMany(
+        TABLE,
+        filtered.map((r) => String(r.id)),
+      );
+      setExpandedKey('');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر حذف المجموعة.');
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -841,10 +867,29 @@ export default function PricesPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="بحث بالبند أو المورد أو الملاحظات..."
           />
-          <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-            {groups.length} بند
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-semibold text-[var(--nav-secondary)]">
+              {groups.length} بند
+            </span>
+            {(query.trim() || tradeFilter) && filtered.length > 0 && (
+              <button
+                className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDeleteFiltered()}
+              >
+                {bulkDeleting
+                  ? 'جارٍ الحذف...'
+                  : `حذف كل نتائج البحث (${filtered.length})`}
+              </button>
+            )}
+          </div>
         </div>
+        {(query.trim() || tradeFilter) && (
+          <p className="mb-4 -mt-2 text-[11px] text-[var(--nav-secondary)]">
+            لحذف مجموعة كاملة استوردتها دفعة واحدة (مثلًا مورد معيّن): اكتب اسم المورد بالبحث
+            أعلاه ليظهر بنوده فقط، ثم اضغط &quot;حذف كل نتائج البحث&quot;.
+          </p>
+        )}
 
         {presentTrades.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -882,10 +927,7 @@ export default function PricesPage() {
                   <th className={th}>البند</th>
                   <th className={th}>الوحدة</th>
                   <th className={th}>عروض</th>
-                  <th className={th}>أقل سعر</th>
-                  <th className={th}>المتوسط</th>
-                  <th className={th}>أعلى سعر</th>
-                  <th className={th}>الفارق</th>
+                  <th className={th}>السعر</th>
                 </tr>
               </thead>
               <tbody>
@@ -908,31 +950,20 @@ export default function PricesPage() {
                           </div>
                           {g.minVendor && (
                             <div className="mt-1 text-xs text-[var(--nav-secondary)]">
-                              الأقل: {g.minVendor}
+                              المورد: {g.minVendor}
                             </div>
                           )}
                         </td>
                         <td className={td}>{g.unit || '—'}</td>
                         <td className={td}>{g.quotes.length}</td>
-                        <td className={`${td} font-semibold text-emerald-400`} dir="ltr">
+                        <td className={`${td} font-semibold text-[var(--nav-accent)]`} dir="ltr">
                           {Number.isFinite(g.min) ? money(g.min) : '—'}
-                        </td>
-                        <td className={td} dir="ltr">
-                          {Number.isFinite(g.avg) ? money(g.avg) : '—'}
-                        </td>
-                        <td className={td} dir="ltr">
-                          {Number.isFinite(g.max) ? money(g.max) : '—'}
-                        </td>
-                        <td className={td} dir="ltr">
-                          {Number.isFinite(g.spread) && g.spread > 0
-                            ? `${g.spread.toFixed(0)}%`
-                            : '—'}
                         </td>
                       </tr>
 
                       {open && (
                         <tr className="border-b border-[var(--nav-border)]/60">
-                          <td className="px-3 pb-4" colSpan={7}>
+                          <td className="px-3 pb-4" colSpan={4}>
                             <div className="grid gap-2">
                               {g.quotes.map((q) => {
                                 const age = daysSince(q.quoted_at);

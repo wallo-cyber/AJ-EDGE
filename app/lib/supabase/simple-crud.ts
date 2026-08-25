@@ -146,4 +146,14 @@ export const simpleCrud = {
       .eq("id", id);
     if (error) throw databaseError("remove", table, error);
   },
+  /** حذف جماعي بمعرّفات — لحذف مجموعة كاملة (دفعة استيراد) دفعة واحدة بدل حلقة remove() لكل صف */
+  async removeMany(table: string, ids: string[]) {
+    if (!ids.length) return;
+    const chunkSize = 200;
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      const chunk = ids.slice(i, i + chunkSize);
+      const { error } = await getSupabaseClient().from(table).delete().in("id", chunk);
+      if (error) throw databaseError("removeMany", table, error);
+    }
+  },
 };
