@@ -156,4 +156,17 @@ export const simpleCrud = {
       if (error) throw databaseError("removeMany", table, error);
     }
   },
+  /** تحديث جماعي بشرط عمود = قيمة — مثلًا نقل كل التسعيرات من بند دليل إلى آخر عند الدمج */
+  async updateWhere(
+    table: string,
+    column: string,
+    value: string,
+    values: Record<string, unknown>,
+  ) {
+    const payload = tablesWithoutUpdatedAt.has(table)
+      ? values
+      : { ...values, updated_at: new Date().toISOString() };
+    const { error } = await getSupabaseClient().from(table).update(payload).eq(column, value);
+    if (error) throw databaseError("updateWhere", table, error);
+  },
 };

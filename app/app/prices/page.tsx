@@ -7,6 +7,7 @@ import { CRMPage } from '../../components/crm-shell';
 
 const TABLE = 'vendor_prices';
 const VENDOR_TABLE = 'vendors';
+const CATALOG_TABLE = 'materials_catalog';
 
 const UNITS = [
   'م٢',
@@ -80,6 +81,8 @@ type MaterialImportStatus = 'new' | 'duplicate' | 'no-vendor' | 'no-price';
 type MaterialImportPreviewRow = MaterialImportRow & {
   resolvedVendorId: string;
   willCreateVendor: boolean;
+  catalogItemId: string;
+  willCreateCatalogItem: boolean;
   status: MaterialImportStatus;
 };
 
@@ -164,6 +167,7 @@ type Group = {
 export default function PricesPage() {
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [vendors, setVendors] = useState<SimpleRow[]>([]);
+  const [catalogItems, setCatalogItems] = useState<SimpleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
@@ -185,17 +189,38 @@ export default function PricesPage() {
     setLoading(true);
     setError('');
     try {
-      const [priceData, vendorData] = await Promise.all([
+      const [priceData, vendorData, catalogData] = await Promise.all([
         simpleCrud.list(TABLE),
         simpleCrud.list(VENDOR_TABLE),
+        simpleCrud.list(CATALOG_TABLE),
       ]);
       setRows(priceData);
       setVendors(vendorData);
+      setCatalogItems(catalogData);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذر تحميل الأسعار.');
     } finally {
       setLoading(false);
     }
+  }
+
+  /** يبحث عن أقرب بند مطابق في دليل البنود (تطابق تام أو احتواء جزئي للنص) — يفضّل أطول نص مطابق كأكثر دقة */
+  function matchCatalogItem(desc: string): SimpleRow | null {
+    const n = norm(desc);
+    if (!n) return null;
+    let best: SimpleRow | null = null;
+    let bestLen = -1;
+    for (const c of catalogItems) {
+      const cn = norm(c.item);
+      if (!cn) continue;
+      if (cn === n || cn.includes(n) || n.includes(cn)) {
+        if (cn.length > bestLen) {
+          best = c;
+          bestLen = cn.length;
+        }
+      }
+    }
+    return best;
   }
 
   useEffect(() => {
@@ -396,6 +421,13 @@ export default function PricesPage() {
         vendorName = safe(vendors.find((v) => String(v.id) === importDefaultVendorId)?.company_name);
       }
 
+      // طابق البند بدليل البنود (تطابق تام أو احتواء جزئي) — نستخدم النص المعتمد بالدليل
+      // بدل صيغة الملف المستورد نفسها، حتى تتوحّد المقارنة بين كل الملفات المستوردة لاحقًا
+      const matchedCatalog = matchCatalogItem(r.item);
+      const catalogItemId = matchedCatalog ? String(matchedCatalog.id) : '';
+      const willCreateCatalogItem = !matchedCatalog;
+      const resolvedItem = matchedCatalog ? safe(matchedCatalog.item) : r.item;
+
       const priceNum = toNum(r.price);
       let status: MaterialImportStatus;
       if (!vendorName && !willCreateVendor) {
@@ -404,7 +436,7 @@ export default function PricesPage() {
         status = 'no-price';
       } else {
         const vendorKey = resolvedVendorId || `new:${norm(vendorName)}`;
-        const key = `${vendorKey}|${norm(r.item)}|${norm(r.unit)}`;
+        const key = `${vendorKey}|${norm(resolvedItem)}|${norm(r.unit)}`;
         if (existingPriceKeys.has(key) || seenInBatch.has(key)) {
           status = 'duplicate';
         } else {
@@ -413,7 +445,16 @@ export default function PricesPage() {
         }
       }
 
-      return { ...r, vendor_name: vendorName, resolvedVendorId, willCreateVendor, status };
+      return {
+        ...r,
+        item: resolvedItem,
+        vendor_name: vendorName,
+        resolvedVendorId,
+        willCreateVendor,
+        catalogItemId,
+        willCreateCatalogItem,
+        status,
+      };
     });
 
     setImportPreview(preview);
@@ -443,8 +484,30 @@ export default function PricesPage() {
         createdVendorIds.set(key, String(created.id));
       }
 
+      // أنشئ بنود دليل جديدة لأي بند لم يُطابَق (مرة واحدة لكل نص بند فريد بالدفعة)، معلَّمة
+      // بعلامة «جديد» ليراجعها ويصنّفها لاحقًا من صفحة دليل البنود
+      const newCatalogKeys = [
+        ...new Set(toImport.filter((r) => r.willCreateCatalogItem).map((r) => norm(r.item))),
+      ];
+      const catalogIdByKey = new Map<string, string>();
+      const catalogInserts: Record<string, unknown>[] = [];
+      for (const key of newCatalogKeys) {
+        const original = toImport.find((r) => norm(r.item) === key);
+        const id = crypto.randomUUID();
+        catalogIdByKey.set(key, id);
+        catalogInserts.push({
+          id,
+          category: '',
+          item: original?.item || '',
+          unit: original?.unit || null,
+          is_new: true,
+        });
+      }
+      if (catalogInserts.length) await simpleCrud.createMany(CATALOG_TABLE, catalogInserts);
+
       const values = toImport.map((r) => ({
         vendor_id: r.resolvedVendorId || createdVendorIds.get(norm(r.vendor_name)) || null,
+        catalog_item_id: r.catalogItemId || catalogIdByKey.get(norm(r.item)) || null,
         item: r.item,
         unit: r.unit || null,
         price: toNum(r.price),
@@ -578,7 +641,11 @@ export default function PricesPage() {
             الأول اختياري كعناوين. الصق مباشرة من Excel (Tab) أو ارفع ملف CSV. إذا كانت كل الصفوف
             لمورد واحد اترك عمود المورد فارغًا واختر المورد الافتراضي أدناه. المورد غير الموجود
             يُنشأ تلقائيًا عند الاستيراد، والبنود المكررة (نفس المورد + البند + الوحدة) تُتجاهل
-            تلقائيًا فلا تتكرر بياناتك.
+            تلقائيًا فلا تتكرر بياناتك. كل بند يُطابَق تلقائيًا مع{' '}
+            <a href="/materials-catalog" className="underline">
+              دليل البنود
+            </a>
+            ، وأي بند غير موجود فيه يُنشأ ويُعلَّم «جديد» لتصنيفه لاحقًا من هناك.
           </p>
 
           <div className="mb-3 grid gap-4 md:grid-cols-3">
@@ -681,7 +748,18 @@ export default function PricesPage() {
                             </span>
                           )}
                         </td>
-                        <td className={td}>{r.item}</td>
+                        <td className={td}>
+                          {r.item}
+                          {r.willCreateCatalogItem ? (
+                            <span className="mr-1 rounded-full border border-amber-400/60 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                              بند جديد بالدليل
+                            </span>
+                          ) : (
+                            <span className="mr-1 rounded-full border border-emerald-400/60 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                              مطابق للدليل
+                            </span>
+                          )}
+                        </td>
                         <td className={td}>{r.unit || '—'}</td>
                         <td className={td} dir="ltr">
                           {r.price || '—'}
