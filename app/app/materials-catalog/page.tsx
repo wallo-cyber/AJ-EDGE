@@ -159,6 +159,12 @@ export default function MaterialsCatalogPage() {
 
   const newCount = useMemo(() => rows.filter((r) => r.is_new === true).length, [rows]);
 
+  /** تصنيفات مقترحة لحقل إدخال التصنيف — الخمسة الأساسية + أي تصنيف أُنشئ فعلًا (بدون «غير مصنف») */
+  const categorySuggestions = useMemo(
+    () => presentCategories.filter((c) => c !== UNCATEGORIZED),
+    [presentCategories],
+  );
+
   async function save() {
     if (!draft.item.trim()) {
       setError('اسم البند مطلوب.');
@@ -447,18 +453,22 @@ export default function MaterialsCatalogPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label className={label}>التصنيف</label>
-              <select
+              <input
                 className={field}
+                list="catalog-categories"
                 value={draft.category}
                 onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-              >
-                <option value="">— بدون تصنيف —</option>
-                {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
+                placeholder="اختر تصنيفًا أو اكتب تصنيفًا جديدًا"
+              />
+              <datalist id="catalog-categories">
+                {categorySuggestions.map((c) => (
+                  <option key={c} value={c} />
                 ))}
-              </select>
+              </datalist>
+              <p className="mt-1 text-[11px] text-[var(--nav-secondary)]">
+                اختر من المقترحات أو اكتب اسم تصنيف جديد غير موجود — يُنشأ تلقائيًا ويظهر بعدها
+                ضمن أزرار التصنيفات بالأسفل.
+              </p>
             </div>
             <div className="md:col-span-2">
               <label className={label}>البند *</label>
