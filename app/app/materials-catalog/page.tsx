@@ -110,6 +110,8 @@ export default function MaterialsCatalogPage() {
   const [mergingId, setMergingId] = useState('');
   const [mergeTarget, setMergeTarget] = useState('');
   const [merging, setMerging] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -127,6 +129,11 @@ export default function MaterialsCatalogPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  // البحث/الفلترة تُغيّر الصفوف المعروضة، فنفرّغ التحديد كيلا يبقى محددًا بند غير ظاهر
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [query, categoryFilter, onlyNew]);
 
   const presentCategories = useMemo(() => {
     const set = new Set<string>();
@@ -226,6 +233,43 @@ export default function MaterialsCatalogPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذر الحذف.');
+    }
+  }
+
+  function toggleSelectId(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) =>
+      prev.size === sorted.length ? new Set() : new Set(sorted.map((r) => String(r.id))),
+    );
+  }
+
+  /** حذف كل البنود المحددة بمربعات الاختيار دفعة واحدة — لا يمسّ التسعيرات المرتبطة، بس يفك ربطها بالدليل */
+  async function bulkDeleteSelected() {
+    if (!selectedIds.size) return;
+    if (
+      !confirm(
+        `حذف ${selectedIds.size} بند من الدليل؟ لن يمسّ التسعيرات المرتبطة بها، بس يفك ربطها. هذا الإجراء لا يمكن التراجع عنه.`,
+      )
+    )
+      return;
+    setBulkDeleting(true);
+    setError('');
+    try {
+      await simpleCrud.removeMany(TABLE, [...selectedIds]);
+      setSelectedIds(new Set());
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر حذف البنود المحددة.');
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -524,9 +568,20 @@ export default function MaterialsCatalogPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="بحث بالبند أو التصنيف..."
           />
-          <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-            {sorted.length} بند
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs font-semibold text-[var(--nav-secondary)]">
+              {sorted.length} بند
+            </span>
+            {selectedIds.size > 0 && (
+              <button
+                className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDeleteSelected()}
+              >
+                {bulkDeleting ? 'جارٍ الحذف...' : `حذف المحدد (${selectedIds.size})`}
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
@@ -566,6 +621,14 @@ export default function MaterialsCatalogPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--nav-border)]">
+                  <th className={`${th} w-8`}>
+                    <input
+                      type="checkbox"
+                      aria-label="تحديد الكل"
+                      checked={sorted.length > 0 && selectedIds.size === sorted.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className={th}>البند</th>
                   <th className={th}>التصنيف</th>
                   <th className={th}>الوحدة</th>
@@ -575,6 +638,14 @@ export default function MaterialsCatalogPage() {
               <tbody>
                 {sorted.map((r) => (
                   <tr key={String(r.id)} className="border-b border-[var(--nav-border)]/60">
+                    <td className={td}>
+                      <input
+                        type="checkbox"
+                        aria-label={`تحديد ${safe(r.item)}`}
+                        checked={selectedIds.has(String(r.id))}
+                        onChange={() => toggleSelectId(String(r.id))}
+                      />
+                    </td>
                     <td className={`${td} max-w-sm`}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold">{safe(r.item)}</span>
