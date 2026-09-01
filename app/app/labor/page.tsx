@@ -151,6 +151,8 @@ export default function LaborPage() {
   const [importPreview, setImportPreview] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [movingId, setMovingId] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -325,6 +327,49 @@ export default function LaborPage() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'تعذر الحذف.');
+    }
+  }
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const visibleIds = filtered.map((r) => String(r.id));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+
+  async function bulkDelete() {
+    const targets = filtered.filter((r) => selectedIds.has(String(r.id)));
+    if (!targets.length) return;
+    if (
+      !confirm(
+        `حذف ${targets.length} عامل نهائيًا؟ لا يمكن التراجع.\n\nالأفضل عادةً "إيقاف" العمالة بدل حذفها.`,
+      )
+    )
+      return;
+    setBulkDeleting(true);
+    setError('');
+    try {
+      await Promise.all(targets.map((r) => simpleCrud.remove(TABLE, String(r.id))));
+      setSelectedIds(new Set());
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر حذف بعض العمالة المحددة.');
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -686,6 +731,24 @@ export default function LaborPage() {
           </div>
         )}
 
+        {selectedIds.size > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--nav-accent)]/40 bg-[var(--nav-accent)]/10 px-4 py-2.5">
+            <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+            <div className="flex gap-2">
+              <button className={iconBtn} onClick={() => setSelectedIds(new Set())}>
+                إلغاء التحديد
+              </button>
+              <button
+                className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDelete()}
+              >
+                {bulkDeleting ? 'جارٍ الحذف...' : 'حذف المحدد'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">جارٍ التحميل...</p>
         ) : filtered.length === 0 ? (
@@ -699,6 +762,15 @@ export default function LaborPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--nav-border)]">
+                  <th className={`${th} w-10`}>
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleAllVisible}
+                      aria-label="تحديد كل العمالة الظاهرة"
+                      className="h-4 w-4"
+                    />
+                  </th>
                   <th className={th}>الاسم</th>
                   <th className={th}>المسؤول</th>
                   <th className={th}>الجوال</th>
@@ -719,6 +791,15 @@ export default function LaborPage() {
                       <tr
                         className={`border-b border-[var(--nav-border)]/60 ${active ? '' : 'opacity-50'}`}
                       >
+                        <td className={td}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(id)}
+                            onChange={() => toggleSelected(id)}
+                            aria-label={`تحديد ${safe(row.company_name)}`}
+                            className="h-4 w-4"
+                          />
+                        </td>
                         <td className={td}>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-semibold">{safe(row.company_name)}</span>
@@ -799,7 +880,7 @@ export default function LaborPage() {
 
                       {open && (
                         <tr className="border-b border-[var(--nav-border)]/60">
-                          <td className="px-3 pb-4 text-sm" colSpan={6}>
+                          <td className="px-3 pb-4 text-sm" colSpan={7}>
                             <div className="grid gap-3 md:grid-cols-2">
                               {safe(row.email) && (
                                 <div>
