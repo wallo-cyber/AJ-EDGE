@@ -1,0 +1,38 @@
+diff --git a/app/components/crm-shell.tsx b/app/components/crm-shell.tsx
+index 8b6ca94..acf21d5 100644
+--- a/app/components/crm-shell.tsx
++++ b/app/components/crm-shell.tsx
+@@ -12,8 +12,8 @@ const primary = [
+ ] as const;
+ /** العلاقات والتواصل أول مجموعة فعليًا — ضُمّ لها فريق التسويق، والسوق/الرادار/مركز الاستقطاب نزلوا للمجموعة اللي تحتها */
+ const secondaryGroups = [
+-  { label: 'العلاقات والتواصل', links: [['/outreach', 'التواصل'], ['/email-center', 'الإيميلات'], ['/marketing', 'فريق التسويق'], ['/vendors', 'الموردون'], ['/labor', 'العمالة'], ['/prices', 'أسعار المواد'], ['/research', 'البحث والتحقق']] },
+-  { label: 'الاستقطاب والمشاريع', links: [['/companies', 'السوق والشركات'], ['/radar', 'رادار الفرص'], ['/daily', 'مركز الاستقطاب'], ['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
++  { label: 'العلاقات والتواصل', links: [['/email-center', 'الإيميلات'], ['/marketing', 'فريق التسويق'], ['/vendors', 'الموردون'], ['/labor', 'العمالة'], ['/prices', 'أسعار المواد'], ['/research', 'البحث والتحقق']] },
++  { label: 'الاستقطاب والمشاريع', links: [['/outreach', 'التواصل'], ['/companies', 'السوق والشركات'], ['/radar', 'رادار الفرص'], ['/daily', 'مركز الاستقطاب'], ['/market-intelligence', 'ذكاء السوق السعودي'], ['/intelligence', 'ذكاء المشاريع'], ['/projects', 'المشاريع المستهدفة'], ['/bid-board', 'لوحة العطاءات'], ['/watchlists', 'قوائم المراقبة']] },
+   { label: 'الإدارة والنتائج', links: [['/contracts', 'العقود'], ['/quotations', 'عروض الأسعار'], ['/readiness', 'جاهزية السوق'], ['/reports/revenue', 'مسار الإيرادات'], ['/reports', 'التقارير'], ['/agent-center', 'الوكلاء'], ['/search', 'البحث الشامل'], ['/exports', 'تصدير البيانات'], ['/settings', 'الإعدادات'], ['/system-status', 'حالة النظام']] },
+ ] as const;
+ 
+diff --git a/app/components/outreach-workspace.tsx b/app/components/outreach-workspace.tsx
+index da79801..cfce1a8 100644
+--- a/app/components/outreach-workspace.tsx
++++ b/app/components/outreach-workspace.tsx
+@@ -371,12 +371,14 @@ export function OutreachWorkspace() {
+           <Link
+             key={id}
+             href={`/outreach?tab=${id}`}
+-            className={
+-              tab === id ? "btn-primary shrink-0" : "btn-ghost shrink-0"
+-            }
++            className={`inline-flex min-h-[38px] shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold transition ${
++              tab === id
++                ? "border-[var(--nav-accent)] bg-[var(--nav-accent)]/15 text-[var(--nav-accent)]"
++                : "border-[var(--nav-border)] bg-transparent text-[var(--nav-secondary)] hover:bg-[var(--nav-hover)]"
++            }`}
+           >
+             {label}
+-            <span className="crm-chip bg-white/20">{counts[id]}</span>
++            <span className="crm-chip bg-white/10">{counts[id]}</span>
+           </Link>
+         ))}
+       </div>

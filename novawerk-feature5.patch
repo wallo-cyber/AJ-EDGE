@@ -1,0 +1,144 @@
+diff --git a/app/app/labor/page.tsx b/app/app/labor/page.tsx
+index 0a07adf..a3c41e1 100644
+--- a/app/app/labor/page.tsx
++++ b/app/app/labor/page.tsx
+@@ -150,6 +150,7 @@ export default function LaborPage() {
+   const [importFileName, setImportFileName] = useState('');
+   const [importPreview, setImportPreview] = useState<ImportRow[]>([]);
+   const [importing, setImporting] = useState(false);
++  const [movingId, setMovingId] = useState('');
+ 
+   async function load() {
+     setLoading(true);
+@@ -327,6 +328,45 @@ export default function LaborPage() {
+     }
+   }
+ 
++  /** نقل عامل إلى قسم الموردين: ننسخ بياناته وروابط مشاريعه، ثم نحذفه من العمالة */
++  async function moveToVendors(row: SimpleRow) {
++    if (
++      !confirm(`نقل "${safe(row.company_name)}" إلى قسم الموردين؟ سيُحذف من العمالة، وتنتقل معه روابط مشاريعه.`)
++    )
++      return;
++    setError('');
++    setMovingId(String(row.id));
++    try {
++      const created = await simpleCrud.create('vendors', {
++        company_name: safe(row.company_name),
++        trade: safe(row.trade),
++        contact_name: safe(row.contact_name),
++        phone: safe(row.phone),
++        email: safe(row.email),
++        city: safe(row.city),
++        scope: safe(row.scope),
++        notes: safe(row.notes),
++        is_active: row.is_active !== false,
++      });
++      const links = await simpleCrud.listWhere('project_labor', 'labor_id', String(row.id));
++      for (const link of links) {
++        await simpleCrud.create('project_vendors', {
++          project_id: link.project_id,
++          vendor_id: created.id,
++          role: safe(link.role),
++          status: safe(link.status) || 'مبدئي',
++          notes: safe(link.notes),
++        });
++      }
++      await simpleCrud.remove(TABLE, String(row.id));
++      await load();
++    } catch (e) {
++      setError(e instanceof Error ? e.message : 'تعذر نقل العامل إلى الموردين.');
++    } finally {
++      setMovingId('');
++    }
++  }
++
+   // كل الأنماط تعتمد متغيرات الثيم — تعمل مع original و neon و teal
+   const field =
+     'w-full rounded-xl border border-[var(--nav-border)] bg-transparent px-3 py-2 text-sm outline-none placeholder:text-[var(--nav-secondary)] focus:border-[var(--nav-accent)]';
+@@ -740,6 +780,13 @@ export default function LaborPage() {
+                             <button className={iconBtn} onClick={() => void toggleActive(row)}>
+                               {active ? 'إيقاف' : 'تنشيط'}
+                             </button>
++                            <button
++                              className={iconBtn}
++                              disabled={movingId === id}
++                              onClick={() => void moveToVendors(row)}
++                            >
++                              {movingId === id ? '...' : 'نقل إلى الموردين'}
++                            </button>
+                             <button
+                               className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                               onClick={() => void remove(row)}
+diff --git a/app/app/vendors/page.tsx b/app/app/vendors/page.tsx
+index 8e41611..5d8ee98 100644
+--- a/app/app/vendors/page.tsx
++++ b/app/app/vendors/page.tsx
+@@ -154,6 +154,7 @@ export default function VendorsPage() {
+   const [importFileName, setImportFileName] = useState('');
+   const [importPreview, setImportPreview] = useState<ImportRow[]>([]);
+   const [importing, setImporting] = useState(false);
++  const [movingId, setMovingId] = useState('');
+ 
+   async function load() {
+     setLoading(true);
+@@ -331,6 +332,45 @@ export default function VendorsPage() {
+     }
+   }
+ 
++  /** نقل مورد إلى قسم العمالة: ننسخ بياناته وروابط مشاريعه، ثم نحذفه من الموردين */
++  async function moveToLabor(row: SimpleRow) {
++    if (
++      !confirm(`نقل "${safe(row.company_name)}" إلى قسم العمالة؟ سيُحذف من الموردين، وتنتقل معه روابط مشاريعه.`)
++    )
++      return;
++    setError('');
++    setMovingId(String(row.id));
++    try {
++      const created = await simpleCrud.create('labor', {
++        company_name: safe(row.company_name),
++        trade: safe(row.trade),
++        contact_name: safe(row.contact_name),
++        phone: safe(row.phone),
++        email: safe(row.email),
++        city: safe(row.city),
++        scope: safe(row.scope),
++        notes: safe(row.notes),
++        is_active: row.is_active !== false,
++      });
++      const links = await simpleCrud.listWhere('project_vendors', 'vendor_id', String(row.id));
++      for (const link of links) {
++        await simpleCrud.create('project_labor', {
++          project_id: link.project_id,
++          labor_id: created.id,
++          role: safe(link.role),
++          status: safe(link.status) || 'مبدئي',
++          notes: safe(link.notes),
++        });
++      }
++      await simpleCrud.remove(TABLE, String(row.id));
++      await load();
++    } catch (e) {
++      setError(e instanceof Error ? e.message : 'تعذر نقل المورد إلى العمالة.');
++    } finally {
++      setMovingId('');
++    }
++  }
++
+   // كل الأنماط تعتمد متغيرات الثيم — تعمل مع original و neon و teal
+   const field =
+     'w-full rounded-xl border border-[var(--nav-border)] bg-transparent px-3 py-2 text-sm outline-none placeholder:text-[var(--nav-secondary)] focus:border-[var(--nav-accent)]';
+@@ -744,6 +784,13 @@ export default function VendorsPage() {
+                             <button className={iconBtn} onClick={() => void toggleActive(row)}>
+                               {active ? 'إيقاف' : 'تنشيط'}
+                             </button>
++                            <button
++                              className={iconBtn}
++                              disabled={movingId === id}
++                              onClick={() => void moveToLabor(row)}
++                            >
++                              {movingId === id ? '...' : 'نقل إلى العمالة'}
++                            </button>
+                             <button
+                               className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                               onClick={() => void remove(row)}

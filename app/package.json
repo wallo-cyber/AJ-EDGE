@@ -16,12 +16,14 @@
     "test:intelligence": "node --experimental-strip-types --test lib/intelligence/core.test.ts lib/intelligence/v6.test.ts lib/intelligence/revenue-phase1.test.ts",
     "test": "npm run test:discovery && npm run test:operational && npm run test:agents && npm run test:domain && npm run test:intelligence && npm run test:readiness && npm run test:acquisition-os && npm run test:acquisition-v3 && npm run test:market-intelligence",
     "test:readiness": "node --experimental-strip-types --test lib/readiness/core.test.ts",
+    "test:gemini": "tsx --env-file=.env.local lib/google/test-agent.ts",
     "vercel-build": "next build",
     "test:acquisition-os": "node --experimental-strip-types --test lib/acquisition-os/core.test.ts",
     "test:acquisition-v3": "node --experimental-strip-types --test lib/acquisition-v3/core.test.ts",
     "test:market-intelligence": "node --experimental-strip-types --test lib/market-intelligence/core.test.ts"
   },
   "dependencies": {
+    "@google/genai": "^2.17.1",
     "@supabase/supabase-js": "^2.112.2",
     "next": "16.3.0",
     "react": "19.2.8",
@@ -37,6 +39,7 @@
     "eslint-config-next": "16.3.0",
     "supabase": "^2.113.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
