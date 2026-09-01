@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-html-link-for-pages */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ContactForm } from '../../components/contact-form';
 import { CRMPage } from '../../components/crm-shell';
@@ -25,23 +25,24 @@ export default function ContactsPage() {
   const [verification, setVerification] = useState(ALL);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [selected, setSelected] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => { void supabaseCrm.companies.list().then(rows => { const loaded=rows as Company[]; setCompanies(loaded); if(requestedCompanyId&&loaded.some(company=>company.id===requestedCompanyId)){setCompanyId(requestedCompanyId);setShowForm(true);} }).catch(reason => setError(reason.message)); }, [requestedCompanyId]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setLoading(true); setError('');
       void supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification })
-        .then(result => { setContacts(result.rows as Contact[]); setTotal(result.count); })
+        .then(result => { setContacts(result.rows as Contact[]); setTotal(result.count); setSelectedIds(new Set()); })
         .catch(reason => setError(reason.message)).finally(() => setLoading(false));
     }, 250);
     return () => window.clearTimeout(timer);
   }, [companyId, decisionLevel, department, page, search, verification]);
 
-  const refresh = async () => { const result = await supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification }); setContacts(result.rows as Contact[]); setTotal(result.count); };
+  const refresh = async () => { const result = await supabaseCrm.contacts.page(page, 25, { search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification }); setContacts(result.rows as Contact[]); setTotal(result.count); setSelectedIds(new Set()); };
   const save = async (contact: Contact) => {
     if (contact.decisionMaker && contact.verificationStatus === 'VERIFIED' && !contact.sourceUrl?.trim() && !contact.source?.trim()) {
       setError('لا يمكن اعتماد صانع قرار كموثق دون مصدر أو رابط دليل.');
@@ -53,7 +54,35 @@ export default function ContactsPage() {
     catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حفظ جهة الاتصال.'); }
   };
   const archive = async (contact: Contact) => { if (!window.confirm('أرشفة جهة الاتصال مع الاحتفاظ بسجلها؟')) return; try { await supabaseCrm.contacts.update(contact.id, { ...contact, archivedAt: new Date().toISOString() }); setNotice('تمت الأرشفة دون حذف.'); await refresh(); } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذرت الأرشفة.'); } };
+
+  const removeOne = async (contact: Contact) => {
+    if (!window.confirm(`حذف "${contact.fullName}" نهائيًا؟ لا يمكن التراجع.`)) return;
+    setError('');
+    try { await supabaseCrm.contacts.remove(contact.id); setNotice('تم الحذف.'); await refresh(); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر الحذف.'); }
+  };
+
+  const removeSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`حذف ${selectedIds.size} جهة اتصال نهائيًا؟ لا يمكن التراجع.`)) return;
+    setDeleting(true); setError('');
+    try {
+      await Promise.all([...selectedIds].map(id => supabaseCrm.contacts.remove(id)));
+      setNotice(`تم حذف ${selectedIds.size} جهة اتصال.`);
+      await refresh();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر حذف بعض العناصر.'); }
+    finally { setDeleting(false); }
+  };
+
+  const toggleOne = (id: string) => setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  const allOnPageSelected = contacts.length > 0 && contacts.every(c => selectedIds.has(c.id));
+  const toggleAllOnPage = () => setSelectedIds(prev => {
+    if (allOnPageSelected) { const next = new Set(prev); contacts.forEach(c => next.delete(c.id)); return next; }
+    const next = new Set(prev); contacts.forEach(c => next.add(c.id)); return next;
+  });
+
   const pages = Math.max(1, Math.ceil(total / 25));
+  const phoneOf = (c: Contact) => c.mobile || (c as unknown as { phone?: string }).phone || '';
 
   return <CRMPage title="جهات الاتصال" description="الأشخاص المرتبطون بالشركات، مع حالة مستقلة لصانع القرار والتحقق ومصدر الدليل." action={<button onClick={() => { setEditing(null); setShowForm(true); }} className="rounded-full bg-[#2f2417] px-5 py-3 text-sm font-semibold text-white">إضافة جهة اتصال</button>}>
     {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}{notice && <p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
@@ -65,15 +94,75 @@ export default function ContactsPage() {
       <select value={verification} onChange={event => { setVerification(event.target.value); setPage(1); }} className="rounded-xl border p-2.5"><option value={ALL}>التحقق: الكل</option><option>VERIFIED</option><option>PARTIALLY_VERIFIED</option><option>UNVERIFIED</option></select>
     </div>
     {showForm && <ContactForm initialContact={editing ?? undefined} companyId={editing?.companyId||(companyId===ALL?'':companyId)} companyName={editing?.companyName||companies.find(company=>company.id===companyId)?.companyName} onSubmit={save} onCancel={() => { setShowForm(false); setEditing(null); }} submitLabel={editing ? 'حفظ التعديلات' : 'إضافة جهة اتصال'} />}
-    {loading ? <div className="crm-empty animate-pulse">جارٍ تحميل جهات الاتصال...</div> : contacts.length === 0 ? <div className="crm-empty"><h3 className="font-bold text-[#2f2417]">لا توجد جهات اتصال موثقة بعد</h3><p className="mx-auto mt-2 max-w-2xl text-sm">لن ينشئ نوفافيرك أشخاصاً أو صناع قرار دون مصدر ودليل. ابدأ من شركة محددة ثم وثّق الشخص الصحيح.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary">إضافة جهة اتصال</button><a href="/companies?view=missing-dm" className="btn-secondary">الشركات التي تحتاج صانع قرار</a><a href="/research?tab=manual" className="btn-ghost">بدء بحث يدوي</a></div></div> : <>
-      <div className="hidden overflow-x-auto rounded-2xl border bg-white md:block"><table className="min-w-full text-right text-sm"><thead><tr><th className="p-3">الاسم</th><th className="p-3">الشركة</th><th className="p-3">المنصب</th><th className="p-3">صانع قرار</th><th className="p-3">التحقق</th><th className="p-3">الإجراءات</th></tr></thead><tbody>{contacts.map(contact => <tr key={contact.id} className="border-t"><td className="p-3 font-bold">{contact.fullName}</td><td className="p-3">{contact.companyName || '—'}</td><td className="p-3">{contact.position || '—'}</td><td className="p-3">{contact.decisionMaker ? 'نعم' : 'لا'}</td><td className="p-3"><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></td><td className="p-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></td></tr>)}</tbody></table></div>
-      <div className="grid gap-3 md:hidden">{contacts.map(contact => <article key={contact.id} className="crm-card p-4"><div className="flex items-start justify-between gap-2"><div><strong>{contact.fullName}</strong><p className="text-xs text-[#75664d]">{contact.companyName || 'بدون شركة'} · {contact.position || 'بدون منصب'}</p></div><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></div><p className="mt-3 text-sm">صانع قرار موثق: {contact.decisionMaker && contact.verificationStatus === 'VERIFIED' ? 'نعم' : 'لا'}</p><div className="mt-3"><Actions contact={contact} view={setSelected} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} /></div></article>)}</div>
+
+    {selectedIds.size > 0 && (
+      <div className="crm-card flex items-center justify-between gap-3 p-3">
+        <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+        <div className="flex gap-2">
+          <button onClick={() => setSelectedIds(new Set())} className="rounded-lg border px-3 py-1.5 text-sm">إلغاء التحديد</button>
+          <button onClick={() => void removeSelected()} disabled={deleting} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700">{deleting ? 'جارٍ الحذف...' : 'حذف المحدد'}</button>
+        </div>
+      </div>
+    )}
+
+    {loading ? <div className="crm-empty animate-pulse">جارٍ تحميل جهات الاتصال...</div> : contacts.length === 0 ? <div className="crm-empty"><h3 className="font-bold text-[#2f2417]">لا توجد جهات اتصال موثقة بعد</h3><p className="mx-auto mt-2 max-w-2xl text-sm">لن ينشئ نوفاويرك أشخاصاً أو صناع قرار دون مصدر ودليل. ابدأ من شركة محددة ثم وثّق الشخص الصحيح.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button onClick={() => { setEditing(null); setShowForm(true); }} className="btn-primary">إضافة جهة اتصال</button><a href="/companies?view=missing-dm" className="btn-secondary">الشركات التي تحتاج صانع قرار</a><a href="/research?tab=manual" className="btn-ghost">بدء بحث يدوي</a></div></div> : <>
+      <div className="hidden overflow-x-auto rounded-2xl border bg-white md:block">
+        <table className="min-w-full text-right text-sm">
+          <thead>
+            <tr>
+              <th className="w-10 p-3"><input type="checkbox" checked={allOnPageSelected} onChange={toggleAllOnPage} /></th>
+              <th className="p-3">الاسم</th>
+              <th className="p-3">الشركة</th>
+              <th className="p-3">المنصب</th>
+              <th className="p-3">الجوال</th>
+              <th className="p-3">صانع قرار</th>
+              <th className="p-3">التحقق</th>
+              <th className="p-3">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {contacts.map(contact => (
+              <tr key={contact.id} className="border-t">
+                <td className="p-3"><input type="checkbox" checked={selectedIds.has(contact.id)} onChange={() => toggleOne(contact.id)} /></td>
+                <td className="p-3 font-bold">{contact.fullName}</td>
+                <td className="p-3">{contact.companyName || '—'}</td>
+                <td className="p-3">{contact.position || '—'}</td>
+                <td className="p-3" dir="ltr">{phoneOf(contact) || '—'}</td>
+                <td className="p-3">{contact.decisionMaker ? 'نعم' : 'لا'}</td>
+                <td className="p-3"><span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span></td>
+                <td className="p-3"><Actions contact={contact} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} remove={removeOne} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="grid gap-3 md:hidden">
+        {contacts.map(contact => (
+          <article key={contact.id} className="crm-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <input type="checkbox" className="mt-1" checked={selectedIds.has(contact.id)} onChange={() => toggleOne(contact.id)} />
+                <div><strong>{contact.fullName}</strong><p className="text-xs text-[#75664d]">{contact.companyName || 'بدون شركة'} · {contact.position || 'بدون منصب'}</p><p className="text-xs text-[#75664d]" dir="ltr">{phoneOf(contact) || '—'}</p></div>
+              </div>
+              <span className="crm-chip bg-amber-50">{contact.verificationStatus || 'UNVERIFIED'}</span>
+            </div>
+            <p className="mt-3 text-sm">صانع قرار موثق: {contact.decisionMaker && contact.verificationStatus === 'VERIFIED' ? 'نعم' : 'لا'}</p>
+            <div className="mt-3"><Actions contact={contact} edit={value => { setEditing(value); setShowForm(true); }} archive={archive} remove={removeOne} /></div>
+          </article>
+        ))}
+      </div>
     </>}
     <div className="flex items-center justify-between text-sm"><span>{total} جهة اتصال · صفحة {page} من {pages}</span><div className="flex gap-2"><button disabled={page <= 1} onClick={() => setPage(value => value - 1)} className="rounded-xl border px-4 py-2 disabled:opacity-40">السابق</button><button disabled={page >= pages} onClick={() => setPage(value => value + 1)} className="rounded-xl border px-4 py-2 disabled:opacity-40">التالي</button></div></div>
-    {selected && <section className="crm-card p-5"><div className="flex justify-between"><h3 className="font-bold">{selected.fullName}</h3><button onClick={() => setSelected(null)}>إغلاق</button></div><dl className="mt-4 grid gap-3 text-sm md:grid-cols-2"><div><dt className="text-[#75664d]">البريد</dt><dd dir="ltr">{selected.email || '—'}</dd></div><div><dt className="text-[#75664d]">الجوال</dt><dd dir="ltr">{selected.mobile || '—'}</dd></div><div><dt className="text-[#75664d]">المصدر</dt><dd>{selected.source || '—'}</dd></div><div><dt className="text-[#75664d]">الثقة</dt><dd>{selected.confidence || 0}%</dd></div></dl></section>}
   </CRMPage>;
 }
 
-function Actions({ contact, view, edit, archive }: { contact: Contact; view: (contact: Contact) => void; edit: (contact: Contact) => void; archive: (contact: Contact) => Promise<void> }) {
-  return <div className="flex flex-wrap gap-2"><button onClick={() => view(contact)} className="rounded-lg border px-3 py-1.5">عرض</button><button onClick={() => edit(contact)} className="rounded-lg border px-3 py-1.5">تعديل</button><button onClick={() => void archive(contact)} className="rounded-lg border px-3 py-1.5 text-red-700">أرشفة</button></div>;
+function Actions({ contact, edit, archive, remove }: { contact: Contact; edit: (contact: Contact) => void; archive: (contact: Contact) => Promise<void>; remove: (contact: Contact) => Promise<void> }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <a href={`/contacts/${contact.id}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border px-3 py-1.5">عرض</a>
+      <button onClick={() => edit(contact)} className="rounded-lg border px-3 py-1.5">تعديل</button>
+      <button onClick={() => void archive(contact)} className="rounded-lg border px-3 py-1.5 text-amber-700">أرشفة</button>
+      <button onClick={() => void remove(contact)} className="rounded-lg border border-red-300 px-3 py-1.5 text-red-700" aria-label="حذف">حذف</button>
+    </div>
+  );
 }
