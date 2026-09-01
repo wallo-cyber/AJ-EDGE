@@ -130,11 +130,6 @@ export default function MaterialsCatalogPage() {
     void load();
   }, []);
 
-  // البحث/الفلترة تُغيّر الصفوف المعروضة، فنفرّغ التحديد كيلا يبقى محددًا بند غير ظاهر
-  useEffect(() => {
-    setSelectedIds(new Set());
-  }, [query, categoryFilter, onlyNew]);
-
   const presentCategories = useMemo(() => {
     const set = new Set<string>();
     rows.forEach((r) => {
@@ -236,7 +231,7 @@ export default function MaterialsCatalogPage() {
     }
   }
 
-  function toggleSelectId(id: string) {
+  function toggleSelected(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -245,29 +240,35 @@ export default function MaterialsCatalogPage() {
     });
   }
 
-  function toggleSelectAll() {
-    setSelectedIds((prev) =>
-      prev.size === sorted.length ? new Set() : new Set(sorted.map((r) => String(r.id))),
-    );
+  const visibleIds = sorted.map((r) => String(r.id));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
   }
 
-  /** حذف كل البنود المحددة بمربعات الاختيار دفعة واحدة — لا يمسّ التسعيرات المرتبطة، بس يفك ربطها بالدليل */
-  async function bulkDeleteSelected() {
-    if (!selectedIds.size) return;
+  async function bulkDelete() {
+    const targets = sorted.filter((r) => selectedIds.has(String(r.id)));
+    if (!targets.length) return;
     if (
       !confirm(
-        `حذف ${selectedIds.size} بند من الدليل؟ لن يمسّ التسعيرات المرتبطة بها، بس يفك ربطها. هذا الإجراء لا يمكن التراجع عنه.`,
+        `حذف ${targets.length} بند من الدليل؟ (لن يمسّ التسعيرات المرتبطة، بس يفك ربطها)`,
       )
     )
       return;
     setBulkDeleting(true);
     setError('');
     try {
-      await simpleCrud.removeMany(TABLE, [...selectedIds]);
+      await Promise.all(targets.map((r) => simpleCrud.remove(TABLE, String(r.id))));
       setSelectedIds(new Set());
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'تعذر حذف البنود المحددة.');
+      setError(e instanceof Error ? e.message : 'تعذر حذف بعض البنود المحددة.');
     } finally {
       setBulkDeleting(false);
     }
@@ -568,20 +569,9 @@ export default function MaterialsCatalogPage() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="بحث بالبند أو التصنيف..."
           />
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-              {sorted.length} بند
-            </span>
-            {selectedIds.size > 0 && (
-              <button
-                className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
-                disabled={bulkDeleting}
-                onClick={() => void bulkDeleteSelected()}
-              >
-                {bulkDeleting ? 'جارٍ الحذف...' : `حذف المحدد (${selectedIds.size})`}
-              </button>
-            )}
-          </div>
+          <span className="text-xs font-semibold text-[var(--nav-secondary)]">
+            {sorted.length} بند
+          </span>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
@@ -608,6 +598,24 @@ export default function MaterialsCatalogPage() {
           </button>
         </div>
 
+        {selectedIds.size > 0 && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--nav-accent)]/40 bg-[var(--nav-accent)]/10 px-4 py-2.5">
+            <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+            <div className="flex gap-2">
+              <button className={iconBtn} onClick={() => setSelectedIds(new Set())}>
+                إلغاء التحديد
+              </button>
+              <button
+                className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDelete()}
+              >
+                {bulkDeleting ? 'جارٍ الحذف...' : 'حذف المحدد'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">جارٍ التحميل...</p>
         ) : sorted.length === 0 ? (
@@ -621,12 +629,13 @@ export default function MaterialsCatalogPage() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-[var(--nav-border)]">
-                  <th className={`${th} w-8`}>
+                  <th className={`${th} w-10`}>
                     <input
                       type="checkbox"
-                      aria-label="تحديد الكل"
-                      checked={sorted.length > 0 && selectedIds.size === sorted.length}
-                      onChange={toggleSelectAll}
+                      checked={allVisibleSelected}
+                      onChange={toggleAllVisible}
+                      aria-label="تحديد كل البنود الظاهرة"
+                      className="h-4 w-4"
                     />
                   </th>
                   <th className={th}>البند</th>
@@ -641,9 +650,10 @@ export default function MaterialsCatalogPage() {
                     <td className={td}>
                       <input
                         type="checkbox"
-                        aria-label={`تحديد ${safe(r.item)}`}
                         checked={selectedIds.has(String(r.id))}
-                        onChange={() => toggleSelectId(String(r.id))}
+                        onChange={() => toggleSelected(String(r.id))}
+                        aria-label={`تحديد ${safe(r.item)}`}
+                        className="h-4 w-4"
                       />
                     </td>
                     <td className={`${td} max-w-sm`}>
