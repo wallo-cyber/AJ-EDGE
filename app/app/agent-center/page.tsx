@@ -1,101 +1,117 @@
 'use client';
 
 import { useState } from 'react';
+import { CRMPage } from '../../components/crm-shell';
+import { getSupabaseClient } from '../../lib/supabase/client';
+
+const ROLES = [
+  'محلل تسعير مقاولات وكميات',
+  'مدير مشاريع ومتابعة جداول زمنية',
+  'مستشار مواصفات الكود السعودي وMODON',
+  'مستشار عقود وموردين',
+] as const;
 
 export default function AgentCenterPage() {
-  const [role, setRole] = useState('محلل تسعير مقاولات');
+  const [role, setRole] = useState<string>(ROLES[0]);
   const [task, setTask] = useState('');
   const [context, setContext] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
-  const handleRunAgent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!task) return;
-
+  async function run() {
+    if (!task.trim()) return;
     setLoading(true);
+    setError('');
     setResult('');
-
     try {
+      const supabase = getSupabaseClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        setError('انتهت جلستك — سجّل الدخول من جديد.');
+        return;
+      }
+
       const res = await fetch('/api/agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ role, task, context }),
       });
-
-      const data = await res.json();
-      if (data.success) {
-        setResult(data.response);
-      } else {
-        setResult(`خطأ: ${data.error}`);
-      }
-    } catch (err: any) {
-      setResult(`حدث خطأ أثناء الاتصال: ${err.message}`);
+      const data2 = await res.json();
+      if (data2.success) setResult(data2.response);
+      else setError(data2.error || 'تعذر تنفيذ المهمة.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذر الاتصال بالوكيل.');
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  const field =
+    'w-full rounded-xl border border-[var(--nav-border)] bg-transparent px-3 py-2 text-sm outline-none placeholder:text-[var(--nav-secondary)] focus:border-[var(--nav-accent)]';
+  const label = 'mb-1 block text-xs font-semibold text-[var(--nav-secondary)]';
+  const panel = 'rounded-2xl border border-[var(--nav-border)] p-5';
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6 text-right" dir="rtl">
-      <h1 className="text-2xl font-bold text-gray-900">مركز العوامل الذكية (Agent Center)</h1>
-      <p className="text-sm text-gray-600">وجّه المهام الهندسية والإدارية للعميل الذكي واحتصل على تحليلات فورية.</p>
-
-      <form onSubmit={handleRunAgent} className="space-y-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">دوري العميل (Agent Role)</label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="محلل تسعير مقاولات">محلل تسعير مقاولات وكميات</option>
-            <option value="مدير مشاريع هندسية">مدير مشاريع ومتابعة جداول زمنية</option>
-            <option value="مستشار شروط ومواصفات">مستشار مواصفات الكود السعودي وMODON</option>
-            <option value="مستشار تعاقدات وموردين">مستشار عقود وموردين</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">المهمة المطلوبة (Task)</label>
-          <textarea
-            rows={3}
-            value={task}
-            onChange={(e) => setTask(e.target.value)}
-            placeholder="مثال: قارن بين عروض أسعار توريد وتصنيع الهياكل المعدنية لمصنع..."
-            className="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">سياق أو بيانات إضافية (Context - اختياري)</label>
-          <textarea
-            rows={2}
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            placeholder="أدخل أي تفاصيل إضافية مثل الكميات أو الميزانية..."
-            className="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
-        >
-          {loading ? 'جاري التحليل والمعالجة...' : 'تشغيل العميل الذكي'}
-        </button>
-      </form>
-
-      {result && (
-        <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
-          <h2 className="text-lg font-semibold mb-3 text-gray-900">نتيجة التحليل:</h2>
-          <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-            {result}
-          </div>
+    <CRMPage
+      title="مركز الوكلاء الذكيين"
+      description="وجّه مهمة تحليلية للوكيل الذكي واحصل على رد فوري — لا يقرأ بيانات النظام تلقائيًا، فألصق ما تحتاجه في خانة السياق."
+    >
+      {error && (
+        <div className="rounded-xl border border-rose-400/60 px-4 py-3 text-sm text-rose-400">
+          {error}
         </div>
       )}
-    </div>
+
+      <section className={panel}>
+        <div className="grid gap-4">
+          <div>
+            <label className={label}>دور الوكيل</label>
+            <select className={field} value={role} onChange={(e) => setRole(e.target.value)}>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={label}>المهمة *</label>
+            <textarea
+              className={`${field} min-h-[90px]`}
+              value={task}
+              onChange={(e) => setTask(e.target.value)}
+              placeholder="مثال: قارن بين عروض توريد وتصنيع الهياكل المعدنية لمصنع..."
+            />
+          </div>
+
+          <div>
+            <label className={label}>سياق إضافي (اختياري)</label>
+            <textarea
+              className={`${field} min-h-[70px]`}
+              value={context}
+              onChange={(e) => setContext(e.target.value)}
+              placeholder="ألصق هنا أي أرقام أو تفاصيل من النظام يحتاجها الوكيل — الكميات، الميزانية، عروض الأسعار..."
+            />
+          </div>
+
+          <button className="btn-primary" onClick={() => void run()} disabled={loading || !task.trim()}>
+            {loading ? 'جارٍ التحليل...' : 'تشغيل الوكيل'}
+          </button>
+        </div>
+      </section>
+
+      {result && (
+        <section className={panel}>
+          <h3 className="mb-3 text-base font-bold">نتيجة التحليل</h3>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">{result}</div>
+        </section>
+      )}
+    </CRMPage>
   );
 }
