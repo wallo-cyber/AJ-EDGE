@@ -18,13 +18,14 @@ const CATEGORIES = [
 const UNCATEGORIZED = 'غير مصنف';
 
 type Draft = {
+  code: string;
   category: string;
   item: string;
   unit: string;
   notes: string;
 };
 
-const EMPTY: Draft = { category: '', item: '', unit: '', notes: '' };
+const EMPTY: Draft = { code: '', category: '', item: '', unit: '', notes: '' };
 
 const safe = (v: unknown) => String(v ?? '').trim();
 const norm = (v: unknown) => safe(v).replace(/\s+/g, ' ').toLowerCase();
@@ -150,7 +151,7 @@ export default function MaterialsCatalogPage() {
       if (categoryFilter && cat !== categoryFilter) return false;
       if (onlyNew && r.is_new !== true) return false;
       if (!q) return true;
-      return [r.item, r.unit, r.notes, cat].map(safe).join(' ').includes(q);
+      return [r.item, r.code, r.unit, r.notes, cat].map(safe).join(' ').includes(q);
     });
   }, [rows, query, categoryFilter, onlyNew]);
 
@@ -176,6 +177,7 @@ export default function MaterialsCatalogPage() {
     setError('');
     try {
       const values: Record<string, unknown> = {
+        code: draft.code.trim() || null,
         category: draft.category || '',
         item: draft.item.trim(),
         unit: draft.unit || null,
@@ -199,6 +201,7 @@ export default function MaterialsCatalogPage() {
 
   function edit(row: SimpleRow) {
     setDraft({
+      code: safe(row.code),
       category: safe(row.category),
       item: safe(row.item),
       unit: safe(row.unit),
@@ -497,6 +500,16 @@ export default function MaterialsCatalogPage() {
           <h3 className="mb-4 text-base font-bold">{editingId ? 'تعديل البند' : 'بند جديد'}</h3>
           <div className="grid gap-4 md:grid-cols-3">
             <div>
+              <label className={label}>الكود</label>
+              <input
+                className={field}
+                dir="ltr"
+                value={draft.code}
+                onChange={(e) => setDraft({ ...draft, code: e.target.value })}
+                placeholder="PRE-001"
+              />
+            </div>
+            <div>
               <label className={label}>التصنيف</label>
               <input
                 className={field}
@@ -638,6 +651,7 @@ export default function MaterialsCatalogPage() {
                       className="h-4 w-4"
                     />
                   </th>
+                  <th className={th}>الكود</th>
                   <th className={th}>البند</th>
                   <th className={th}>التصنيف</th>
                   <th className={th}>الوحدة</th>
@@ -656,6 +670,9 @@ export default function MaterialsCatalogPage() {
                         className="h-4 w-4"
                       />
                     </td>
+                    <td className={`${td} whitespace-nowrap`} dir="ltr">
+                      <span className="text-xs text-[var(--nav-secondary)]">{safe(r.code) || '—'}</span>
+                    </td>
                     <td className={`${td} max-w-sm`}>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold">{safe(r.item)}</span>
@@ -665,6 +682,11 @@ export default function MaterialsCatalogPage() {
                           </span>
                         )}
                       </div>
+                      {safe(r.notes) && (
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--nav-secondary)]">
+                          {safe(r.notes)}
+                        </p>
+                      )}
                       {mergingId === String(r.id) && (
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <select
