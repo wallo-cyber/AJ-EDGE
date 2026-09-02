@@ -30,6 +30,8 @@ export default function ContractsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useEffect(() => {
     void Promise.all([contractsApi.list(), supabaseCrm.companies.list()])
@@ -62,6 +64,45 @@ export default function ContractsPage() {
       return matchesSearch && matchesStatus && matchesView;
     });
   }, [decorated, searchTerm, statusFilter, view]);
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [view, statusFilter, searchTerm]);
+
+  const visibleIds = filtered.map(({ item }) => item.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+  async function bulkDelete() {
+    if (!selectedIds.size) return;
+    if (!window.confirm(`حذف ${selectedIds.size} عقد نهائيًا؟ لا يمكن التراجع.`)) return;
+    setBulkDeleting(true);
+    setError('');
+    try {
+      await Promise.all([...selectedIds].map((id) => contractsApi.remove(id)));
+      setContracts((items) => items.filter((item) => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      setSuccess(`تم حذف ${selectedIds.size} عقد.`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'تعذر حذف بعض العقود المحددة.');
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
 
   const openNewForm = () => {
     setEditingId(null);
@@ -132,10 +173,27 @@ export default function ContractsPage() {
 
       {isFormOpen ? <ContractForm initialContract={editing} companyId={editing?.companyId} companyName={editing?.companyName} onSubmit={handleSubmit} onCancel={closeForm} submitLabel={editing ? 'حفظ التعديلات' : 'إضافة عقد'} /> : null}
 
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-[#ead9b3] bg-[#fdf8ee] p-3">
+          <label className="flex items-center gap-2 text-sm font-semibold text-[#2f2417]">
+            <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-4 w-4" />
+            تحديد الكل ({filtered.length})
+          </label>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#2f2417]">{selectedIds.size} محدد</span>
+              <button onClick={() => setSelectedIds(new Set())} className="rounded-full border border-[#d8c08d] bg-white px-3 py-1.5 text-xs font-semibold text-[#2f2417]">إلغاء التحديد</button>
+              <button onClick={() => void bulkDelete()} disabled={bulkDeleting} className="rounded-full border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700">{bulkDeleting ? 'جارٍ الحذف...' : 'حذف المحدد'}</button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-[24px] border border-[#ead9b3] bg-white p-3">
         <table className="min-w-full text-right text-sm text-[#2f2417]">
           <thead>
             <tr className="border-b border-[#ead9b3] text-[#9a7b2f]">
+              <th className="px-3 py-3 w-8"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-4 w-4" aria-label="تحديد الكل" /></th>
               <th className="px-3 py-3">الشركة</th>
               <th className="px-3 py-3">رقم العقد</th>
               <th className="px-3 py-3">القيمة</th>
@@ -147,10 +205,11 @@ export default function ContractsPage() {
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-3 py-6 text-center text-[#6f6044]">لا توجد عقود تطابق هذه المعايير بعد.</td></tr>
+              <tr><td colSpan={8} className="px-3 py-6 text-center text-[#6f6044]">لا توجد عقود تطابق هذه المعايير بعد.</td></tr>
             ) : (
               filtered.map(({ item, decision }) => (
                 <tr key={item.id} className="border-b border-[#f4ebd7]">
+                  <td className="px-3 py-3"><input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleSelected(item.id)} className="h-4 w-4" aria-label={`تحديد ${item.companyName}`} /></td>
                   <td className="px-3 py-3">
                     <div className="font-semibold">{item.companyName}</div>
                     <div className="mt-1 text-xs text-[#6f6044]">{item.title}</div>

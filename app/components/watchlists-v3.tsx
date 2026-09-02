@@ -29,6 +29,9 @@ export function WatchlistsV3() {
     min_project_value: "",
     max_project_value: "",
   });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -40,6 +43,7 @@ export function WatchlistsV3() {
       setWatchlists(w.rows);
       setSignals(sg.rows);
       setCompanies(c.rows);
+      setSelectedIds(new Set());
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذر تحميل Watchlists.");
     } finally {
@@ -107,6 +111,51 @@ export function WatchlistsV3() {
       setError(e instanceof Error ? e.message : "تعذر إنشاء Watchlist.");
     }
   };
+
+  const visibleIds = watchlists.map((w) => s(w.id));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+  async function removeOne(id: string) {
+    if (!confirm("حذف هذه القائمة نهائيًا؟")) return;
+    setError("");
+    try {
+      await simpleCrud.remove("project_watchlists", id);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذر الحذف.");
+    }
+  }
+  async function bulkDelete() {
+    if (!selectedIds.size) return;
+    if (!confirm(`حذف ${selectedIds.size} قائمة نهائيًا؟ لا يمكن التراجع.`)) return;
+    setBulkDeleting(true);
+    setError("");
+    try {
+      await Promise.all([...selectedIds].map((id) => simpleCrud.remove("project_watchlists", id)));
+      setNotice(`تم حذف ${selectedIds.size} قائمة.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذر حذف بعض القوائم المحددة.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
   return (
     <CRMPage
       title="Project Watchlists"
@@ -178,39 +227,84 @@ export function WatchlistsV3() {
           حفظ Watchlist
         </button>
       </section>
+
+      {watchlists.length > 0 && (
+        <section className="crm-card flex flex-wrap items-center justify-between gap-3 p-3">
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-4 w-4" />
+            تحديد الكل ({watchlists.length})
+          </label>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+              <button className="btn-ghost" onClick={() => setSelectedIds(new Set())}>
+                إلغاء التحديد
+              </button>
+              <button
+                className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDelete()}
+              >
+                {bulkDeleting ? "جارٍ الحذف..." : "حذف المحدد"}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
       {loading ? (
         <div className="crm-empty">جارٍ تحميل Watchlists…</div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {watchlists.map((w) => (
-            <article className="crm-card p-4" key={w.id}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-bold">{s(w.name)}</h3>
-                  <p className="mt-1 text-xs text-[#8f96a3]">
-                    Min Signal Score {Number(w.min_signal_score || 0)} ·{" "}
-                    {Boolean(w.enabled) ? "ACTIVE" : "PAUSED"}
-                  </p>
+          {watchlists.map((w) => {
+            const id = s(w.id);
+            return (
+              <article className="crm-card p-4" key={id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(id)}
+                      onChange={() => toggleSelected(id)}
+                      aria-label={`تحديد ${s(w.name)}`}
+                      className="mt-1 h-4 w-4"
+                    />
+                    <div>
+                      <h3 className="text-lg font-bold">{s(w.name)}</h3>
+                      <p className="mt-1 text-xs text-[#8f96a3]">
+                        Min Signal Score {Number(w.min_signal_score || 0)} ·{" "}
+                        {Boolean(w.enabled) ? "ACTIVE" : "PAUSED"}
+                      </p>
+                    </div>
+                  </div>
+                  <b className="text-3xl">{matches(w)}</b>
                 </div>
-                <b className="text-3xl">{matches(w)}</b>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(Array.isArray(w.sectors) ? w.sectors : []).map((x) => (
-                  <span className="crm-chip status-neutral" key={s(x)}>
-                    {s(x)}
-                  </span>
-                ))}
-                {(Array.isArray(w.cities) ? w.cities : []).map((x) => (
-                  <span className="crm-chip status-neutral" key={s(x)}>
-                    {s(x)}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-[#8f96a3]">
-                مطابقات حالية في Signal Radar: {matches(w)}
-              </p>
-            </article>
-          ))}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(Array.isArray(w.sectors) ? w.sectors : []).map((x) => (
+                    <span className="crm-chip status-neutral" key={s(x)}>
+                      {s(x)}
+                    </span>
+                  ))}
+                  {(Array.isArray(w.cities) ? w.cities : []).map((x) => (
+                    <span className="crm-chip status-neutral" key={s(x)}>
+                      {s(x)}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <p className="text-xs text-[#8f96a3]">
+                    مطابقات حالية في Signal Radar: {matches(w)}
+                  </p>
+                  <button
+                    className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                    onClick={() => void removeOne(id)}
+                  >
+                    حذف
+                  </button>
+                </div>
+              </article>
+            );
+          })}
           {!watchlists.length && (
             <div className="crm-empty md:col-span-2">
               لا توجد Watchlists بعد.

@@ -17,6 +17,9 @@ export function ProjectRadar() {
     [notice, setNotice] = useState(""),
     // Defaults to REVIEW so rejected signals never show up without an explicit choice.
     [filter, setFilter] = useState<"ALL" | "VERIFIED" | "REVIEW" | "REJECTED">("REVIEW");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -28,6 +31,7 @@ export function ProjectRadar() {
       setSignals(a.rows);
       setProjects(b.rows);
       setCompanies(c.rows);
+      setSelectedIds(new Set());
     } catch (e) {
       setError(e instanceof Error ? e.message : "تعذر تحميل Project Radar.");
     } finally {
@@ -65,6 +69,63 @@ export function ProjectRadar() {
         ),
     [signals, linked, filter],
   );
+
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [filter]);
+
+  const visibleIds = rows.map((r) => s(r.signal.id));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.has(id));
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function toggleAllVisible() {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }
+  async function bulkDelete() {
+    if (!selectedIds.size) return;
+    if (
+      !confirm(
+        `حذف ${selectedIds.size} إشارة نهائيًا من الرادار؟ لا يمكن التراجع.`,
+      )
+    )
+      return;
+    setBulkDeleting(true);
+    setError("");
+    try {
+      await Promise.all(
+        [...selectedIds].map((id) => simpleCrud.remove("external_signals", id)),
+      );
+      setNotice(`تم حذف ${selectedIds.size} إشارة.`);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذر حذف بعض الإشارات المحددة.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+  async function removeOne(id: string) {
+    if (!confirm("حذف هذه الإشارة نهائيًا من الرادار؟")) return;
+    setError("");
+    try {
+      await simpleCrud.remove("external_signals", id);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذر الحذف.");
+    }
+  }
+
   const create = async (signal: SimpleRow) => {
     if (s(signal.verification_status) !== "verified") {
       setError("لا يمكن تحويل Signal غير معتمد إلى Project Candidate.");
@@ -156,15 +217,50 @@ export function ProjectRadar() {
           </div>
         </div>
       </section>
+
+      {rows.length > 0 && (
+        <section className="crm-card flex flex-wrap items-center justify-between gap-3 p-3">
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="h-4 w-4" />
+            تحديد الكل ({rows.length})
+          </label>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+              <button className="btn-ghost" onClick={() => setSelectedIds(new Set())}>
+                إلغاء التحديد
+              </button>
+              <button
+                className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                disabled={bulkDeleting}
+                onClick={() => void bulkDelete()}
+              >
+                {bulkDeleting ? "جارٍ الحذف..." : "حذف المحدد"}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+
       {loading ? (
         <div className="crm-empty">جارٍ تحليل الإشارات…</div>
       ) : (
         <div className="grid gap-3">
           {rows.map(({ signal, score, linked: isLinked }) => {
             const c = companyById.get(s(signal.company_id));
+            const id = s(signal.id);
             return (
-              <article key={signal.id} className="crm-card p-4">
-                <div className="grid gap-4 lg:grid-cols-[1.4fr_.7fr_.8fr_auto] lg:items-center">
+              <article key={id} className="crm-card p-4">
+                <div className="grid gap-4 lg:grid-cols-[auto_1.4fr_.7fr_.8fr_auto] lg:items-center">
+                  <div className="flex items-start pt-1 lg:pt-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(id)}
+                      onChange={() => toggleSelected(id)}
+                      aria-label={`تحديد ${s(signal.title) || "إشارة"}`}
+                      className="h-4 w-4"
+                    />
+                  </div>
                   <div>
                     <div className="flex flex-wrap gap-2">
                       <span
@@ -235,6 +331,12 @@ export function ProjectRadar() {
                         تحويل لمشروع
                       </button>
                     )}
+                    <button
+                      className="rounded-lg border border-rose-400/50 px-3 py-1.5 text-xs font-semibold text-rose-400 hover:border-rose-400"
+                      onClick={() => void removeOne(id)}
+                    >
+                      حذف
+                    </button>
                   </div>
                 </div>
               </article>
