@@ -17,6 +17,84 @@ const CATEGORIES = [
 
 const UNCATEGORIZED = 'غير مصنف';
 
+/** ترجمة أسماء التصنيفات — تُستعمل فقط حين تكون الواجهة بالإنجليزية */
+const CATEGORY_EN: Record<string, string> = {
+  'أعمال إنشائية': 'Structural Works',
+  'أعمال ميكانيكية': 'Mechanical Works',
+  'أعمال كهربائية': 'Electrical Works',
+  'أعمال تشطيبات': 'Finishing Works',
+  'أعمال مكافحة الحريق والإنذار': 'Fire Fighting & Alarm',
+  'أعمال ترابية وأساسات': 'Earthworks & Foundations',
+  'الأبواب والنوافذ والواجهات': 'Doors, Windows & Facades',
+  'الأرضيات والحوائط': 'Flooring & Walls',
+  'الأعمال الخارجية والتسليم': 'External Works & Handover',
+  'الأعمال الصحية': 'Plumbing',
+  'الإنارة والتحكم': 'Lighting & Controls',
+  'التكييف والتهوية': 'HVAC',
+  'التيار الخفيف والأمن': 'Low Current & Security',
+  'الدهانات والكسوات': 'Paints & Claddings',
+  'العزل والأسقف': 'Insulation & Roofing',
+  'القواطع والأسقف المستعارة': 'Partitions & Ceilings',
+  'القوى الكهربائية': 'Electrical Power',
+  'الهيكل الخرساني والمعدني': 'Concrete & Steel Structure',
+  'تمهيد وتجهيز الموقع': 'Site Preparation',
+  'مكافحة الحريق': 'Fire Protection',
+  [UNCATEGORIZED]: 'Uncategorized',
+};
+const catLabel = (c: string, lang: 'ar' | 'en') => (lang === 'en' ? CATEGORY_EN[c] || c : c);
+
+/** نصوص واجهة الصفحة بلغتين */
+const UI = {
+  ar: {
+    title: 'دليل البنود',
+    description:
+      'قائمة موحّدة لبنود الأعمال حسب التصنيف — بلا أسعار. عند استيراد ملف تسعير من صفحة أسعار المواد، يُطابَق كل بند تلقائيًا مع الدليل هنا، وأي بند غير موجود يُنشأ ويُعلَّم بعلامة «جديد» للمراجعة.',
+    addItem: 'إضافة بند',
+    closeForm: 'إغلاق النموذج',
+    searchPlaceholder: 'بحث بالبند أو التصنيف...',
+    itemsCount: (n: number) => `${n} بند`,
+    all: 'الكل',
+    newOnly: 'جديد فقط',
+    selectAll: 'تحديد كل البنود الظاهرة',
+    selected: (n: number) => `${n} محدد`,
+    clearSelection: 'إلغاء التحديد',
+    bulkDelete: 'حذف المحدد',
+    bulkDeleting: 'جارٍ الحذف...',
+    loading: 'جارٍ التحميل...',
+    emptyNone: 'لا توجد بنود بعد. أضف بندًا أو استورد قائمة.',
+    emptyFiltered: 'لا نتائج مطابقة للفلترة الحالية.',
+    thCode: 'الكود',
+    thItem: 'البند',
+    thCategory: 'التصنيف',
+    thUnit: 'الوحدة',
+    langToggle: 'English',
+  },
+  en: {
+    title: 'Materials Catalog',
+    description:
+      'A unified list of work items by category — prices excluded. When a pricing file is imported from the Materials Prices page, each item is matched automatically against this catalog; unmatched items are created and flagged "New" for review.',
+    addItem: 'Add Item',
+    closeForm: 'Close Form',
+    searchPlaceholder: 'Search by item or category...',
+    itemsCount: (n: number) => `${n} items`,
+    all: 'All',
+    newOnly: 'New only',
+    selectAll: 'Select all visible items',
+    selected: (n: number) => `${n} selected`,
+    clearSelection: 'Clear selection',
+    bulkDelete: 'Delete selected',
+    bulkDeleting: 'Deleting...',
+    loading: 'Loading...',
+    emptyNone: 'No items yet. Add one or import a list.',
+    emptyFiltered: 'No results match the current filter.',
+    thCode: 'Code',
+    thItem: 'Item',
+    thCategory: 'Category',
+    thUnit: 'Unit',
+    langToggle: 'العربية',
+  },
+} as const;
+
 type Draft = {
   code: string;
   category: string;
@@ -93,6 +171,8 @@ function downloadCsvTemplate() {
 }
 
 export default function MaterialsCatalogPage() {
+  const [lang, setLang] = useState<'ar' | 'en'>('ar');
+  const t = UI[lang];
   const [rows, setRows] = useState<SimpleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -144,14 +224,20 @@ export default function MaterialsCatalogPage() {
     return [...known, ...extra, ...(hasUncategorized ? [UNCATEGORIZED] : [])];
   }, [rows]);
 
-  const filtered = useMemo(() => {
+  /** يعيد اسم/وصف البند بلغة الواجهة الحالية، مع رجوع للعربي إن كانت الترجمة فارغة */
+const itemLabel = (r: SimpleRow, lang: 'ar' | 'en') =>
+  lang === 'en' ? safe(r.item_en) || safe(r.item) : safe(r.item);
+const descLabel = (r: SimpleRow, lang: 'ar' | 'en') =>
+  lang === 'en' ? safe(r.notes_en) || safe(r.notes) : safe(r.notes);
+
+const filtered = useMemo(() => {
     const q = query.trim();
     return rows.filter((r) => {
       const cat = safe(r.category) || UNCATEGORIZED;
       if (categoryFilter && cat !== categoryFilter) return false;
       if (onlyNew && r.is_new !== true) return false;
       if (!q) return true;
-      return [r.item, r.code, r.unit, r.notes, cat].map(safe).join(' ').includes(q);
+      return [r.item, r.item_en, r.code, r.unit, r.notes, r.notes_en, cat].map(safe).join(' ').includes(q);
     });
   }, [rows, query, categoryFilter, onlyNew]);
 
@@ -370,8 +456,8 @@ export default function MaterialsCatalogPage() {
 
   return (
     <CRMPage
-      title="دليل البنود"
-      description="قائمة موحّدة لبنود الأعمال حسب التصنيف — بلا أسعار. عند استيراد ملف تسعير من صفحة أسعار المواد، يُطابَق كل بند تلقائيًا مع الدليل هنا، وأي بند غير موجود يُنشأ ويُعلَّم بعلامة «جديد» للمراجعة."
+      title={t.title}
+      description={t.description}
       action={
         <div className="flex flex-wrap gap-2">
           <button
@@ -392,7 +478,14 @@ export default function MaterialsCatalogPage() {
               setShowForm((v) => !v);
             }}
           >
-            {showForm ? 'إغلاق النموذج' : 'إضافة بند'}
+            {showForm ? t.closeForm : t.addItem}
+          </button>
+          <button
+            className="btn-ghost"
+            onClick={() => setLang((v) => (v === 'ar' ? 'en' : 'ar'))}
+            title="Toggle language / تبديل اللغة"
+          >
+            {t.langToggle}
           </button>
         </div>
       }
@@ -580,10 +673,10 @@ export default function MaterialsCatalogPage() {
             className={`${field} max-w-sm`}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="بحث بالبند أو التصنيف..."
+            placeholder={t.searchPlaceholder}
           />
           <span className="text-xs font-semibold text-[var(--nav-secondary)]">
-            {sorted.length} بند
+            {t.itemsCount(sorted.length)}
           </span>
         </div>
 
@@ -592,7 +685,7 @@ export default function MaterialsCatalogPage() {
             className={`${chip} ${categoryFilter === '' ? chipOn : chipOff}`}
             onClick={() => setCategoryFilter('')}
           >
-            الكل
+            {t.all}
           </button>
           {presentCategories.map((c) => (
             <button
@@ -600,42 +693,40 @@ export default function MaterialsCatalogPage() {
               className={`${chip} ${categoryFilter === c ? chipOn : chipOff}`}
               onClick={() => setCategoryFilter(categoryFilter === c ? '' : c)}
             >
-              {c}
+              {catLabel(c, lang)}
             </button>
           ))}
           <button
             className={`${chip} ${onlyNew ? 'border-amber-400 text-amber-400' : chipOff}`}
             onClick={() => setOnlyNew((v) => !v)}
           >
-            جديد فقط
+            {t.newOnly}
           </button>
         </div>
 
         {selectedIds.size > 0 && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-[var(--nav-accent)]/40 bg-[var(--nav-accent)]/10 px-4 py-2.5">
-            <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
+            <span className="text-sm font-semibold">{t.selected(selectedIds.size)}</span>
             <div className="flex gap-2">
               <button className={iconBtn} onClick={() => setSelectedIds(new Set())}>
-                إلغاء التحديد
+                {t.clearSelection}
               </button>
               <button
                 className="rounded-lg border border-rose-400/50 px-2 py-1 text-xs font-semibold text-rose-400 hover:border-rose-400"
                 disabled={bulkDeleting}
                 onClick={() => void bulkDelete()}
               >
-                {bulkDeleting ? 'جارٍ الحذف...' : 'حذف المحدد'}
+                {bulkDeleting ? t.bulkDeleting : t.bulkDelete}
               </button>
             </div>
           </div>
         )}
 
         {loading ? (
-          <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">جارٍ التحميل...</p>
+          <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">{t.loading}</p>
         ) : sorted.length === 0 ? (
           <p className="py-8 text-center text-sm text-[var(--nav-secondary)]">
-            {rows.length === 0
-              ? 'لا توجد بنود بعد. أضف بندًا أو استورد قائمة.'
-              : 'لا نتائج مطابقة للفلترة الحالية.'}
+            {rows.length === 0 ? t.emptyNone : t.emptyFiltered}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -647,14 +738,14 @@ export default function MaterialsCatalogPage() {
                       type="checkbox"
                       checked={allVisibleSelected}
                       onChange={toggleAllVisible}
-                      aria-label="تحديد كل البنود الظاهرة"
+                      aria-label={t.selectAll}
                       className="h-4 w-4"
                     />
                   </th>
-                  <th className={th}>الكود</th>
-                  <th className={th}>البند</th>
-                  <th className={th}>التصنيف</th>
-                  <th className={th}>الوحدة</th>
+                  <th className={th}>{t.thCode}</th>
+                  <th className={th}>{t.thItem}</th>
+                  <th className={th}>{t.thCategory}</th>
+                  <th className={th}>{t.thUnit}</th>
                   <th className={th}></th>
                 </tr>
               </thead>
@@ -666,7 +757,7 @@ export default function MaterialsCatalogPage() {
                         type="checkbox"
                         checked={selectedIds.has(String(r.id))}
                         onChange={() => toggleSelected(String(r.id))}
-                        aria-label={`تحديد ${safe(r.item)}`}
+                        aria-label={`${lang === 'ar' ? 'تحديد' : 'Select'} ${itemLabel(r, lang)}`}
                         className="h-4 w-4"
                       />
                     </td>
@@ -675,16 +766,16 @@ export default function MaterialsCatalogPage() {
                     </td>
                     <td className={`${td} max-w-sm`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold">{safe(r.item)}</span>
+                        <span className="font-semibold">{itemLabel(r, lang)}</span>
                         {r.is_new === true && (
                           <span className="rounded-full border border-amber-400/60 px-2 py-0.5 text-[10px] font-bold text-amber-400">
                             جديد
                           </span>
                         )}
                       </div>
-                      {safe(r.notes) && (
+                      {descLabel(r, lang) && (
                         <p className="mt-1 text-xs leading-relaxed text-[var(--nav-secondary)]">
-                          {safe(r.notes)}
+                          {descLabel(r, lang)}
                         </p>
                       )}
                       {mergingId === String(r.id) && (
@@ -723,7 +814,7 @@ export default function MaterialsCatalogPage() {
                         </div>
                       )}
                     </td>
-                    <td className={td}>{safe(r.category) || UNCATEGORIZED}</td>
+                    <td className={td}>{catLabel(safe(r.category) || UNCATEGORIZED, lang)}</td>
                     <td className={td}>{safe(r.unit) || '—'}</td>
                     <td className={td}>
                       <div className="flex flex-wrap justify-end gap-2">
