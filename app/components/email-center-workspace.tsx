@@ -28,16 +28,50 @@ const relationshipStages = ['COLD', 'WARM', 'ACTIVE', 'STRATEGIC', 'DORMANT'];
 type Tab = 'inbox' | 'drafts' | 'review' | 'approved' | 'followups' | 'nurture' | 'campaigns' | 'history' | 'composer';
 
 const tabs: Array<{ id: Tab; label: string }> = [
-  { id: 'inbox', label: 'INBOX / RESPONSES' },
-  { id: 'drafts', label: 'DRAFTS' },
-  { id: 'review', label: 'READY FOR REVIEW' },
-  { id: 'approved', label: 'APPROVED' },
-  { id: 'followups', label: 'FOLLOW-UPS' },
-  { id: 'nurture', label: 'NURTURE' },
-  { id: 'campaigns', label: 'CAMPAIGNS' },
-  { id: 'history', label: 'HISTORY' },
-  { id: 'composer', label: 'COMPOSER' },
+  { id: 'inbox', label: 'الوارد / الردود' },
+  { id: 'drafts', label: 'المسودات' },
+  { id: 'review', label: 'جاهزة للمراجعة' },
+  { id: 'approved', label: 'معتمدة' },
+  { id: 'followups', label: 'المتابعات' },
+  { id: 'nurture', label: 'رعاية العلاقة' },
+  { id: 'campaigns', label: 'الحملات' },
+  { id: 'history', label: 'السجل' },
+  { id: 'composer', label: 'إنشاء رسالة' },
 ];
+
+const statusLabels: Record<string, string> = {
+  inbox: 'الوارد',
+  drafts: 'المسودات',
+  review: 'قيد المراجعة',
+  approved: 'معتمدة',
+  followups: 'المتابعات',
+  nurture: 'رعاية العلاقة',
+  campaigns: 'الحملات',
+  history: 'السجل',
+};
+
+const objectiveLabels: Record<(typeof objectiveOptions)[number], string> = {
+  INTRODUCTION: 'تعريف بالشركة',
+  VENDOR_REGISTRATION: 'تسجيل كمورد',
+  SUBCONTRACTING: 'مقاولة من الباطن',
+  PROJECT_DISCUSSION: 'مناقشة مشروع',
+  MEETING_REQUEST: 'طلب اجتماع',
+  FOLLOW_UP: 'متابعة',
+  RECONNECT: 'إعادة تواصل',
+};
+
+const languageLabels: Record<string, string> = {
+  ARABIC: 'العربية',
+  ENGLISH: 'الإنجليزية',
+};
+
+const relationshipLabels: Record<string, string> = {
+  COLD: 'باردة',
+  WARM: 'دافئة',
+  ACTIVE: 'نشطة',
+  STRATEGIC: 'استراتيجية',
+  DORMANT: 'خاملة',
+};
 
 export function EmailCenterWorkspace() {
   const [data, setData] = useState<Record<string, SimpleRow[]>>({});
@@ -420,7 +454,7 @@ export function EmailCenterWorkspace() {
   };
 
   return (
-    <CRMPage title="Email / Communication Center" description="مركز التواصل المهني: رسائل مخصصة حسب الشركة والقطاع، معاينة وتعديل، ثم إرسال يدوي مع سجل كامل.">
+    <CRMPage title="مركز البريد والتواصل" description="مركز التواصل المهني: رسائل مخصصة حسب الشركة والقطاع، معاينة وتعديل، ثم إرسال يدوي مع سجل كامل.">
       <TargetedEmailSender />
       <div className="flex flex-wrap items-center gap-2 rounded-xl border p-3 text-sm">
         <b>الإرسال تحت تحكمك</b>
@@ -441,7 +475,7 @@ export function EmailCenterWorkspace() {
           ['history', statusCounts.history],
         ].map(([id, value]) => (
           <button key={id} type="button" onClick={() => setTab((id as Tab) || 'inbox')} className="crm-kpi text-right p-3">
-            <p className="text-xs text-[#75664d]">{id}</p>
+            <p className="text-xs text-[#75664d]">{statusLabels[id as string] ?? id}</p>
             <strong className="mt-1 block text-2xl">{value}</strong>
           </button>
         ))}
@@ -485,12 +519,12 @@ export function EmailCenterWorkspace() {
           </select>
           <select value={languageFilter} onChange={(event) => setLanguageFilter(event.target.value)} className="rounded-xl border p-2">
             <option value="">كل اللغات</option>
-            {languageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            {languageOptions.map((option) => <option key={option} value={option}>{languageLabels[option] ?? option}</option>)}
           </select>
           <input type="date" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} className="rounded-xl border p-2" />
           <select value={relationshipFilter} onChange={(event) => setRelationshipFilter(event.target.value)} className="rounded-xl border p-2">
             <option value="">كل مراحل العلاقة</option>
-            {relationshipStages.map((option) => <option key={option} value={option}>{option}</option>)}
+            {relationshipStages.map((option) => <option key={option} value={option}>{relationshipLabels[option] ?? option}</option>)}
           </select>
           <select value={opportunityFilter} onChange={(event) => setOpportunityFilter(event.target.value)} className="rounded-xl border p-2">
             <option value="">كل الفرص</option>
@@ -522,10 +556,10 @@ export function EmailCenterWorkspace() {
               ))}
             </select>
             <select value={objective} onChange={(event) => setObjective(event.target.value as (typeof objectiveOptions)[number])} className="rounded-xl border p-2">
-              {objectiveOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              {objectiveOptions.map((option) => <option key={option} value={option}>{objectiveLabels[option]}</option>)}
             </select>
             <select value={language} onChange={(event) => setLanguage(event.target.value as 'ARABIC' | 'ENGLISH')} className="rounded-xl border p-2">
-              {languageOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              {languageOptions.map((option) => <option key={option} value={option}>{languageLabels[option] ?? option}</option>)}
             </select>
           </div>
 
@@ -535,7 +569,7 @@ export function EmailCenterWorkspace() {
           </div>
 
           <div className="rounded-xl border bg-[#fffaf0] p-3">
-            <p className="mb-2 text-sm font-bold">3 subject options</p>
+            <p className="mb-2 text-sm font-bold">٣ خيارات لموضوع الرسالة</p>
             <div className="flex flex-wrap gap-2">
               {selectedCompany ? generateForCompany(selectedCompany, selectedContact).subjectOptions.map((option) => (
                 <button key={option} type="button" onClick={() => setSubject(option)} className={subject === option ? 'btn-primary' : 'btn-ghost'}>{option}</button>
@@ -547,14 +581,14 @@ export function EmailCenterWorkspace() {
           <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="نص الرسالة" className="min-h-52 w-full rounded-xl border p-3" />
 
           <div className="grid gap-2 text-sm md:grid-cols-3">
-            <p><b>Attachment:</b> {text(recommendedAttachment?.name || recommendedAttachment?.asset_type) || 'لا يوجد أصل مناسب'}</p>
-            <p><b>Quality:</b> {draftQuality ? `${draftQuality.score}/100 (${draftQuality.status})` : '—'}</p>
-            <p><b>Workflow:</b> Draft → Review → Approve → Manual send only</p>
+            <p><b>المرفق:</b> {text(recommendedAttachment?.name || recommendedAttachment?.asset_type) || 'لا يوجد أصل مناسب'}</p>
+            <p><b>الجودة:</b> {draftQuality ? `${draftQuality.score}/100 (${draftQuality.status})` : '—'}</p>
+            <p><b>سير العمل:</b> مسودة ← مراجعة ← اعتماد ← إرسال يدوي فقط</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <button onClick={regenerateComposer} className="btn-secondary">توليد رسالة مخصصة</button>
-            <button onClick={() => void saveComposerDraft()} className="btn-primary">حفظ Draft</button>
+            <button onClick={() => void saveComposerDraft()} className="btn-primary">حفظ كمسودة</button>
             <button onClick={resetComposer} className="btn-ghost">مسودة جديدة</button>
           </div>
         </section>
@@ -566,12 +600,12 @@ export function EmailCenterWorkspace() {
             <select value={selectedCampaign} onChange={(event) => setSelectedCampaign(event.target.value)} className="rounded-xl border p-2">
               <option value="">اختر حملة</option>
               {campaigns.map((campaign) => (
-                <option key={campaign.id} value={campaign.id}>{text(campaign.name) || 'Campaign'}</option>
+                <option key={campaign.id} value={campaign.id}>{text(campaign.name) || 'حملة'}</option>
               ))}
             </select>
             <input value={campaignName} onChange={(event) => setCampaignName(event.target.value)} placeholder="اسم حملة جديدة" className="rounded-xl border p-2" />
             <button onClick={() => void createCampaign()} className="btn-secondary">إنشاء حملة</button>
-            <button onClick={() => void generateCampaignDrafts()} className="btn-primary">Generate Personalized Drafts</button>
+            <button onClick={() => void generateCampaignDrafts()} className="btn-primary">توليد مسودات مخصصة</button>
           </div>
 
           <div className="crm-card max-h-[30rem] overflow-auto p-3">
@@ -600,7 +634,7 @@ export function EmailCenterWorkspace() {
           {reviewRows.map((row) => (
             <article key={row.id} className="crm-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <b>{text(row.subject) || 'Draft'}</b>
+                <b>{text(row.subject) || 'بدون عنوان'}</b>
                 <span className="crm-chip status-neutral">{text(row.status)}</span>
               </div>
               <p className="mt-1 text-xs text-[#75664d]">{text(row.company_name) || text(companies.find((item) => item.id === row.company_id)?.company_name)}</p>
@@ -635,7 +669,7 @@ export function EmailCenterWorkspace() {
         <section className="grid gap-3">
           {filteredMessages.filter((item) => text(item.status).toUpperCase() === 'APPROVED').map((row) => (
             <article key={row.id} className="crm-card p-4">
-              <div className="flex justify-between"><b>{text(row.subject)}</b><span className="crm-chip status-success">Approved</span></div>
+              <div className="flex justify-between"><b>{text(row.subject)}</b><span className="crm-chip status-success">معتمدة</span></div>
               <p className="mt-1 text-xs text-[#75664d]">{text(row.company_name)}</p>
               <p className="mt-2 text-sm">{text(row.body)}</p>
             </article>
@@ -648,7 +682,7 @@ export function EmailCenterWorkspace() {
         <section className="grid gap-3">
           {filteredEvents.map((event) => (
             <article key={event.id} className="crm-card p-4">
-              <div className="flex justify-between"><b>{text(event.subject || event.outcome || 'Follow-up')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase()}</span></div>
+              <div className="flex justify-between"><b>{text(event.subject || event.outcome || 'متابعة')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase() === 'INBOUND' ? 'وارد' : 'صادر'}</span></div>
               <p className="mt-1 text-xs text-[#75664d]">{text(companies.find((company) => company.id === event.company_id)?.company_name)} · {text(event.channel)} · {text(event.occurred_at || event.created_at)}</p>
               <p className="mt-2 text-sm">{text(event.notes || event.outcome || '—')}</p>
             </article>
@@ -668,7 +702,7 @@ export function EmailCenterWorkspace() {
                 </span>
               </div>
               <p className="mt-2 text-sm">{item.decision.reason}</p>
-              <p className="mt-1 text-xs text-[#75664d]">{item.excluded ? `Blocked: ${item.excluded}` : 'Eligible for manual review'}</p>
+              <p className="mt-1 text-xs text-[#75664d]">{item.excluded ? `محظور: ${item.excluded}` : 'مؤهلة للمراجعة اليدوية'}</p>
               <div className="mt-3 flex gap-2">
                 <button onClick={() => void saveNurtureSuggestion(item.company)} className="btn-secondary">حفظ توصية</button>
                 <Link href={`/companies/${item.company.id}`} className="btn-ghost">فتح Company 360</Link>
@@ -684,9 +718,9 @@ export function EmailCenterWorkspace() {
           {historyRows.map((event) => (
             <article key={event.id} className="crm-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <b>{text(event.recipient) || 'Recipient'}</b>
+                <b>{text(event.recipient) || 'مستلم'}</b>
                 <span className={`crm-chip ${text(event.direction).toUpperCase() === 'INBOUND' ? 'status-warning' : 'status-success'}`}>
-                  {text(event.direction).toUpperCase() || 'EVENT'}
+                  {text(event.direction).toUpperCase() === 'INBOUND' ? 'وارد' : text(event.direction).toUpperCase() === 'OUTBOUND' ? 'صادر' : 'حدث'}
                 </span>
               </div>
               <p className="mt-1 text-xs text-[#75664d]">{text(companies.find((item) => item.id === event.company_id)?.company_name)} · {text(event.channel)} · {text(event.occurred_at || event.created_at)}</p>
@@ -701,7 +735,7 @@ export function EmailCenterWorkspace() {
         <section className="grid gap-3">
           {filteredEvents.map((event) => (
             <article key={event.id} className="crm-card p-4">
-              <div className="flex justify-between"><b>{text(event.subject || event.recipient || 'Response')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase()}</span></div>
+              <div className="flex justify-between"><b>{text(event.subject || event.recipient || 'رد')}</b><span className="crm-chip status-warning">{text(event.direction).toUpperCase() === 'INBOUND' ? 'وارد' : 'صادر'}</span></div>
               <p className="mt-1 text-xs text-[#75664d]">{text(companies.find((company) => company.id === event.company_id)?.company_name)} · {text(event.channel)} · {text(event.occurred_at || event.created_at)}</p>
               <p className="mt-2 text-sm">{text(event.outcome || event.notes || '—')}</p>
             </article>
