@@ -9,11 +9,10 @@ jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST endpoint
+      - name: Ping Supabase Auth health endpoint
         run: |
           echo "Pinging Supabase project to keep it active..."
           curl -sS -o /dev/null -w "HTTP status: %{http_code}\n" \
             --request GET \
-            --url "${{ secrets.SUPABASE_URL }}/rest/v1/" \
-            --header "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            --header "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+            --url "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
+            --header "apikey: ${{ secrets.SUPABASE_ANON_KEY }}"
