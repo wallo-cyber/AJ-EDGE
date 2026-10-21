@@ -2,17 +2,19 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ContactForm } from '../../components/contact-form';
 import { CRMPage } from '../../components/crm-shell';
 import type { Company } from '../../lib/company-store';
 import type { Contact, ContactDepartment, ContactDecisionLevel } from '../../lib/contact-store';
 import { supabaseCrm } from '../../lib/supabase/crm';
+import { MAIL_CONTACTS_KEY } from '../../components/contact-email-sender';
 
 const ALL = 'الكل';
 
 export default function ContactsPage() {
   const params = useSearchParams();
+  const router = useRouter();
   const requestedCompanyId = params.get('company_id') ?? '';
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -30,6 +32,7 @@ export default function ContactsPage() {
   const [notice, setNotice] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [selectingAll, setSelectingAll] = useState(false);
 
   useEffect(() => { void supabaseCrm.companies.list().then(rows => { const loaded=rows as Company[]; setCompanies(loaded); if(requestedCompanyId&&loaded.some(company=>company.id===requestedCompanyId)){setCompanyId(requestedCompanyId);setShowForm(true);} }).catch(reason => setError(reason.message)); }, [requestedCompanyId]);
   useEffect(() => {
@@ -74,6 +77,26 @@ export default function ContactsPage() {
     finally { setDeleting(false); }
   };
 
+  const currentFilters = () => ({ search, companyId: companyId === ALL ? '' : companyId, department: department === ALL ? '' : department, decisionLevel: decisionLevel === ALL ? '' : decisionLevel, verificationStatus: verification === ALL ? '' : verification });
+  const selectAllMatching = async () => {
+    setSelectingAll(true); setError('');
+    try {
+      const ids = new Set<string>();
+      for (let current = 1; current <= 100; current += 1) {
+        const result = await supabaseCrm.contacts.page(current, 200, currentFilters());
+        (result.rows as Contact[]).forEach(row => ids.add(row.id));
+        if (ids.size >= result.count || result.rows.length === 0) break;
+      }
+      setSelectedIds(ids); setNotice(`تم تحديد كل النتائج (${ids.size}).`);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'تعذر تحديد كل النتائج.'); }
+    finally { setSelectingAll(false); }
+  };
+  const prepareEmail = () => {
+    if (selectedIds.size === 0) return;
+    try { window.sessionStorage.setItem(MAIL_CONTACTS_KEY, JSON.stringify([...selectedIds])); } catch { setError('تعذر تجهيز القائمة البريدية في هذا المتصفح.'); return; }
+    router.push('/email-center');
+  };
+
   const toggleOne = (id: string) => setSelectedIds(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   const allOnPageSelected = contacts.length > 0 && contacts.every(c => selectedIds.has(c.id));
   const toggleAllOnPage = () => setSelectedIds(prev => {
@@ -99,6 +122,8 @@ export default function ContactsPage() {
       <div className="crm-card flex items-center justify-between gap-3 p-3">
         <span className="text-sm font-semibold">{selectedIds.size} محدد</span>
         <div className="flex gap-2">
+          <button onClick={prepareEmail} className="rounded-lg border border-amber-400 px-3 py-1.5 text-sm font-semibold text-amber-700">تجهيز رسالة للمحدد</button>
+          <button onClick={() => void selectAllMatching()} disabled={selectingAll} className="rounded-lg border px-3 py-1.5 text-sm">{selectingAll ? 'جارٍ التحديد...' : `تحديد كل النتائج (${total})`}</button>
           <button onClick={() => setSelectedIds(new Set())} className="rounded-lg border px-3 py-1.5 text-sm">إلغاء التحديد</button>
           <button onClick={() => void removeSelected()} disabled={deleting} className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700">{deleting ? 'جارٍ الحذف...' : 'حذف المحدد'}</button>
         </div>

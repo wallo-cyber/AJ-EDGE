@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { TargetedEmailSender } from './targeted-email-sender';
+import { ContactEmailSender } from './contact-email-sender';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CRMPage } from './crm-shell';
 import { conversationStrategy, evaluateMessageQuality, generateProfessionalMessage } from '../lib/intelligence/v6';
@@ -455,6 +456,7 @@ export function EmailCenterWorkspace() {
 
   return (
     <CRMPage title="مركز البريد والتواصل" description="مركز التواصل المهني: رسائل مخصصة حسب الشركة والقطاع، معاينة وتعديل، ثم إرسال يدوي مع سجل كامل.">
+      <ContactEmailSender />
       <TargetedEmailSender />
       <div className="flex flex-wrap items-center gap-2 rounded-xl border p-3 text-sm">
         <b>الإرسال تحت تحكمك</b>
